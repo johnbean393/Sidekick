@@ -5,8 +5,8 @@
 </h1>
 
 <p align="center">
-<img alt="Downloads" src="https://img.shields.io/github/downloads/johnbean393/Sidekick/total?label=Downloads" height=22.5>
-<img alt="License" src="https://img.shields.io/github/license/johnbean393/Sidekick?label=License" height=22.5>
+<img alt="Downloads" src="https://img.shields.io/github/downloads/johnbean393/Sidekick/total?label=Downloads" height="22.5">
+<img alt="License" src="https://img.shields.io/github/license/johnbean393/Sidekick?label=License" height="22.5">
 </p>
 
 Chat with a local LLM that can respond with information from your files, folders and websites on your Mac without installing any other software. All conversations happen offline, and your data stays secure. Sidekick is a <strong>local first</strong> application –– with a built in inference engine for local models, while accomodating OpenAI compatible APIs for additional model options.
