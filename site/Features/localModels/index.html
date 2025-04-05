@@ -65,6 +65,14 @@
     <li class="toctree-l2"><a class="reference internal" href="#using-speculative-decoding">Using Speculative Decoding</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#selecting-a-model">Selecting a Model</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#main-model">Main Model</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#worker-model">Worker Model</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#draft-model">Draft Model</a>
+    </li>
+        </ul>
     </li>
     </ul>
                   </li>
@@ -116,20 +124,29 @@
               
                 <h1 id="local-models">Local Models</h1>
 <h2 id="adding-a-model">Adding a Model</h2>
-<p>To add a local model, navigate to <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Inference</code>.</p>
-<p>Click the <code>Manage</code> button to the right of the current model name.</p>
+<p>To add a local model, navigate to <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Inference</code> -&gt; <code>Models</code> ,then click the <code>Manage</code> button to the right of the current model name.</p>
 <p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/speculativeDecodingSupport.png" /></p>
 <p>If you have already downloaded a <code>GGUF</code> model, click the <code>Add Model</code> button and select the <code>GGUF</code> model you have downloaded.</p>
 <p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/modelSelector.png" /></p>
 <p>If you are looking for a model, click the <code>Download Model</code> button. This will open a new window where you can select the model you want to download.</p>
 <p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/modelLibrary.png" /></p>
 <h2 id="using-speculative-decoding">Using Speculative Decoding</h2>
-<p>Speculative decoding is a technique that speeds up the inference process by running a smaller "draft model" in parallel with the main model. This draft model <strong>MUST</strong> share the same tokenizer as the main model.</p>
+<p>Speculative decoding is a technique that speeds up the inference process by running a smaller "draft model" in parallel with the main model.</p>
 <p>To enable speculative decoding, flip the toggle in <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Inference</code>.</p>
 <p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/speculativeDecodingSupport.png" /></p>
 <h2 id="selecting-a-model">Selecting a Model</h2>
-<p>To change the local model being used, click the brain icon on the right hand side of the toolbar. A menu will appear with a list of local models. Click on a model's name to select it.</p>
+<p>You can choose 3 local models, a main model, a worker model, and a draft model for speculative decoding. </p>
+<p>To select a model, navigate to <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Inference</code> -&gt; <code>Models</code>, then click the <code>Manage</code> button to the right of the model's name.</p>
+<p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/speculativeDecodingSupport.png" /></p>
+<h3 id="main-model">Main Model</h3>
+<p>This is the main model that powers most work in Sidekick, such as chat, most tools and more.</p>
+<p>In addition to Sidekick Settings, the local model can also be selected from the main window. Click the brain icon on the right hand side of the toolbar, and a menu will appear with a list of local models. Click on a model's name to select it.</p>
 <p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/modelToolbarMenu.png" /></p>
+<h3 id="worker-model">Worker Model</h3>
+<p>The worker model is used for simple tasks that demand speed and responsiveness, but can accept trade-offs in quality. This includes automatic conversation titles generation and commands in Inline Writing Assistant.</p>
+<p>Ideally, a worker model should be fast and cheap to run. As a result, reasoning models are not recommended.</p>
+<h3 id="draft-model">Draft Model</h3>
+<p>The draft model is used for speculative decoding. It should be in the same family as the main model, but with dramatically fewer parameters. This draft model <strong>MUST</strong> share the same tokenizer as the main model.</p>
               
             </div>
           </div><footer>
