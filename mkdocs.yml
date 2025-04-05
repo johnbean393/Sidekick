@@ -2,7 +2,8 @@ site_name: Sidekick
 
 nav:
   - Home: index.md
-  - Getting Started: ./gettingStarted.md
+  - Getting Started:
+    - Getting Started: ./gettingStarted.md
   - Features:
     - Canvas: ./Features/canvas.md
     - Conversations: ./Features/conversations.md
