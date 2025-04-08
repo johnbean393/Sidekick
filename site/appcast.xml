@@ -2,6 +2,16 @@
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
     <channel>
         <title>Sidekick-beta</title>
+        <item>
+            <title>0.0.30</title>
+            <pubDate>Sat, 05 Apr 2025 23:55:00 +0800</pubDate>
+            <sparkle:version>18</sparkle:version>
+            <sparkle:shortVersionString>0.0.30</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/johnbean393/Sidekick/releases/download/0.0.30/Sidekick-beta.0.0.30.dmg"
+            sparkle:edSignature="1ejY1UPdZSWZAKls3T0Mywqn3SHqbRPajGoH0EEMNRZ0m9Pc9/ItC7waoeVE1DBrVQhB3CJXjIWnURcG1OtjAQ==" length="169140652"
+            type="application/octet-stream" />
+        </item>
 		<item>
 			<title>0.0.29</title>
 			<pubDate>Thu, 27 Mar 2025 16:25:13 +0800</pubDate>
