@@ -16,7 +16,7 @@ To copy the raw message content with Markdown formatting syntax, click the three
 
 To read Sidekick's response out loud, click the speaker button above the message content. Sidekick will read the response out. If you want to stop, click the speaker button again.
 
-![Conversations](../img/Docs Images/Features/Conversations/codeInterpreterToggle.png)
+![Conversations](../img/Docs Images/Features/Conversations/chatSettings.png)
 
 To change the voice used, go to `Settings` -> `Chat` -> `Voice` and select a voice.
 
