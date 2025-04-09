@@ -64,7 +64,7 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#reasoning-model-support">Reasoning Model Support</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#code-interpreter">Code Interpreter</a>
+    <li class="toctree-l2"><a class="reference internal" href="#function-calling">Function Calling</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#advanced-markdown-rendering">Advanced Markdown Rendering</a>
         <ul>
@@ -145,14 +145,13 @@
 <p>Sidekick supports a variety of reasoning models, including Alibaba Cloud's QwQ-32B and DeepSeek's DeepSeek-R1.</p>
 <p><img alt="Conversations" src="../../img/Docs%20Images/Features/Conversations/reasoningModelSupport.png" /></p>
 <p>Click the purple header labeled <code>Reasoning Process</code> to hide and show the reasoning process.</p>
-<h2 id="code-interpreter">Code Interpreter</h2>
-<p>Sidekick uses a code interpreter to boost the mathematical and logical capabilities of models. </p>
-<p>Since small models are much better at writing code than doing math, having it write the code, execute it, and present the results dramatically increases trustworthiness of answers.</p>
-<p><img alt="Conversations" src="../../img/Docs%20Images/Features/Conversations/codeInterpreter.png" /></p>
-<p>For example, when asking Sidekick to reverse a string, it runs the JavaScript to reverse the string, then presents the result.</p>
-<p>To view the code used, click the three dots next to the copy button, then select <code>Show Code Used</code>.</p>
-<p><img alt="Conversations" src="../../img/Docs%20Images/Features/Conversations/codeInterpreterToggle.png" /></p>
-<p>Code Interpreter is enabled by default, but can be disabled in <code>Settings</code> -&gt; <code>Chat</code> -&gt; <code>Use Code Interpreter</code>.</p>
+<h2 id="function-calling">Function Calling</h2>
+<p>Sidekick can call functions to boost the mathematical and logical capabilities of models, and to execute actions. Functions are called sequentially in a loop until a result is obtained.</p>
+<p>For example, when asking Sidekick to reverse a string or do arithmetic operation, it runs tools, then presents the result.</p>
+<p><img alt="Conversations" src="../../img/Docs%20Images/Features/Conversations/functionCalling.png" /></p>
+<p>To view details for each function call, click the down arrow on the right.</p>
+<p><img alt="Conversations" src="../../img/Docs%20Images/Features/Conversations/functionsToggle.png" /></p>
+<p>Code Interpreter is enabled by default if a remote model is used, but can be disabled in <code>Settings</code> -&gt; <code>Chat</code> -&gt; <code>Use Functions</code>.</p>
 <h2 id="advanced-markdown-rendering">Advanced Markdown Rendering</h2>
 <p>Markdown is rendered beautifully in Sidekick.</p>
 <h3 id="latex">LaTeX</h3>
