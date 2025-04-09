@@ -28,21 +28,19 @@ Sidekick supports a variety of reasoning models, including Alibaba Cloud's QwQ-3
 
 Click the purple header labeled `Reasoning Process` to hide and show the reasoning process.
 
-## Code Interpreter
+## Function Calling
 
-Sidekick uses a code interpreter to boost the mathematical and logical capabilities of models. 
+Sidekick can call functions to boost the mathematical and logical capabilities of models, and to execute actions. Functions are called sequentially in a loop until a result is obtained.
 
-Since small models are much better at writing code than doing math, having it write the code, execute it, and present the results dramatically increases trustworthiness of answers.
+For example, when asking Sidekick to reverse a string or do arithmetic operation, it runs tools, then presents the result.
 
-![Conversations](../img/Docs Images/Features/Conversations/codeInterpreter.png)
+![Conversations](../img/Docs Images/Features/Conversations/functionCalling.png)
 
-For example, when asking Sidekick to reverse a string, it runs the JavaScript to reverse the string, then presents the result.
+To view details for each function call, click the down arrow on the right.
 
-To view the code used, click the three dots next to the copy button, then select `Show Code Used`.
+![Conversations](../img/Docs Images/Features/Conversations/functionsToggle.png)
 
-![Conversations](../img/Docs Images/Features/Conversations/codeInterpreterToggle.png)
-
-Code Interpreter is enabled by default, but can be disabled in `Settings` -> `Chat` -> `Use Code Interpreter`.
+Code Interpreter is enabled by default if a remote model is used, but can be disabled in `Settings` -> `Chat` -> `Use Functions`.
 
 ## Advanced Markdown Rendering
 
