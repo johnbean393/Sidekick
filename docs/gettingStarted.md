@@ -7,7 +7,7 @@
 - RAM: 8 GB or above
 
 ### Software
-- macOS: 14.0 or above
+- macOS: 15.0 or above
 
 ## Download & Install
 1. Download the disk image from [Releases](https://github.com/johnbean393/Sidekick/releases/), and open it.
