@@ -10,7 +10,29 @@ Sidekick works with OpenAI compatible APIs.
 
 ![Remote Models](../img/Docs Images/Features/Remote Models/remoteModelSettingsTop.png)
 
-To configure an endpoint, get the endpoint URL from your provider, and enter all components that precedes `/v1`. For example, if the URL is `https://api.openai.com/v1`, enter `https://api.openai.com/` into the `Endpoint` field.
+To configure an endpoint, get the endpoint URL from your provider, and enter all components until `/v1`. For example, if you are using the OpenAI API, enter `https://api.openai.com/v1/` into the `Endpoint` field.
+
+Common endpoints:
+
+Aliyun Bailian (China): `https://dashscope.aliyuncs.com/compatible-mode/v1`
+
+Anthropic: `https://api.anthropic.com/v1`
+
+DeepSeek: `https://api.deepseek.com/v1`
+
+Google AI Studio: `https://generativelanguage.googleapis.com/v1beta`
+
+Groq: `https://api.groq.com/openai/v1`
+
+LM Studio: `http://localhost:1234/v1`
+
+Mistral: `https://api.mistral.ai/v1`
+
+Ollama: `http://localhost:11434/v1`
+
+OpenAI: `https://api.openai.com/v1`
+
+OpenRouter: `https://openrouter.ai/api/v1`
 
 Next, enter your API key. This is encrypted with a key securely stored in your keychain.
 
