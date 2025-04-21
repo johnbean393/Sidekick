@@ -77,6 +77,12 @@
                   <li class="toctree-l1 current"><a class="reference internal current" href="#">Web Search</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#configure-web-search">Configure Web Search</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#duckduckgo">DuckDuckGo</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#tavily">Tavily</a>
+    </li>
+        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#using-web-search">Using Web Search</a>
     </li>
@@ -117,15 +123,20 @@
                 <h1 id="web-search">Web Search</h1>
 <p>Web search allows Sidekick to respond with up to date information, and reduces the chance of hallucinations, where the chatbot responds with false information.</p>
 <h2 id="configure-web-search">Configure Web Search</h2>
-<p>To configure web search, navigate to <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Retrieval</code> -&gt; <code>Tavily Search</code>.</p>
+<p>To configure web search, navigate to <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Retrieval</code> -&gt; <code>Web Search</code>.</p>
 <p><img alt="Web Search" src="../../img/Docs%20Images/Features/Web%20Search/webSearchSettings.png" /></p>
-<p>Click the toggle to enable or disable web search, and set an API key in the field below. Your API key will be encrypted with a key securely stored in your keychain.</p>
+<h3 id="duckduckgo">DuckDuckGo</h3>
+<p>Web search is configured to use DuckDuckGo by default. No setup is required.</p>
+<h3 id="tavily">Tavily</h3>
+<p>Select <code>Tavily</code> in the picker, then set an API key in the field below. Your API key will be encrypted with a key securely stored in your keychain.</p>
 <p>You can create an API key by clicking the <code>Get an API Key</code> button, which will take you to <a href="https://app.tavily.com/home">Tavily</a>. </p>
 <p><img alt="Web Search" src="../../img/Docs%20Images/Features/Web%20Search/tavilyApi.png" /></p>
 <p>You will need to sign up for an account and then create a new API key. Copy this key and paste it into the API key field in Sidekick's <code>Tavily Search</code> Settings.</p>
 <p>Note that when web search is enabled, your prompt may be exposed to third parties such as Tavily.</p>
 <h2 id="using-web-search">Using Web Search</h2>
-<p>Using web search is simple. Use click the <code>Web Search</code> button in the prompt bar to toggle web search.</p>
+<p>Web search is activated in 2 ways.</p>
+<p>If <code>Use Functions</code> is activated in Settings, Sidekick will automatically detect if web search is needed and call a function to search the web.</p>
+<p>To force web search, you can also click the <code>Web Search</code> button in the prompt bar to toggle web search. For most queries, the model can use</p>
 <h2 id="example-use">Example Use</h2>
 <p>Using web search allows Sidekick to respond using up to date information.</p>
 <p><img alt="Web Search" src="../../img/Docs%20Images/Features/Web%20Search/webSearch.png" /></p>
