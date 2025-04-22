@@ -4,21 +4,21 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Image Generation - Sidekick</title>
-    <link rel="stylesheet" href="../../css/theme.css" />
-    <link rel="stylesheet" href="../../css/theme_extra.css" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Web Search - Sidekick</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Image Generation";
-        var mkdocs_page_input_path = "Features/imageGeneration.md";
+        var mkdocs_page_name = "Web Search";
+        var mkdocs_page_input_path = "Markdown/Features/webSearch.md";
         var mkdocs_page_url = null;
       </script>
     
     <!--[if lt IE 9]>
-      <script src="../../js/html5shiv.min.js"></script>
+      <script src="../../../js/html5shiv.min.js"></script>
     <![endif]-->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
       <script>hljs.highlightAll();</script> 
@@ -30,9 +30,9 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-          <a href="../.." class="icon icon-home"> Sidekick
+          <a href="../../.." class="icon icon-home"> Sidekick
         </a><div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
       <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
   </form>
 </div>
@@ -40,7 +40,7 @@
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
                 </li>
               </ul>
               <p class="caption"><span class="caption-text">Getting Started</span></p>
@@ -56,9 +56,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../experts/">Experts</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Image Generation</a>
-    <ul class="current">
-    </ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../imageGeneration/">Image Generation</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../localModels/">Local Models</a>
                   </li>
@@ -76,7 +74,21 @@
                 </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../webSearch/">Web Search</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Web Search</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#configure-web-search">Configure Web Search</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#duckduckgo">DuckDuckGo</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#tavily">Tavily</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#using-web-search">Using Web Search</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#example-use">Example Use</a>
+    </li>
+    </ul>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">About</span></p>
@@ -91,15 +103,15 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
       <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../..">Sidekick</a>
+          <a href="../../..">Sidekick</a>
         
       </nav>
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
           <li class="breadcrumb-item">Features</li>
-      <li class="breadcrumb-item active">Image Generation</li>
+      <li class="breadcrumb-item active">Web Search</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -108,17 +120,33 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="image-generation">Image Generation</h1>
-<p>Sidekick can generate images from text, allowing you to create visual aids for your work. </p>
-<p>There are no buttons, no switches to flick, no <code>Image Generation</code> mode. Instead, a built-in CoreML model <strong>automatically identifies</strong> image generation prompts, and generates an image when necessary.</p>
-<p><img alt="Image Generation" src="../../img/Docs%20Images/Features/Image%20Generation/imageGeneration.png" /></p>
-<p>Image generation is available on macOS 15.2 or above, and requires Apple Intelligence.</p>
+                <h1 id="web-search">Web Search</h1>
+<p>Web search allows Sidekick to respond with up to date information, and reduces the chance of hallucinations, where the chatbot responds with false information.</p>
+<h2 id="configure-web-search">Configure Web Search</h2>
+<p>To configure web search, navigate to <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Retrieval</code> -&gt; <code>Web Search</code>.</p>
+<p><img alt="Web Search" src="../../../img/Docs%20Images/Features/Web%20Search/webSearchSettings.png" /></p>
+<h3 id="duckduckgo">DuckDuckGo</h3>
+<p>Web search is configured to use DuckDuckGo by default. No setup is required.</p>
+<h3 id="tavily">Tavily</h3>
+<p>Select <code>Tavily</code> in the picker, then set an API key in the field below. Your API key will be encrypted with a key securely stored in your keychain.</p>
+<p>You can create an API key by clicking the <code>Get an API Key</code> button, which will take you to <a href="https://app.tavily.com/home">Tavily</a>. </p>
+<p><img alt="Web Search" src="../../../img/Docs%20Images/Features/Web%20Search/tavilyApi.png" /></p>
+<p>You will need to sign up for an account and then create a new API key. Copy this key and paste it into the API key field in Sidekick's <code>Tavily Search</code> Settings.</p>
+<p>Note that when web search is enabled, your prompt may be exposed to third parties such as Tavily.</p>
+<h2 id="using-web-search">Using Web Search</h2>
+<p>Web search is activated in 2 ways.</p>
+<p>If <code>Use Functions</code> is activated in Settings, Sidekick will automatically detect if web search is needed and call a function to search the web.</p>
+<p>To force web search, you can also click the <code>Web Search</code> button in the prompt bar to toggle web search. For most queries, the model can use</p>
+<h2 id="example-use">Example Use</h2>
+<p>Using web search allows Sidekick to respond using up to date information.</p>
+<p><img alt="Web Search" src="../../../img/Docs%20Images/Features/Web%20Search/webSearch.png" /></p>
+<p>At the bottom of the message, references are included, which can be clicked to open the website referenced in Sidekick's response.</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../experts/" class="btn btn-neutral float-left" title="Experts"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../localModels/" class="btn btn-neutral float-right" title="Local Models">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../Tools/slideStudio/" class="btn btn-neutral float-left" title="Slide Studio"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../About/mission/" class="btn btn-neutral float-right" title="Our Mission">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -141,18 +169,18 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../experts/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../Tools/slideStudio/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../localModels/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../../About/mission/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
-    <script src="../../js/jquery-3.6.0.min.js"></script>
-    <script>var base_url = "../..";</script>
-    <script src="../../js/theme_extra.js"></script>
-    <script src="../../js/theme.js"></script>
-      <script src="../../search/main.js"></script>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="../../../search/main.js"></script>
     <script>
         jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);

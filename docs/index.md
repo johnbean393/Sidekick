@@ -12,8 +12,8 @@ Welcome to Sidekick, a **native**, **local-first** macOS app that allows users t
 
 ## Getting Started
 
-View [this guide](./gettingStarted.md) to get started with Sidekick.
+View [this guide](./Markdown/gettingStarted.md) to get started with Sidekick.
 
 ## About Us
 
-Find out more information about Sidekick and our mission [here](./About/mission.md).
+Find out more information about Sidekick and our mission [here](./Markdown/About/mission.md).
