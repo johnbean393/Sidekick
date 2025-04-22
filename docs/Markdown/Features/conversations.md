@@ -46,6 +46,18 @@ To view details for each function call, click the down arrow on the right.
 
 Code Interpreter is enabled by default if a remote model is used, but can be disabled in `Settings` -> `Chat` -> `Use Functions`.
 
+## Memory
+
+Sidekick can now remember helpful information between conversations, making its responses more relevant and personalized. Whether you're typing, speaking, or generating images in Sidekick, it can recall details and preferences you’ve shared and use them to tailor its responses. The more you use it, the more useful it becomes, and you’ll start to notice improvements over time.
+
+For example, I can tell Sidekick about my new dog, Cat...
+
+![Conversations](../../img/Docs Images/Features/Conversations/memoryRemember.png)
+
+so that when I ask Sidekick what to feed Cat, it recommends dog food.
+
+![Conversations](../../img/Docs Images/Features/Conversations/memoryUse.png)
+
 ## Advanced Markdown Rendering
 
 Markdown is rendered beautifully in Sidekick.
