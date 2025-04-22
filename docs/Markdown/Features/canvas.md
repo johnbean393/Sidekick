@@ -8,7 +8,7 @@ When using Canvas, Sidekick gains deeper insight into your objectives. By select
 
 Press the 3D-cube button in the right hand side of the toolbar to open Canvas. Editable content will be automatically extracted from the text and displayed. Code will automatically open in Canvas by default.
 
-![Canvas](../img/Docs Images/Features/Canvas/canvasSelectiveEdit.png)
+![Canvas](../../img/Docs Images/Features/Canvas/canvasSelectiveEdit.png)
 
 By selecting specific ranges of the text, you can instruct Sidekick to apply changes to that range only. 
 
@@ -20,18 +20,18 @@ To export the text, click the share icon to copy the text, or click the copy ico
 
 When HTML, CSS and JS code is detected in the chatbot's response, it is automatically extracted and displayed in Canvas.
 
-![Canvas](../img/Docs Images/Features/Canvas/canvasWebsite.png)
+![Canvas](../../img/Docs Images/Features/Canvas/canvasWebsite.png)
 
 Just like text and code, you can select a version from the bottom of the Canvas editor by clicking `v1`, `v2`, etc.
 
 You can export the completed site by clicking the share icon, then setting the desired output location.
 
-![Canvas](../img/Docs Images/Features/Canvas/canvasExport.png)
+![Canvas](../../img/Docs Images/Features/Canvas/canvasExport.png)
 
 ## Example Use
 
 Since Canvas works with references, you can use it to create interactive charts to visualize your data!
 
-![Canvas](../img/Docs Images/Features/Canvas/canvasDataVisualization.png)
+![Canvas](../../img/Docs Images/Features/Canvas/canvasDataVisualization.png)
 
 Drag your data source (e.g. an Excel spreadsheet) into the prompt bar, then tell Sidekick to `Make a website to show this data with an interactive bar chart.`

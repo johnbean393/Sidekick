@@ -6,7 +6,7 @@ To access Slide Studio, click the `Toolbox` button, then click `Slide Studio`.
 
 ## Creating a Presentation
 
-![Slide Studio](../../img/Docs Images/Features/Tools/Slide Studio/slideStudioPrompt.png)
+![Slide Studio](../../../img/Docs Images/Features/Tools/Slide Studio/slideStudioPrompt.png)
 
 Write a prompt about your presentation's topic.
 
@@ -23,7 +23,7 @@ When you are ready to create your presentation, hit `Return`. Slide generation w
 
 When presentation generation is complete, a preview of the slides is displayed alongside an editor. 
 
-![Slide Studio](../../img/Docs Images/Features/Tools/Slide Studio/slideStudioPreviewEditor.png)
+![Slide Studio](../../../img/Docs Images/Features/Tools/Slide Studio/slideStudioPreviewEditor.png)
 
 You can edit the slides by directly editing the Markdown on the left. The preview on the right will update in real-time to reflect your changes.
 
@@ -33,7 +33,7 @@ To generate a new presentation, click the `New Slides` button on the top right. 
 
 To export your presentation, click the `Export` button. A dialog will appear to allow customization of export options.
 
-![Slide Studio](../../img/Docs Images/Features/Tools/Slide Studio/slideStudioExport.png)
+![Slide Studio](../../../img/Docs Images/Features/Tools/Slide Studio/slideStudioExport.png)
 
 There are 4 available output formats:
 

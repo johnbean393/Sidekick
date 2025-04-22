@@ -6,7 +6,7 @@ Web search allows Sidekick to respond with up to date information, and reduces t
 
 To configure web search, navigate to `Sidekick` -> `Settings` -> `Retrieval` -> `Web Search`.
 
-![Web Search](../img/Docs Images/Features/Web Search/webSearchSettings.png)
+![Web Search](../../img/Docs Images/Features/Web Search/webSearchSettings.png)
 
 ### DuckDuckGo
 
@@ -18,7 +18,7 @@ Select `Tavily` in the picker, then set an API key in the field below. Your API 
 
 You can create an API key by clicking the `Get an API Key` button, which will take you to [Tavily](https://app.tavily.com/home). 
 
-![Web Search](../img/Docs Images/Features/Web Search/tavilyApi.png)
+![Web Search](../../img/Docs Images/Features/Web Search/tavilyApi.png)
 
 You will need to sign up for an account and then create a new API key. Copy this key and paste it into the API key field in Sidekick's `Tavily Search` Settings.
 
@@ -36,6 +36,6 @@ To force web search, you can also click the `Web Search` button in the prompt ba
 
 Using web search allows Sidekick to respond using up to date information.
 
-![Web Search](../img/Docs Images/Features/Web Search/webSearch.png)
+![Web Search](../../img/Docs Images/Features/Web Search/webSearch.png)
 
 At the bottom of the message, references are included, which can be clicked to open the website referenced in Sidekick's response.

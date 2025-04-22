@@ -6,11 +6,11 @@ Inline Writing Assistant is a built-in tool that assists your writing by providi
 
 Press `Command + Control + I` to reveal the Inline Writing Assistant command palette. For example, use the `Simplify` command to simplify a technical concept without leaving Microsoft Word!
 
-![Inline Writing Assistant](../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantCommands.png)
+![Inline Writing Assistant](../../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantCommands.png)
 
 The shortcut used to invoke commands can be customized in `Sidekick` -> `Settings` -> `General` -> `Inline Writing Assistant`.
 
-![Inline Writing Assistant](../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantSettings.png)
+![Inline Writing Assistant](../../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantSettings.png)
 
 When available, the remote worker model is always used for Inline Writing Assistant commands.
 
@@ -18,11 +18,11 @@ When available, the remote worker model is always used for Inline Writing Assist
 
 Sidekick comes with a default set of Inline Writing Assistant commands.
 
-![Inline Writing Assistant](../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantCommandPalette.png)
+![Inline Writing Assistant](../../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantCommandPalette.png)
 
 To edit a command and its associated prompt, right click on the command and select `Edit`.
 
-![Inline Writing Assistant](../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantEditingCommand.png)
+![Inline Writing Assistant](../../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantEditingCommand.png)
 
 To delete a command, right click on the command and select `Delete`.
 
@@ -40,7 +40,7 @@ After a brief tutorial and model download process, completions will be ready to 
 
 When available, Inline Writing Assistant will suggest completions as you type. These are displayed as translucent text suggestions next to the text cursor.
 
-![Inline Writing Assistant](../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantCompletions.png)
+![Inline Writing Assistant](../../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantCompletions.png)
 
 Use the default keyboard shortcut `Tab` to accept suggestions for the next word, or `Shift + Tab` to accept all suggested words.
 
@@ -50,8 +50,8 @@ Use the default keyboard shortcut `Tab` to accept suggestions for the next word,
 
 The shortcuts used to accept completions can be customized in `Sidekick` -> `Settings` -> `General` -> `Inline Writing Assistant`.
 
-![Inline Writing Assistant](../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantSettings.png)
+![Inline Writing Assistant](../../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantSettings.png)
 
 You might also want to disable completions for certain apps. This can be done by clicking on the `Manage` button next to `Excluded Apps`, then pressing `Add` to add an app.
 
-![Inline Writing Assistant](../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantCompletionsExcludedApps.png)
+![Inline Writing Assistant](../../../img/Docs Images/Features/Tools/Inline Writing Assistant/inlineWritingAssistantCompletionsExcludedApps.png)

@@ -8,7 +8,7 @@ To configure a remote model provider after setup, navigate to `Sidekick` -> `Set
 
 Sidekick works with OpenAI compatible APIs.
 
-![Remote Models](../img/Docs Images/Features/Remote Models/remoteModelSettingsTop.png)
+![Remote Models](../../img/Docs Images/Features/Remote Models/remoteModelSettingsTop.png)
 
 To configure an endpoint, get the endpoint URL from your provider, and enter all components until `/v1`. For example, if you are using the OpenAI API, enter `https://api.openai.com/v1/` into the `Endpoint` field.
 
@@ -40,7 +40,7 @@ Next, enter your API key. This is encrypted with a key securely stored in your k
 
 You can choose 2 remote models, a main model and a worker model. Specified model names **must** be the same as that listed in your model provider's API documentation.
 
-![Remote Models](../img/Docs Images/Features/Remote Models/remoteModelSettingsBottom.png)
+![Remote Models](../../img/Docs Images/Features/Remote Models/remoteModelSettingsBottom.png)
 
 ### Main Model
 

@@ -13,7 +13,7 @@
 1. Download the disk image from [Releases](https://github.com/johnbean393/Sidekick/releases/), and open it.
 2. Open the disk image
 3. Drag the application icon into the Applications folder.
-![Screenshot](./img/Docs Images/Getting Started/mountedDmg.png)
+![Screenshot](../img/Docs Images/Getting Started/mountedDmg.png)
 
 ## Open
 Click [here](sidekick://) to launch Sidekick. Alternatively, navigate to the applications folder, then double click to launch it.
@@ -24,7 +24,7 @@ Click [here](sidekick://) to launch Sidekick. Alternatively, navigate to the app
 
 Upon launching Sidekick for the first time, you will be greeted with a setup screen.
 
-![Screenshot](./img/Docs Images/Getting Started/setupSheet.png)
+![Screenshot](../img/Docs Images/Getting Started/setupSheet.png)
 
 ## Configuring a Model
 
@@ -40,7 +40,7 @@ After the download completes, you will be redirected to Sidekick's main interfac
 
 ## Main Interface
 
-![Screenshot](./img/Docs Images/Getting Started/mainInterfaceAnnotated.png)
+![Screenshot](../img/Docs Images/Getting Started/mainInterfaceAnnotated.png)
 
 ## Sending your First Message
 
@@ -48,7 +48,7 @@ To create a new conversation, click the `New Conversation` button in the lower l
 
 To send a message, click the prompt bar, then enter your message. Use `Option + Return` to add a new line.
 
-![Screenshot](./img/Docs Images/Getting Started/firstChat.png)
+![Screenshot](../img/Docs Images/Getting Started/firstChat.png)
 
 The chatbot should respond within a few seconds.
 

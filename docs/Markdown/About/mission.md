@@ -1,7 +1,7 @@
 # Mission
 
 <h1 align="center">
-  <img src="../../img/App Icon/icon512.png" width = "200" height = "200">
+  <img src="../../../img/App Icon/icon512.png" width = "200" height = "200">
 </h1>
 
 Sidekick is a **local-first** native LLM application for macOS. Its main goal is to make open, local, private, and contextually aware AI applications accessible to more people.

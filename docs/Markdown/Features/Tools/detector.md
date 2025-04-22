@@ -8,7 +8,7 @@ To access Detector, click the `Toolbox` button, then click `Detector`.
 
 Paste the text you want to analyze into the editor, then click the `Analyze` button in the toolbar.
 
-![Detector](../../img/Docs Images/Features/Tools/Detector/detectorEvaluationResults.png)
+![Detector](../../../img/Docs Images/Features/Tools/Detector/detectorEvaluationResults.png)
 
 When analysis is complete, an inspector automatically opens alongside your text, with an `AI Probability` and sentences driving human and AI probability respectively.
 
