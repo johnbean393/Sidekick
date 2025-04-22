@@ -4,21 +4,21 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="shortcut icon" href="../../img/favicon.ico" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
     <title>Local Models - Sidekick</title>
-    <link rel="stylesheet" href="../../css/theme.css" />
-    <link rel="stylesheet" href="../../css/theme_extra.css" />
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
         var mkdocs_page_name = "Local Models";
-        var mkdocs_page_input_path = "Features/localModels.md";
+        var mkdocs_page_input_path = "Markdown/Features/localModels.md";
         var mkdocs_page_url = null;
       </script>
     
     <!--[if lt IE 9]>
-      <script src="../../js/html5shiv.min.js"></script>
+      <script src="../../../js/html5shiv.min.js"></script>
     <![endif]-->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
       <script>hljs.highlightAll();</script> 
@@ -30,9 +30,9 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-          <a href="../.." class="icon icon-home"> Sidekick
+          <a href="../../.." class="icon icon-home"> Sidekick
         </a><div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
       <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
   </form>
 </div>
@@ -40,7 +40,7 @@
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
                 </li>
               </ul>
               <p class="caption"><span class="caption-text">Getting Started</span></p>
@@ -105,13 +105,13 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
       <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../..">Sidekick</a>
+          <a href="../../..">Sidekick</a>
         
       </nav>
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
           <li class="breadcrumb-item">Features</li>
       <li class="breadcrumb-item active">Local Models</li>
     <li class="wy-breadcrumbs-aside">
@@ -125,23 +125,23 @@
                 <h1 id="local-models">Local Models</h1>
 <h2 id="adding-a-model">Adding a Model</h2>
 <p>To add a local model, navigate to <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Inference</code> -&gt; <code>Models</code> ,then click the <code>Manage</code> button to the right of the current model name.</p>
-<p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/speculativeDecodingSupport.png" /></p>
+<p><img alt="Local Models" src="../../../img/Docs Images/Features/Local Models/speculativeDecodingSupport.png" /></p>
 <p>If you have already downloaded a <code>GGUF</code> model, click the <code>Add Model</code> button and select the <code>GGUF</code> model you have downloaded.</p>
-<p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/modelSelector.png" /></p>
+<p><img alt="Local Models" src="../../../img/Docs Images/Features/Local Models/modelSelector.png" /></p>
 <p>If you are looking for a model, click the <code>Download Model</code> button. This will open a new window where you can select the model you want to download.</p>
-<p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/modelLibrary.png" /></p>
+<p><img alt="Local Models" src="../../../img/Docs Images/Features/Local Models/modelLibrary.png" /></p>
 <h2 id="using-speculative-decoding">Using Speculative Decoding</h2>
 <p>Speculative decoding is a technique that speeds up the inference process by running a smaller "draft model" in parallel with the main model.</p>
 <p>To enable speculative decoding, flip the toggle in <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Inference</code>.</p>
-<p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/speculativeDecodingSupport.png" /></p>
+<p><img alt="Local Models" src="../../../img/Docs Images/Features/Local Models/speculativeDecodingSupport.png" /></p>
 <h2 id="selecting-a-model">Selecting a Model</h2>
 <p>You can choose 3 local models, a main model, a worker model, and a draft model for speculative decoding. </p>
 <p>To select a model, navigate to <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Inference</code> -&gt; <code>Models</code>, then click the <code>Manage</code> button to the right of the model's name.</p>
-<p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/speculativeDecodingSupport.png" /></p>
+<p><img alt="Local Models" src="../../../img/Docs Images/Features/Local Models/speculativeDecodingSupport.png" /></p>
 <h3 id="main-model">Main Model</h3>
 <p>This is the main model that powers most work in Sidekick, such as chat, most tools and more.</p>
 <p>In addition to Sidekick Settings, the local model can also be selected from the main window. Click the brain icon on the right hand side of the toolbar, and a menu will appear with a list of local models. Click on a model's name to select it.</p>
-<p><img alt="Local Models" src="../../img/Docs%20Images/Features/Local%20Models/modelToolbarMenu.png" /></p>
+<p><img alt="Local Models" src="../../../img/Docs Images/Features/Local Models/modelToolbarMenu.png" /></p>
 <h3 id="worker-model">Worker Model</h3>
 <p>The worker model is used for simple tasks that demand speed and responsiveness, but can accept trade-offs in quality. This includes automatic conversation titles generation and commands in Inline Writing Assistant.</p>
 <p>Ideally, a worker model should be fast and cheap to run. As a result, reasoning models are not recommended.</p>
@@ -182,11 +182,11 @@
     
   </span>
 </div>
-    <script src="../../js/jquery-3.6.0.min.js"></script>
-    <script>var base_url = "../..";</script>
-    <script src="../../js/theme_extra.js"></script>
-    <script src="../../js/theme.js"></script>
-      <script src="../../search/main.js"></script>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="../../../search/main.js"></script>
     <script>
         jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
