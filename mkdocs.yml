@@ -8,8 +8,10 @@ nav:
     - Canvas: ./Markdown/Features/canvas.md
     - Conversations: ./Markdown/Features/conversations.md
     - Experts: ./Markdown/Features/experts.md
+    - Function Calling: ./Markdown/Features/functionCalling.md
     - Image Generation: ./Markdown/Features/imageGeneration.md
     - Local Models: ./Markdown/Features/localModels.md
+    - Memory: ./Markdown/Features/memory.md
     - Remote Models: ./Markdown/Features/remoteModels.md
     - Tools:
       - Detector: ./Markdown/Features/Tools/detector.md

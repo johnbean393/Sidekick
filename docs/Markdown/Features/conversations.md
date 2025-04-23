@@ -28,36 +28,6 @@ Sidekick supports a variety of reasoning models, including Alibaba Cloud's QwQ-3
 
 Click the purple header labeled `Reasoning Process` to hide and show the reasoning process.
 
-## Function Calling
-
-Sidekick can call functions to boost the mathematical and logical capabilities of models, and to execute actions. Functions are called sequentially in a loop until a result is obtained.
-
-For example, when asking Sidekick to reverse a string or do arithmetic operation, it runs tools, then presents the result.
-
-![Conversations](../../img/Docs Images/Features/Conversations/functionCalling.png)
-
-When telling Sidekick to draft an invitation email for a birthday celebration to my friend Jean, Sidekick finds my birthday and Jean's email address from my contacts book, and creates a draft in my default email client. 
-
-![Screenshot](../../img/Docs Images/Features/Conversations/functionCallingDraftEmail.png)
-
-To view details for each function call, click the down arrow on the right.
-
-![Conversations](../../img/Docs Images/Features/Conversations/functionsToggle.png)
-
-Code Interpreter is enabled by default if a remote model is used, but can be disabled in `Settings` -> `Chat` -> `Use Functions`.
-
-## Memory
-
-Sidekick can now remember helpful information between conversations, making its responses more relevant and personalized. Whether you're typing, speaking, or generating images in Sidekick, it can recall details and preferences you’ve shared and use them to tailor its responses. The more you use it, the more useful it becomes, and you’ll start to notice improvements over time.
-
-For example, I might tell Sidekick that I am a beginner in Python trying to create my own version of Tetris.
-
-![Conversations](../../img/Docs Images/Features/Conversations/memoryRemember.png)
-
-When I ask it about `pygame` alternatives, it makes recommendations based on my current project, Tetris.
-
-![Conversations](../../img/Docs Images/Features/Conversations/memoryUse.png)
-
 ## Advanced Markdown Rendering
 
 Markdown is rendered beautifully in Sidekick.
