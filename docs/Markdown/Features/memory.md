@@ -4,8 +4,8 @@ Sidekick can now remember helpful information between conversations, making its 
 
 For example, I might tell Sidekick that I am a beginner in Python trying to create my own version of Tetris.
 
-![Conversations](../../img/Docs Images/Features/Conversations/memoryRemember.png)
+![Conversations](../../img/Docs Images/Features/Memory/memoryRemember.png)
 
 When I ask it about `pygame` alternatives, it makes recommendations based on my current project, Tetris.
 
-![Conversations](../../img/Docs Images/Features/Conversations/memoryUse.png)
+![Conversations](../../img/Docs Images/Features/Memory/memoryUse.png)
