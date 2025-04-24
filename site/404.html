@@ -1,148 +1,330 @@
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<!doctype html>
+<html lang="en">
+
 <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="shortcut icon" href="/img/favicon.ico" />
-    <title>Sidekick</title>
-    <link rel="stylesheet" href="/css/theme.css" />
-    <link rel="stylesheet" href="/css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
-    
-    <!--[if lt IE 9]>
-      <script src="/js/html5shiv.min.js"></script>
-    <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-      <script>hljs.highlightAll();</script> 
+        <title>Sidekick</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        
+        
+        
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+            <link rel="stylesheet" href="/assets/css/darcula-highlight.min.css">
+
+        <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/assets/css/dracula-ui.min.css">
+        <link rel="stylesheet" href="/assets/css/mkdocs.min.css">
+
+        
+            <link  rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+                <script>hljs.initHighlightingOnLoad();</script>
+
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="drac-bg-black-secondary drac-text-grey-ternary drac-text drac-scrollbar-purple">
 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
-    <div class="wy-side-scroll">
-      <div class="wy-side-nav-search">
-          <a href="/." class="icon icon-home"> Sidekick
-        </a><div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="//search.html" method="get">
-      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
-  </form>
-</div>
-      </div>
+    <main class="d-flex">
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="/.">Home</a>
-                </li>
-              </ul>
-              <p class="caption"><span class="caption-text">Getting Started</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="/Markdown/gettingStarted/">Getting Started</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">Features</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="/Markdown/Features/canvas/">Canvas</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="/Markdown/Features/conversations/">Conversations</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="/Markdown/Features/experts/">Experts</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="/Markdown/Features/functionCalling/">Function Calling</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="/Markdown/Features/imageGeneration/">Image Generation</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="/Markdown/Features/localModels/">Local Models</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="/Markdown/Features/memory/">Memory</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="/Markdown/Features/remoteModels/">Remote Models</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" >Tools</a>
-    <ul>
-                <li class="toctree-l2"><a class="reference internal" href="/Markdown/Features/Tools/detector/">Detector</a>
-                </li>
-                <li class="toctree-l2"><a class="reference internal" href="/Markdown/Features/Tools/diagrammer/">Diagrammer</a>
-                </li>
-                <li class="toctree-l2"><a class="reference internal" href="/Markdown/Features/Tools/inlineWritingAssistant/">Inline Writing Assistant</a>
-                </li>
-                <li class="toctree-l2"><a class="reference internal" href="/Markdown/Features/Tools/slideStudio/">Slide Studio</a>
-                </li>
-    </ul>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="/Markdown/Features/webSearch/">Web Search</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">About</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="/Markdown/About/mission/">Our Mission</a>
-                  </li>
-              </ul>
-      </div>
+        <!-- block sidebar -->
+            <nav id="sidebar" class="sidebar drac-bg-black">
+    <div class="custom-menu">
+        <button type="button" id="sidebarCollapse" class="btn btn-primary">
+            <i class="fa fa-bars"></i>
+            <span class="sr-only">Menu</span>
+        </button>
     </div>
-    </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="/.">Sidekick</a>
+    <div class="p-4">
         
-      </nav>
-      <div class="wy-nav-content">
-        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
-  <ul class="wy-breadcrumbs">
-    <li><a href="/." class="icon icon-home" aria-label="Docs"></a></li>
-    <li class="wy-breadcrumbs-aside">
-    </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-            <div class="section" itemprop="articleBody">
-              
 
-  <h1 id="404-page-not-found">404</h1>
-
-  <p><strong>Page not found</strong></p>
-
-
-            </div>
-          </div><footer>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <!-- Copyright etc -->
-  </div>
-
-  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-</footer>
-          
+        <div class="drac-text-center">
+            
+                <span class="drac-text drac-line-height drac-text-white">Sidekick</span>
+            
         </div>
-      </div>
 
+        <div class="drac-box flex-column">
+            <ul class="dot-ul">
+                <li><div class="dot-li drac-bg-cyan"></div></li>
+                <li><div class="dot-li drac-bg-green"></div></li>
+                <li><div class="dot-li drac-bg-orange"></div></li>
+                <li><div class="dot-li drac-bg-pink"></div></li>
+                <li><div class="dot-li drac-bg-purple"></div></li>
+                <li><div class="dot-li drac-bg-red"></div></li>
+                <li><div class="dot-li drac-bg-yellow"></div></li>
+            </ul>
+        </div>
+
+        <hr class="drac-divider" />
+
+        <!-- block menu -->
+        <ul class="mb-5 drac-list drac-list-none">
+            
+            <li class="drac-box">
+                <a href="/."
+                    class="
+                    drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+                    Home
+                </a>
+            </li>
+            <li class="drac-box">
+                <a href="/."
+                    class="
+                    drac-anchor btn-toggle d-inline-flex align-items-center border-0 drac-text-purple--hover collapsed"
+                    data-bs-toggle="collapse" data-bs-target="#getting-started-collapse" aria-expanded="false">
+                    Getting Started
+                </a>
+                <div class="collapse" id="getting-started-collapse">
+                    <ul class="mb-5 drac-list drac-list-none">
+                            
+    <li class="drac-box-ternary">
+        <a href="/Markdown/gettingStarted/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Getting Started
+        </a>
+    </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="drac-box">
+                <a href="/."
+                    class="
+                    drac-anchor btn-toggle d-inline-flex align-items-center border-0 drac-text-purple--hover collapsed"
+                    data-bs-toggle="collapse" data-bs-target="#features-collapse" aria-expanded="false">
+                    Features
+                </a>
+                <div class="collapse" id="features-collapse">
+                    <ul class="mb-5 drac-list drac-list-none">
+                            
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/canvas/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Canvas
+        </a>
+    </li>
+                            
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/conversations/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Conversations
+        </a>
+    </li>
+                            
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/experts/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Experts
+        </a>
+    </li>
+                            
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/functionCalling/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Function Calling
+        </a>
+    </li>
+                            
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/imageGeneration/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Image Generation
+        </a>
+    </li>
+                            
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/localModels/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Local Models
+        </a>
+    </li>
+                            
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/memory/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Memory
+        </a>
+    </li>
+                            
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/remoteModels/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Remote Models
+        </a>
+    </li>
+                            
+    <li class="drac-box-ternary">
+        <a href="#" class="
+            drac-anchor-secondary btn-toggle d-inline-flex align-items-center border-0 drac-text-purple--hover collapsed"
+            data-bs-toggle="collapse" data-bs-target="#tools-collapse" aria-expanded="false">
+            Tools
+        </a>
+
+        <div class="collapse" id="tools-collapse">
+            <ul class="mb-5 drac-list drac-list-none">
+                    
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/Tools/detector/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Detector
+        </a>
+    </li>
+                    
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/Tools/diagrammer/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Diagrammer
+        </a>
+    </li>
+                    
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/Tools/inlineWritingAssistant/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Inline Writing Assistant
+        </a>
+    </li>
+                    
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/Tools/slideStudio/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Slide Studio
+        </a>
+    </li>
+            </ul>
+        </div>
+    </li>
+                            
+    <li class="drac-box-ternary">
+        <a href="/Markdown/Features/webSearch/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Web Search
+        </a>
+    </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="drac-box">
+                <a href="/."
+                    class="
+                    drac-anchor btn-toggle d-inline-flex align-items-center border-0 drac-text-purple--hover collapsed"
+                    data-bs-toggle="collapse" data-bs-target="#about-collapse" aria-expanded="false">
+                    About
+                </a>
+                <div class="collapse" id="about-collapse">
+                    <ul class="mb-5 drac-list drac-list-none">
+                            
+    <li class="drac-box-ternary">
+        <a href="/Markdown/About/mission/"
+            class="
+            drac-anchor d-inline-flex align-items-center border-0 drac-text-purple--hover">
+            Our Mission
+        </a>
+    </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+        <!-- endblock -->
+    </div>
+</nav>
+        <!-- endblock -->
+
+        <nav class="divider drac-bg-purple-cyan"></nav>
+
+        <div class="content">
+            <!-- block header -->
+                <header>
+    <nav class="navbar navbar-expand-xl drac-bg-purple">
+        <div class="container-fluid">
+            
+            <button class="navbar-toggler w-100 text-center" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsMenu"
+                aria-controls="navbarsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse flex-column ml-auto" id="navbarsMenu">
+                <ul class="navbar-nav text-md-center">
+
+                    <!-- block preview -->
+                    <li class="nav-item">
+                            
+                    </li>
+                    <!--  endblock -->
+
+                    <!-- block search -->
+                    <li class="nav-item"><div role="search" class="search-box">
+	<form id="rtd-search-form" class="wy-form" action="//search.html" method="get">
+		<input type="text" name="q" class="drac-input drac-input-search drac-input-white drac-text-white drac-bg-black-secondary"
+		placeholder="Search docs" title="Type search term here" />
+	</form>
+</div>
+                    </li>
+                    <!--  endblock -->
+
+                    <!-- block source -->
+                    <li class="nav-item">
+                        
+                    </li>
+                    <!--  endblock -->
+
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+</header>
+            <!-- endblock -->
+
+            <!-- block content -->
+    <section class="p-md-5 section-content">
+        <article>
+            <p></p>
+            <h1>404</h1>
+            <hr>
+            <p><strong>Page not found</strong></p>
+        </article>
     </section>
 
-  </div>
+            <!-- endblock -->
 
-  <div class="rst-versions" role="note" aria-label="Versions">
-  <span class="rst-current-version" data-toggle="rst-current-version">
-    
-    
-    
-  </span>
-</div>
-    <script src="/js/jquery-3.6.0.min.js"></script>
-    <script>var base_url = "/";</script>
-    <script src="/js/theme_extra.js"></script>
-    <script src="/js/theme.js"></script>
-      <script src="/search/main.js"></script>
-    <script>
-        jQuery(function () {
-            SphinxRtdTheme.Navigation.enable(true);
-        });
-    </script>
+            <!-- block footer -->
+                <footer>
+    <div class="d-flex flex-sm-row justify-content-between py-2 border-top drac-text-black drac-bg-cyan-green">
+        <a href="https://github.com/dracula/mkdocs" target="_blank" style="padding-left: 1%;"
+            class="footer-text drac-anchor drac-text-black drac-text-purple--hover">
+            Made with Dracula Theme for MkDocs
+        </a>
+    </div>
+</footer>
+            <!-- endblock -->
+        </div>
+
+    </main>
+
+        <script>var base_url = '/';</script>
+        <script src="/assets/js/jquery-3.3.1.slim.min.js"></script>
+        <script src="/assets/js/bootstrap.bundle.min.js"></script>
+        <script src="/assets/js/mkdocs.js"></script>
+			<script src="/search/main.js" defer></script>
 
 </body>
+
 </html>
