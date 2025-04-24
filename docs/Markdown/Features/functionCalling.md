@@ -14,4 +14,4 @@ To view details for each function call, click the down arrow on the right.
 
 ![Conversations](../../img/Docs Images/Features/Function Calling/functionsToggle.png)
 
-Code Interpreter is enabled by default if a remote model is used, but can be disabled in `Settings` -> `Chat` -> `Use Functions`.
+Function calling is enabled by default if a remote model is used, but can be disabled in `Settings` -> `Chat` -> `Use Functions`.
