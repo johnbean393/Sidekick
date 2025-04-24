@@ -12,13 +12,13 @@ When I ask it about `pygame` alternatives, it makes recommendations based on my 
 
 ## Using Memory
 
-As an `Experimental` feature, Memory is turned turned off by default. To turn on `Memory`, navigate to `Settings` -> `Retrieval`, then toggle `Use Memory` to on.
+As an experimental feature, Memory is turned off by default. To turn on `Memory`, navigate to `Settings` -> `Retrieval`, then toggle `Use Memory` to on.
 
 ![Memory](../../img/Docs Images/Features/Memory/memorySettings.png)
 
 ## Remember
 
-Sidekick stores details from your conversations without explicit action. When it finds and stores a useful tidbit, the label `Updated Memory` will be displayed to the upper right of the assistant's message.
+Sidekick stores details from your conversations without explicit action. When it finds and stores a useful tidbit, the label `Memory updated` will be displayed to the upper right of the assistant's message.
 
 ![Memory](../../img/Docs Images/Features/Memory/memoryRemember.png)
 
@@ -28,4 +28,6 @@ Click on the label, then select `Forget` to make Sidekick forget this memory. Al
 
 ## Recall
 
-## Managing Memories
+Sidekick recalls and uses memories automatically in conversations. For example, here, it recalls that I am working on building a variant of Tetris, and comments on `pygame` alternatives in the context of my project.
+
+![Memory](../../img/Docs Images/Features/Memory/memoryUse.png)
