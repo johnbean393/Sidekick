@@ -21,4 +21,4 @@ nav:
     - Web Search: ./Markdown/Features/webSearch.md
   - About:
     - Our Mission: ./Markdown/About/mission.md
-theme: readthedocs
+theme: dracula
