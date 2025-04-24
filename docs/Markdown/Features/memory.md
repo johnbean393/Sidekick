@@ -4,8 +4,28 @@ Sidekick can now remember helpful information between conversations, making its 
 
 For example, I might tell Sidekick that I am a beginner in Python trying to create my own version of Tetris.
 
-![Conversations](../../img/Docs Images/Features/Memory/memoryRemember.png)
+![Memory](../../img/Docs Images/Features/Memory/memoryRemember.png)
 
 When I ask it about `pygame` alternatives, it makes recommendations based on my current project, Tetris.
 
-![Conversations](../../img/Docs Images/Features/Memory/memoryUse.png)
+![Memory](../../img/Docs Images/Features/Memory/memoryUse.png)
+
+## Using Memory
+
+As an `Experimental` feature, Memory is turned turned off by default. To turn on `Memory`, navigate to `Settings` -> `Retrieval`, then toggle `Use Memory` to on.
+
+![Memory](../../img/Docs Images/Features/Memory/memorySettings.png)
+
+## Remember
+
+Sidekick stores details from your conversations without explicit action. When it finds and stores a useful tidbit, the label `Updated Memory` will be displayed to the upper right of the assistant's message.
+
+![Memory](../../img/Docs Images/Features/Memory/memoryRemember.png)
+
+Click on the label, then select `Forget` to make Sidekick forget this memory. Alternatively, click `Manage Memories` to view and manage all memories.
+
+![Memory](../../img/Docs Images/Features/Memory/memories.png)
+
+## Recall
+
+## Managing Memories
