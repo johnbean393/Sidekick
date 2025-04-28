@@ -4,12 +4,12 @@
         <title>Sidekick-beta</title>
         <item>
             <title>1.0.0-rc.10</title>
-            <pubDate>Mon, 28 Apr 2025 23:00:00 +0800</pubDate>
+            <pubDate>Tue, 29 Apr 2025 00:40:00 +0800</pubDate>
             <sparkle:version>30</sparkle:version>
             <sparkle:shortVersionString>1.0.0-rc.10</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
             <enclosure url="https://github.com/johnbean393/Sidekick/releases/download/1.0.0-rc.10/Sidekick.1.0.0-rc.10.dmg"
-            sparkle:edSignature="Lj3MWTFcqN9j3sB67vd0vfWzBMK1dASIjbuLx50t5WeyW9LslLSNz4fETp0mGSqfZV5Rd67J7n0cNz9njR5TDg==" length="160262915"
+            sparkle:edSignature="jVve6cVtUri/sg66VSFG1qY6xI1TkuZKazy/jeFC3iPcTapgETKqUORyWgliaKpyYfOet30/7Rjz6f+7dix5DA==" length="160265124"
             type="application/octet-stream" />
         </item>
         <item>
