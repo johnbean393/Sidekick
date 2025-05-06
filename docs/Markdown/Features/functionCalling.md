@@ -14,4 +14,6 @@ To view details for each function call, click the down arrow on the right.
 
 ![Conversations](../../img/Docs Images/Features/Function Calling/functionsToggle.png)
 
-Function calling is enabled by default if a remote model is used, but can be disabled in `Settings` -> `Chat` -> `Use Functions`.
+Function calling is enabled by default if a remote model is used, but can be disabled in `Settings` -> `Chat` -> `Use Functions`. 
+
+Turn on `Check Functions Completion` to improve performance on long consecutive chains on actions. Note that this will reduce speed.

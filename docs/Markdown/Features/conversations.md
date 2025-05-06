@@ -28,6 +28,8 @@ Sidekick supports a variety of reasoning models, including Alibaba Cloud's QwQ-3
 
 Click the purple header labeled `Reasoning Process` to hide and show the reasoning process.
 
+When using hybrid reasoning models such as Qwen3, reasoning can be toggled on/off. As you type your prompt, Sidekick automatically analyses it and determines if reasoning is needed. To explicitly toggle reasoning, click the `Reason` button in the prompt bar.
+
 ## Advanced Markdown Rendering
 
 Markdown is rendered beautifully in Sidekick.
