@@ -7,6 +7,7 @@ nav:
   - Features:
     - Canvas: ./Markdown/Features/canvas.md
     - Conversations: ./Markdown/Features/conversations.md
+    - Deep Research: ./Markdown/Features/deepResearch.md
     - Experts: ./Markdown/Features/experts.md
     - Function Calling: ./Markdown/Features/functionCalling.md
     - Image Generation: ./Markdown/Features/imageGeneration.md
