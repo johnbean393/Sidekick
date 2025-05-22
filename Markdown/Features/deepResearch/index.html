@@ -5,15 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../../../img/favicon.ico" />
-    <title>Local Models - Sidekick</title>
+    <title>Deep Research - Sidekick</title>
     <link rel="stylesheet" href="../../../css/theme.css" />
     <link rel="stylesheet" href="../../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Local Models";
-        var mkdocs_page_input_path = "Markdown/Features/localModels.md";
+        var mkdocs_page_name = "Deep Research";
+        var mkdocs_page_input_path = "Markdown/Features/deepResearch.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -54,7 +54,11 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../conversations/">Conversations</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../deepResearch/">Deep Research</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Deep Research</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#using-deep-research">Using Deep Research</a>
+    </li>
+    </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../experts/">Experts</a>
                   </li>
@@ -62,23 +66,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../imageGeneration/">Image Generation</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Local Models</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#adding-a-model">Adding a Model</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#using-speculative-decoding">Using Speculative Decoding</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#selecting-a-model">Selecting a Model</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#main-model">Main Model</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#worker-model">Worker Model</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#draft-model">Draft Model</a>
-    </li>
-        </ul>
-    </li>
-    </ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../localModels/">Local Models</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../memory/">Memory</a>
                   </li>
@@ -119,7 +107,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
           <li class="breadcrumb-item">Features</li>
-      <li class="breadcrumb-item active">Local Models</li>
+      <li class="breadcrumb-item active">Deep Research</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -128,37 +116,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="local-models">Local Models</h1>
-<h2 id="adding-a-model">Adding a Model</h2>
-<p>To add a local model, navigate to <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Inference</code> -&gt; <code>Models</code> ,then click the <code>Manage</code> button to the right of the current model name.</p>
-<p><img alt="Local Models" src="../../../img/Docs%20Images/Features/Local%20Models/speculativeDecodingSupport.png" /></p>
-<p>If you have already downloaded a <code>GGUF</code> model, click the <code>Add Model</code> button and select the <code>GGUF</code> model you have downloaded.</p>
-<p><img alt="Local Models" src="../../../img/Docs%20Images/Features/Local%20Models/modelSelector.png" /></p>
-<p>If you are looking for a model, click the <code>Download Model</code> button. This will open a new window where you can select the model you want to download.</p>
-<p><img alt="Local Models" src="../../../img/Docs%20Images/Features/Local%20Models/modelLibrary.png" /></p>
-<h2 id="using-speculative-decoding">Using Speculative Decoding</h2>
-<p>Speculative decoding is a technique that speeds up the inference process by running a smaller "draft model" in parallel with the main model.</p>
-<p>To enable speculative decoding, flip the toggle in <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Inference</code>.</p>
-<p><img alt="Local Models" src="../../../img/Docs%20Images/Features/Local%20Models/speculativeDecodingSupport.png" /></p>
-<h2 id="selecting-a-model">Selecting a Model</h2>
-<p>You can choose 3 local models, a main model, a worker model, and a draft model for speculative decoding. </p>
-<p>To select a model, navigate to <code>Sidekick</code> -&gt; <code>Settings</code> -&gt; <code>Inference</code> -&gt; <code>Models</code>, then click the <code>Manage</code> button to the right of the model's name.</p>
-<p><img alt="Local Models" src="../../../img/Docs%20Images/Features/Local%20Models/speculativeDecodingSupport.png" /></p>
-<h3 id="main-model">Main Model</h3>
-<p>This is the main model that powers most work in Sidekick, such as chat, most tools and more.</p>
-<p>In addition to Sidekick Settings, the local model can also be selected from the main window. Click the brain icon on the right hand side of the toolbar, and a menu will appear with a list of local models. Click on a model's name to select it.</p>
-<p><img alt="Local Models" src="../../../img/Docs%20Images/Features/Local%20Models/modelToolbarMenu.png" /></p>
-<h3 id="worker-model">Worker Model</h3>
-<p>The worker model is used for simple tasks that demand speed and responsiveness, but can accept trade-offs in quality. This includes automatic conversation titles generation and commands in Inline Writing Assistant.</p>
-<p>Ideally, a worker model should be fast and cheap to run. As a result, reasoning models are not recommended.</p>
-<h3 id="draft-model">Draft Model</h3>
-<p>The draft model is used for speculative decoding. It should be in the same family as the main model, but with dramatically fewer parameters. This draft model <strong>must</strong> share the same tokenizer as the main model.</p>
+                <h1 id="deep-research">Deep Research</h1>
+<p>Deep Research is an agent that uses reasoning and web search to synthesize large amounts of online information and complete multi-step research tasks for you.</p>
+<h2 id="using-deep-research">Using Deep Research</h2>
+<p>To activate Deep Research, navigate to the prompt bar, click the down arrow next to the <code>Search</code> button, the select <code>Deep Research</code>. </p>
+<p><img alt="Deep Research" src="../../../img/Docs%20Images/Features/Deep%20Research/deepResearchActivation.png" /></p>
+<p>Next, write a prompt for your research topic. Note that since Deep Research can take 25-45 minutes, it is worth taking the time to perfect your prompt and make your intent explicit to the agent.</p>
+<p>You might be asked follow up questions to refine your research topic.</p>
+<p><img alt="Deep Research" src="../../../img/Docs%20Images/Features/Deep%20Research/deepResearchFollowUp.png" /></p>
+<p>Once the research topic is clarified, Sidekick will conduct research in an agentic loop. Progress can be viewed in the preview. </p>
+<p><img alt="Deep Research" src="../../../img/Docs%20Images/Features/Deep%20Research/deepResearchProgress.png" /></p>
+<p>The research report will likely be complete in 25-45 minutes, and can be viewed in the chat window.</p>
+<p><img alt="Deep Research" src="../../../img/Docs%20Images/Features/Deep%20Research/deepResearchReport.png" /></p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../imageGeneration/" class="btn btn-neutral float-left" title="Image Generation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../memory/" class="btn btn-neutral float-right" title="Memory">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../conversations/" class="btn btn-neutral float-left" title="Conversations"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../experts/" class="btn btn-neutral float-right" title="Experts">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -181,10 +156,10 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../imageGeneration/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../conversations/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../memory/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../experts/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
