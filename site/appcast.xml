@@ -3,6 +3,26 @@
     <channel>
         <title>Sidekick-beta</title>
         <item>
+            <title>1.0.0-rc.14</title>
+            <pubDate>Tue, 04 Nov 2025 20:30:00 -0500</pubDate>
+            <sparkle:version>34</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-rc.14</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/johnbean393/Sidekick/releases/download/1.0.0-rc.14/Sidekick.1.0.0-rc.14.dmg"
+            sparkle:edSignature="fG6roQC75ZVI858yIGHIMtvChwmJB7hkNzb4ZsfiFrkISJFG6ukLzjKtkYlXJuDxo9Kha9QQ0aKJP2QmQvpVAg==" length="93708921"
+            type="application/octet-stream" />
+        </item>
+        <item>
+            <title>1.0.0-rc.13</title>
+            <pubDate>Tue, 08 Jul 2025 03:30:00 +0800</pubDate>
+            <sparkle:version>33</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-rc.13</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/johnbean393/Sidekick/releases/download/1.0.0-rc.13/Sidekick.1.0.0-rc.13.dmg"
+            sparkle:edSignature="qj+7njfBNFLvYr614p9njiEnXZzNVPz0IefceLsnCbDFHwrnyE+/vRvowUJmTTjOxTLJJMeV3IvFZCa4uzrxBA==" length="99885388"
+            type="application/octet-stream" />
+        </item>
+        <item>
             <title>1.0.0-rc.12</title>
             <pubDate>Wed, 21 May 2025 15:50:00 +0800</pubDate>
             <sparkle:version>32</sparkle:version>
