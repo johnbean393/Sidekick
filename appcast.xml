@@ -3,6 +3,16 @@
     <channel>
         <title>Sidekick-beta</title>
 		<item>
+			<title>1.0.0-rc.16</title>
+			<pubDate>Mon, 17 Nov 2025 14:05:00 -0500</pubDate>
+			<sparkle:version>36</sparkle:version>
+			<sparkle:shortVersionString>1.0.0-rc.16</sparkle:shortVersionString>
+			<sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+			<enclosure url="https://github.com/johnbean393/Sidekick/releases/download/1.0.0-rc.16/Sidekick.1.0.0-rc.16.dmg"
+			sparkle:edSignature="TBIvSbntXfr2izAuO9oAwmPmfB0SFMxZLjYQVQWMERl9tdYM8y0kx8xwyEYOUZgebAwyUzUaIqXmDjqBg+t6CA==" length="173286568"
+			type="application/octet-stream" />
+		</item>
+		<item>
 			<title>1.0.0-rc.15</title>
 			<pubDate>Mon, 10 Nov 2025 03:00:07 -0500</pubDate>
 			<sparkle:version>35</sparkle:version>
