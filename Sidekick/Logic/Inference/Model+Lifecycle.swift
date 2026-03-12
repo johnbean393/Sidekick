@@ -20,6 +20,7 @@ extension Model {
     }
     
     public func refreshModel() async {
+        self.startupTask?.cancel()
         // Restart servers if needed
         await self.stopServers()
         self.mainModelServer = LlamaServer(
@@ -31,6 +32,7 @@ extension Model {
         )
         let canReachRemoteServer: Bool = await self.remoteServerIsReachable()
         self.wasRemoteServerAccessible = canReachRemoteServer
+        self.scheduleLocalWarmup(using: canReachRemoteServer)
     }
     
     // MARK: - Token Counting
@@ -111,6 +113,8 @@ extension Model {
     // MARK: - Server Lifecycle
     
     func stopServers() async {
+        self.startupTask?.cancel()
+        self.startupTask = nil
         await self.mainModelServer.stopServer()
         await self.workerModelServer.stopServer()
         self.status = .cold
@@ -125,7 +129,59 @@ extension Model {
         self.pendingMessage = nil
         self.status = .ready
     }
+
+    // MARK: - Startup Warmup
+
+    func scheduleStartupWarmup() {
+        self.startupTask?.cancel()
+        self.startupTask = Task(priority: .utility) { [weak self] in
+            guard let self else { return }
+            let signpost = StartupMetrics.begin("Model.remoteProbe")
+            let canReachRemoteServer = await self.remoteServerIsReachable()
+            StartupMetrics.end("Model.remoteProbe", signpost)
+            await self.prewarmLocalServersIfNeeded(
+                canReachRemoteServer: canReachRemoteServer
+            )
+        }
+    }
+
+    private func scheduleLocalWarmup(using canReachRemoteServer: Bool) {
+        self.startupTask?.cancel()
+        self.startupTask = Task(priority: .utility) { [weak self] in
+            guard let self else { return }
+            await self.prewarmLocalServersIfNeeded(
+                canReachRemoteServer: canReachRemoteServer
+            )
+        }
+    }
+
+    private func prewarmLocalServersIfNeeded(
+        canReachRemoteServer: Bool
+    ) async {
+        guard !Task.isCancelled else { return }
+        let shouldUseLocalServers: Bool = !InferenceSettings.useServer || !canReachRemoteServer
+        guard shouldUseLocalServers else { return }
+        let hasMainLocalModel: Bool = Settings.modelUrl?.fileExists ?? false
+        let hasDedicatedWorkerModel: Bool = InferenceSettings.workerModelUrl?.fileExists ?? false
+        let signpost = StartupMetrics.begin("Model.localWarmup")
+        defer {
+            StartupMetrics.end("Model.localWarmup", signpost)
+            self.startupTask = nil
+        }
+        async let mainWarmup: Void = {
+            guard hasMainLocalModel else { return }
+            try? await self.mainModelServer.startServer(
+                canReachRemoteServer: canReachRemoteServer
+            )
+        }()
+        async let workerWarmup: Void = {
+            guard hasDedicatedWorkerModel else { return }
+            try? await self.workerModelServer.startServer(
+                canReachRemoteServer: canReachRemoteServer
+            )
+        }()
+        let _ = await (mainWarmup, workerWarmup)
+    }
     
 }
-
 

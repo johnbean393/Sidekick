@@ -64,13 +64,7 @@ public class Model: ObservableObject {
         self.workerModelServer = LlamaServer(
             modelType: .worker
         )
-        // Probe remote connectivity without blocking the main actor
-        Task.detached(priority: .userInitiated) { [weak self] in
-            guard let self else { return }
-            let signpost = StartupMetrics.begin("Model.remoteProbe")
-            defer { StartupMetrics.end("Model.remoteProbe", signpost) }
-            let _ = await self.remoteServerIsReachable()
-        }
+        self.scheduleStartupWarmup()
     }
     
     // MARK: - Model Selection

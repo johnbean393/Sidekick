@@ -226,10 +226,8 @@ extension LlamaServer {
         var timeout = 30 // Timeout after 30 seconds
         let tick = 1 // Check every second
         while true {
-            await serverHealth.check()
             let score = await serverHealth.score
             if score >= 0.25 { break }
-            await serverHealth.check()
             try await Task.sleep(for: .seconds(tick))
             timeout -= tick
             if timeout <= 0 {
@@ -237,6 +235,7 @@ extension LlamaServer {
                 // Display error
                 throw LlamaServerError.modelError
             }
+            await serverHealth.check()
         }
     }
     

@@ -88,37 +88,40 @@ extension Model {
         switch mode {
             case .`default`:
                 if modelType == .worker {
-                    do {
-                        response = try await self.workerModelServer.getChatCompletion(
-                            mode: mode,
-                            canReachRemoteServer: canReachRemoteServer,
-                            messages: messagesWithSources,
-                            progressHandler: { partialResponse in
-                                DispatchQueue.main.async {
-                                    // Update response
-                                    self.handleCompletionProgress(
-                                        showPreview: showPreview,
-                                        partialResponse: partialResponse,
-                                        handleResponseUpdate: handleResponseUpdate
-                                    )
-                                }
-                            }
-                        )
-                    } catch {
+                    let shouldUseDedicatedWorkerServer: Bool = (
+                        canReachRemoteServer && InferenceSettings.useServer
+                    ) || (InferenceSettings.workerModelUrl?.fileExists ?? false)
+                    let progressHandler: @Sendable (String) -> Void = { partialResponse in
+                        DispatchQueue.main.async {
+                            self.handleCompletionProgress(
+                                showPreview: showPreview,
+                                partialResponse: partialResponse,
+                                handleResponseUpdate: handleResponseUpdate
+                            )
+                        }
+                    }
+                    if shouldUseDedicatedWorkerServer {
+                        do {
+                            response = try await self.workerModelServer.getChatCompletion(
+                                mode: mode,
+                                canReachRemoteServer: canReachRemoteServer,
+                                messages: messagesWithSources,
+                                progressHandler: progressHandler
+                            )
+                        } catch {
+                            response = try await self.mainModelServer.getChatCompletion(
+                                mode: mode,
+                                canReachRemoteServer: canReachRemoteServer,
+                                messages: messagesWithSources,
+                                progressHandler: progressHandler
+                            )
+                        }
+                    } else {
                         response = try await self.mainModelServer.getChatCompletion(
                             mode: mode,
                             canReachRemoteServer: canReachRemoteServer,
                             messages: messagesWithSources,
-                            progressHandler: { partialResponse in
-                                DispatchQueue.main.async {
-                                    // Update response
-                                    self.handleCompletionProgress(
-                                        showPreview: showPreview,
-                                        partialResponse: partialResponse,
-                                        handleResponseUpdate: handleResponseUpdate
-                                    )
-                                }
-                            }
+                            progressHandler: progressHandler
                         )
                     }
                 } else {
@@ -762,5 +765,3 @@ Respond with YES if ALL 3 criteria above have been met. Respond with YES or NO o
     }
     
 }
-
-

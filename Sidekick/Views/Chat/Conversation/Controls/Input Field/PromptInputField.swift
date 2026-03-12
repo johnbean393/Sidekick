@@ -516,18 +516,8 @@ struct PromptInputField: View {
         self.model.setSentConversationId(conversation.id)
         // Generate title & update again
         let isFirstMessage: Bool = conversation.messages.count <= 1
-        if Settings.generateConversationTitles && isFirstMessage {
-            self.model.indicateStartedNamingConversation()
-            // Title generation uses worker model; indexing operations will yield when they detect this status
-            if let title = try? await self.generateConversationTitle(
-                prompt: prompt
-            ), !title.isEmpty {
-                conversation.title = title
-            }
-            withAnimation(.linear) {
-                self.conversationManager.update(conversation)
-            }
-        }
+        let shouldGenerateConversationTitle: Bool = Settings.generateConversationTitles && isFirstMessage
+        let initialConversationTitle: String = conversation.title
         // Get response
         var response: LlamaServer.CompleteResponse
         var didUseSources: Bool = false
@@ -606,6 +596,30 @@ struct PromptInputField: View {
             // Reset sentConversation
             self.promptController.sentConversation = nil
         }
+        if shouldGenerateConversationTitle {
+            let conversationId: UUID = conversation.id
+            Task {
+                guard let title = try? await self.generateConversationTitle(
+                    prompt: prompt
+                ), !title.isEmpty else {
+                    return
+                }
+                await MainActor.run {
+                    guard var existingConversation = self.conversationManager.getConversation(
+                        id: conversationId
+                    ) else {
+                        return
+                    }
+                    guard existingConversation.title == initialConversationTitle else {
+                        return
+                    }
+                    existingConversation.title = title
+                    withAnimation(.linear) {
+                        self.conversationManager.update(existingConversation)
+                    }
+                }
+            }
+        }
         // Memorize content if needed
         if RetrievalSettings.useMemory,
            let assistantMessage: Message = conversation.messages.last,
@@ -623,6 +637,17 @@ struct PromptInputField: View {
     private func generateConversationTitle(
         prompt: String
     ) async throws -> String? {
+        let canReachRemoteServer: Bool = await model.remoteServerIsReachable()
+        let usingRemoteModel: Bool = canReachRemoteServer && InferenceSettings.useServer
+        let hasDedicatedWorkerModel: Bool = {
+            guard let workerModelUrl = InferenceSettings.workerModelUrl else {
+                return false
+            }
+            return FileManager.default.fileExists(
+                atPath: workerModelUrl.path
+            )
+        }()
+        let targetServer: LlamaServer = (usingRemoteModel || hasDedicatedWorkerModel) ? model.workerModelServer : model.mainModelServer
         // Formulate messages
         let generateTitleMessage: Message = Message(
             text: """
@@ -635,11 +660,18 @@ A user is chatting with an assistant and they have sent the message below. Gener
         let messages: [Message] = [
             generateTitleMessage
         ]
+        let messageSubsets: [Message.MessageSubset] = await messages.asyncMap { message in
+            await Message.MessageSubset(
+                modelType: .worker,
+                usingRemoteModel: usingRemoteModel,
+                message: message
+            )
+        }
         // Generate
-        let title: String = try await model.listenThinkRespond(
-            messages: messages,
-            modelType: .worker,
-            mode: .default
+        let title: String = try await targetServer.getChatCompletion(
+            mode: .default,
+            canReachRemoteServer: canReachRemoteServer,
+            messages: messageSubsets
         ).text
         // Reset pending message text
         self.model.pendingMessage = nil
