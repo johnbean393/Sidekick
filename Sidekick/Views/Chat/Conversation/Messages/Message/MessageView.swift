@@ -6,15 +6,12 @@
 //
 
 import AppKit
-import MarkdownUI
-import Splash
 import SwiftUI
 
 struct MessageView: View {
 	
     @Environment(\.openWindow) var openWindow
     
-	@EnvironmentObject private var model: Model
 	@EnvironmentObject private var conversationManager: ConversationManager
 	@EnvironmentObject private var conversationState: ConversationState
 	@EnvironmentObject private var promptController: PromptController
@@ -25,6 +22,7 @@ struct MessageView: View {
 	
     var message: Message
     var shimmer: Bool = false
+    var deprioritizeStreamingUpdates: Bool = false
     
     private var isGenerating: Bool {
         return !message.outputEnded && message.getSender() == .assistant
@@ -121,9 +119,6 @@ struct MessageView: View {
                 message: message,
                 canEdit: !self.isGenerating
             )
-            if self.isGenerating {
-                stopButton
-            }
             if hasMemories, let memory {
                 Spacer()
                 // Show memory updated
@@ -165,7 +160,7 @@ struct MessageView: View {
 		Group {
 			// Check for blank message or function calls
 			if message.text.isEmpty && message.imageUrl == nil && message
-                .getSender() == .assistant && !model.status.isWorking {
+                .getSender() == .assistant && self.message.outputEnded {
 				RegenerateButton {
 					self.retryGeneration(
                         message: message
@@ -177,7 +172,8 @@ struct MessageView: View {
                 MessageContentView(
                     message: self.message,
                     isEditing: self.$isEditing,
-                    shimmer: self.shimmer
+                    shimmer: self.shimmer,
+                    deprioritizeStreamingUpdates: self.deprioritizeStreamingUpdates
                 )
 			}
 		}
@@ -198,30 +194,11 @@ struct MessageView: View {
 			.padding(.vertical, 2)
 	}
 	
-	var stopButton: some View {
-		StopGenerationButton {
-			self.stopGeneration()
-		}
-		.disabled(!isGenerating)
-		.padding(0)
-		.padding(.vertical, 2)
-	}
-	
 	var copyButton: some View {
 		Button {
 			self.message.text.copyWithFormatting()
 		} label: {
 			Text("Copy to Clipboard")
-		}
-	}
-	
-	/// Function to stop generation
-	private func stopGeneration() {
-		Task.detached { @MainActor in
-			await self.model.interrupt()
-			self.retryGeneration(
-                message: message
-            )
 		}
 	}
 	

@@ -597,7 +597,22 @@ public extension String {
     }
     
     func index(atDistance distance: Int) -> String.Index {
-        return index(startIndex, offsetBy: distance)
+        return index(
+            startIndex,
+            offsetBy: max(0, min(distance, count))
+        )
+    }
+
+    func index(utf16Distance distance: Int) -> String.Index {
+        let clampedDistance = max(0, min(distance, self.utf16.count))
+        let utf16Index = self.utf16.index(
+            self.utf16.startIndex,
+            offsetBy: clampedDistance
+        )
+        return String.Index(
+            utf16Index,
+            within: self
+        ) ?? self.endIndex
     }
     
     /// Extract parameter count from model name for sorting

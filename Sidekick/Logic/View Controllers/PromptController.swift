@@ -30,7 +30,7 @@ public class PromptController: ObservableObject, DropDelegate {
     @Published var imageConcept: String? = nil
     
     @Published var didManuallyToggleReasoning: Bool = false
-    @Published var useReasoning: Bool = false
+    @Published var useReasoning: Bool = InferenceSettings.localModelSupportsLiveReasoningToggle()
     
     @Published var useWebSearch: Bool = false
     @Published var selectedSearchState: SearchState = .search
@@ -54,6 +54,13 @@ public class PromptController: ObservableObject, DropDelegate {
     /// A `Bool` representing whether resources will be passed to the chatbot
     public var hasResources: Bool {
         !tempResources.isEmpty
+    }
+
+    func resetReasoningToDefault(
+        reasoningAvailable: Bool? = nil
+    ) {
+        self.didManuallyToggleReasoning = false
+        self.useReasoning = reasoningAvailable ?? InferenceSettings.localModelSupportsLiveReasoningToggle()
     }
     
     private var audioEngine: AVAudioEngine = AVAudioEngine()

@@ -74,6 +74,8 @@ struct MultilineTextField: NSViewRepresentable {
         let coordinator = context.coordinator
         let isFirstResponder = textView.window?.firstResponder == textView
         let hasMarkedText = textView.hasMarkedText()
+        let currentTextLength = (textView.string as NSString).length
+        let clampedInsertionPoint = max(0, min(insertionPoint, currentTextLength))
         let desiredTextColor: NSColor = .labelColor
         let desiredInsertionColor: NSColor = .controlAccentColor
         if textView.textColor != desiredTextColor {
@@ -88,34 +90,45 @@ struct MultilineTextField: NSViewRepresentable {
             textView.typingAttributes = attributes
         }
         
-        // Save current scroll position
-        let currentScrollPosition = nsView.contentView.bounds.origin
-        
         // Update the callback
         textView.onImageDrop = context.coordinator.onImageDrop
-        
-        // Enable scroll position preservation during programmatic updates
-        textView.shouldPreserveScrollPosition = true
-        
-        // Only update if not editing (or not composing)
-        if !isFirstResponder || !hasMarkedText {
+
+        let isExternalTextChange = textView.string != text && (
+            !isFirstResponder ||
+            hasMarkedText ||
+            text.isEmpty ||
+            abs((text as NSString).length - currentTextLength) > 1
+        )
+        let shouldRestoreScrollPosition = isExternalTextChange && !isFirstResponder
+        let currentScrollPosition = nsView.contentView.bounds.origin
+
+        textView.shouldPreserveScrollPosition = shouldRestoreScrollPosition
+
+        if isExternalTextChange {
             if textView.string != text {
                 coordinator.isProgrammaticUpdate = true
                 textView.string = text
             }
-            if textView.selectedRange.location != insertionPoint {
+            let updatedTextLength = (textView.string as NSString).length
+            let updatedInsertionPoint = max(0, min(insertionPoint, updatedTextLength))
+            if textView.selectedRange.location != updatedInsertionPoint {
                 coordinator.isProgrammaticUpdate = true
-                textView.setSelectedRange(NSRange(location: insertionPoint, length: 0))
+                textView.setSelectedRange(NSRange(location: updatedInsertionPoint, length: 0))
             }
+        } else if textView.selectedRange.location != clampedInsertionPoint {
+            coordinator.isProgrammaticUpdate = true
+            textView.setSelectedRange(NSRange(location: clampedInsertionPoint, length: 0))
         }
         textView.setPrompt(prompt)
         textView.invalidateIntrinsicContentSize()
         nsView.invalidateIntrinsicContentSize()
-        
-        // Restore scroll position after layout update
-        DispatchQueue.main.async {
-            nsView.contentView.scroll(to: currentScrollPosition)
-            // Re-enable automatic scrolling for user interactions
+
+        if shouldRestoreScrollPosition {
+            DispatchQueue.main.async {
+                nsView.contentView.scroll(to: currentScrollPosition)
+                textView.shouldPreserveScrollPosition = false
+            }
+        } else {
             textView.shouldPreserveScrollPosition = false
         }
     }
@@ -145,11 +158,9 @@ struct MultilineTextField: NSViewRepresentable {
                 return
             }
             let newString = textView.string
-            let cursor = textView.selectedRange.location
-            withAnimation(.linear) {
-                parent.text = newString
-                parent.insertionPoint = cursor
-            }
+            let cursor = max(0, min(textView.selectedRange.location, (newString as NSString).length))
+            parent.text = newString
+            parent.insertionPoint = cursor
             textView.invalidateIntrinsicContentSize()
             textView.enclosingScrollView?.invalidateIntrinsicContentSize()
         }
@@ -162,7 +173,7 @@ struct MultilineTextField: NSViewRepresentable {
                 isProgrammaticUpdate = false
                 return
             }
-            let cursor = textView.selectedRange.location
+            let cursor = max(0, min(textView.selectedRange.location, (textView.string as NSString).length))
             if parent.insertionPoint != cursor {
                 parent.insertionPoint = cursor
             }
@@ -239,11 +250,7 @@ class PromptingTextView: NSTextView {
     func setPrompt(
         _ prompt: String
     ) {
-        DispatchQueue.main.async {
-            withAnimation(.linear) {
-                self.prompt = prompt
-            }
-        }
+        self.prompt = prompt
         needsDisplay = true
     }
     

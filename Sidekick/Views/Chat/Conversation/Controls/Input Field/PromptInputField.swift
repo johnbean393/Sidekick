@@ -39,6 +39,7 @@ struct PromptInputField: View {
     // NSEvent monitor token
     @State private var keyEventMonitor: Any?
     @State private var delayedClearTask: DispatchWorkItem?
+    @State private var lastShowReasoningToggle: Bool = false
     
     var selectedConversation: Conversation? {
         guard let selectedConversationId = conversationState.selectedConversationId else {
@@ -91,7 +92,7 @@ struct PromptInputField: View {
                 of: conversationState.selectedConversationId
             ) {
                 self.isFocused = true
-                self.promptController.didManuallyToggleReasoning = false
+                self.handleModelChange(forceDefault: true)
             }
             .onChange(
                 of: conversationState.selectedExpertId
@@ -118,6 +119,7 @@ struct PromptInputField: View {
             .onAppear {
                 self.isFocused = true
                 self.setupKeyEventMonitor()
+                self.handleModelChange(forceDefault: true)
             }
             .onDisappear {
                 self.removeKeyEventMonitor()
@@ -235,7 +237,7 @@ struct PromptInputField: View {
             } else if isShiftKeyDown || isOptionKeyDown || (self.useCommandReturn && noModifiers) {
                 // Insert newline at cursor
                 let index: String.Index = self.promptController.prompt.index(
-                    atDistance: self.promptController.insertionPoint
+                    utf16Distance: self.promptController.insertionPoint
                 )
                 DispatchQueue.main.async {
                     withAnimation {
@@ -377,7 +379,7 @@ struct PromptInputField: View {
     
     private func clearInputs() {
         DispatchQueue.main.async {
-            self.promptController.didManuallyToggleReasoning = false
+            self.handleModelChange(forceDefault: true)
             self.promptController.prompt.removeAll()
             self.promptController.insertionPoint = 0
         }
@@ -776,12 +778,24 @@ A user is chatting with an assistant and they have sent the message below. Gener
         return success
     }
     
-    private func handleModelChange() {
-        guard !self.showReasoningToggle else {
+    private func handleModelChange(
+        forceDefault: Bool = false
+    ) {
+        let showReasoningToggle = self.showReasoningToggle
+        defer {
+            self.lastShowReasoningToggle = showReasoningToggle
+        }
+        guard !showReasoningToggle else {
+            if forceDefault || !self.lastShowReasoningToggle || !self.promptController.didManuallyToggleReasoning {
+                self.promptController.resetReasoningToDefault(
+                    reasoningAvailable: true
+                )
+            }
             return
         }
-        self.promptController.useReasoning = false
-        self.promptController.didManuallyToggleReasoning = false
+        self.promptController.resetReasoningToDefault(
+            reasoningAvailable: false
+        )
     }
     
     private func scheduleDelayedClear() {

@@ -3905,8 +3905,15 @@
         }
       }
     },
-    "Reasoning" : {
-
+    "Reason" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "思考"
+          }
+        }
+      }
     },
     "Reasoning Process" : {
       "localizations" : {
@@ -4262,7 +4269,14 @@
       }
     },
     "Save as PNG" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存为图片"
+          }
+        }
+      }
     },
     "Save as Text" : {
       "localizations" : {

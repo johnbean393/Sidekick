@@ -45,7 +45,7 @@ struct ChatPromptEditor: View {
     
     var body: some View {
         MultilineTextField(
-            text: self.$promptController.prompt.animation(.linear),
+            text: self.$promptController.prompt,
             insertionPoint: self.$promptController.insertionPoint,
             prompt: sendDescription,
             onImageDrop: { url in

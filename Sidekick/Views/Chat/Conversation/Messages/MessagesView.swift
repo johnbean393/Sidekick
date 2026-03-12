@@ -5,8 +5,9 @@
 //  Created by Bean John on 10/8/24.
 //
 
-import SwiftUI
 import AppKit
+import Combine
+import SwiftUI
 
 struct MessagesView: View {
     
@@ -14,12 +15,13 @@ struct MessagesView: View {
     
     @EnvironmentObject private var model: Model
     @EnvironmentObject private var conversationManager: ConversationManager
-    @EnvironmentObject private var expertManager: ExpertManager
     @EnvironmentObject private var conversationState: ConversationState
     
     @State private var scrollViewProxy: NSScrollView?
     @State private var savedScrollPosition: CGPoint?
     @State private var wasShowingPreview: Bool = false
+    @State private var isActivelyScrolling: Bool = false
+    @State private var scrollResetTask: DispatchWorkItem?
     
     var selectedConversation: Conversation? {
         guard let selectedConversationId = conversationState.selectedConversationId else {
@@ -34,20 +36,21 @@ struct MessagesView: View {
         return self.selectedConversation?.messages ?? []
     }
     
-    var shouldShowPreview: Bool {
-        let statusPass: Bool = self.model.status.isWorking && self.model.status != .backgroundTask
-        let conversationPass: Bool = self.selectedConversation?.id == self.model.sentConversationId
-        return statusPass && conversationPass
-    }
-    
     var body: some View {
         ScrollView {
             HStack(alignment: .top) {
                 LazyVStack(alignment: .leading, spacing: 13) {
                     Group {
                         self.messagesView
-                        if self.shouldShowPreview {
-                            self.model.pendingMessageView
+                        PendingMessageHost(
+                            model: self.model,
+                            conversationId: self.selectedConversation?.id,
+                            isActivelyScrolling: self.isActivelyScrolling
+                        ) { oldValue, newValue in
+                            self.handlePreviewVisibilityChange(
+                                oldValue: oldValue,
+                                newValue: newValue
+                            )
                         }
                     }
                 }
@@ -57,19 +60,39 @@ struct MessagesView: View {
             }
         }
         .background(NSScrollViewAccessor(scrollView: $scrollViewProxy))
-        .onChange(of: shouldShowPreview) { oldValue, newValue in
-            // When preview is showing, continuously track scroll position
-            if newValue {
-                wasShowingPreview = true
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSScrollView.willStartLiveScrollNotification
+            )
+        ) { output in
+            guard let scrollView = output.object as? NSScrollView,
+                  scrollView === self.scrollViewProxy else {
+                return
             }
-            
-            // When preview disappears (message generation finishes)
-            if oldValue && !newValue {
-                // Save the current scroll position before the view updates
-                if let scrollView = scrollViewProxy {
-                    savedScrollPosition = scrollView.documentVisibleRect.origin
-                }
+            self.scrollResetTask?.cancel()
+            self.isActivelyScrolling = true
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSScrollView.didLiveScrollNotification
+            )
+        ) { output in
+            guard let scrollView = output.object as? NSScrollView,
+                  scrollView === self.scrollViewProxy else {
+                return
             }
+            self.scheduleScrollReset()
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSScrollView.didEndLiveScrollNotification
+            )
+        ) { output in
+            guard let scrollView = output.object as? NSScrollView,
+                  scrollView === self.scrollViewProxy else {
+                return
+            }
+            self.scheduleScrollReset(delay: 0.05)
         }
         .onChange(of: messages.count) { oldCount, newCount in
             // When a message finishes generating and is added to the array
@@ -96,7 +119,184 @@ struct MessagesView: View {
                 .id(message.id)
         }
     }
+
+    private func scheduleScrollReset(
+        delay: TimeInterval = 0.12
+    ) {
+        self.scrollResetTask?.cancel()
+        let task = DispatchWorkItem {
+            self.isActivelyScrolling = false
+            self.scrollResetTask = nil
+        }
+        self.scrollResetTask = task
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + delay,
+            execute: task
+        )
+    }
+
+    private func handlePreviewVisibilityChange(
+        oldValue: Bool,
+        newValue: Bool
+    ) {
+        if newValue {
+            self.wasShowingPreview = true
+        }
+        if oldValue && !newValue, let scrollView = self.scrollViewProxy {
+            self.savedScrollPosition = scrollView.documentVisibleRect.origin
+        }
+    }
     
+}
+
+private struct PendingMessageHost: View {
+
+    @StateObject private var presenter: PendingMessagePresenter = .init()
+
+    let model: Model
+    let conversationId: UUID?
+    let isActivelyScrolling: Bool
+    let onVisibilityChange: (Bool, Bool) -> Void
+
+    var body: some View {
+        let snapshot = self.presenter.snapshot
+        Group {
+            if snapshot.isVisible {
+                switch snapshot.contentType {
+                    case .text, .indicator:
+                        MessageView(
+                            message: snapshot.message,
+                            shimmer: snapshot.contentType == .indicator,
+                            deprioritizeStreamingUpdates: self.isActivelyScrolling
+                        )
+                        .id(snapshot.message.id)
+                    case .preview:
+                        snapshot.preview
+                }
+            }
+        }
+        .onAppear {
+            self.presenter.configure(
+                model: self.model,
+                conversationId: self.conversationId
+            )
+            self.presenter.setScrolling(
+                self.isActivelyScrolling
+            )
+        }
+        .onChange(of: self.presenter.snapshot.isVisible) { oldValue, newValue in
+            self.onVisibilityChange(oldValue, newValue)
+        }
+        .onChange(of: self.conversationId) { _, newValue in
+            self.presenter.configure(
+                model: self.model,
+                conversationId: newValue
+            )
+        }
+        .onChange(of: self.isActivelyScrolling) { _, newValue in
+            self.presenter.setScrolling(newValue)
+        }
+    }
+
+}
+
+@MainActor
+private final class PendingMessagePresenter: ObservableObject {
+
+    struct Snapshot {
+        var isVisible: Bool
+        var message: Message
+        var contentType: Model.DisplayedContentType
+        var preview: AnyView
+
+        static let hidden: Self = .init(
+            isVisible: false,
+            message: Message(text: "", sender: .assistant),
+            contentType: .indicator,
+            preview: AnyView(EmptyView())
+        )
+    }
+
+    @Published private(set) var snapshot: Snapshot = .hidden
+
+    private var cancellables: Set<AnyCancellable> = []
+    private weak var model: Model?
+    private var conversationId: UUID?
+    private var isScrolling: Bool = false
+
+    func configure(
+        model: Model,
+        conversationId: UUID?
+    ) {
+        let modelChanged = self.model !== model
+        let conversationChanged = self.conversationId != conversationId
+
+        self.model = model
+        self.conversationId = conversationId
+
+        if modelChanged {
+            self.bind(to: model)
+        }
+
+        if modelChanged || conversationChanged {
+            self.refresh(force: true)
+        }
+    }
+
+    func setScrolling(
+        _ isScrolling: Bool
+    ) {
+        guard self.isScrolling != isScrolling else {
+            return
+        }
+        self.isScrolling = isScrolling
+        if !isScrolling {
+            self.refresh(force: true)
+        }
+    }
+
+    private func bind(
+        to model: Model
+    ) {
+        self.cancellables.removeAll()
+
+        model.objectWillChange
+            .sink { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.refresh()
+                }
+            }
+            .store(in: &self.cancellables)
+    }
+
+    private func refresh(
+        force: Bool = false
+    ) {
+        guard force || !self.isScrolling else {
+            return
+        }
+        guard let model else {
+            self.snapshot = .hidden
+            return
+        }
+
+        let statusPass = model.status.isWorking && model.status != .backgroundTask
+        let conversationPass = self.conversationId == model.sentConversationId
+        let isVisible = statusPass && conversationPass
+
+        guard isVisible else {
+            self.snapshot = .hidden
+            return
+        }
+
+        self.snapshot = Snapshot(
+            isVisible: true,
+            message: model.displayedPendingMessage,
+            contentType: model.displayedContentType,
+            preview: model.agent?.preview ?? AnyView(EmptyView())
+        )
+    }
+
 }
 
 /// A helper view to access the underlying NSScrollView

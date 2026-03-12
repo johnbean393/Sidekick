@@ -46,10 +46,13 @@ struct ConversationControlsView: View {
         let noResources: Bool = !promptController.hasResources
         return noPrompt && noMessages && noResources
     }
+
+    var isCenteredLayout: Bool {
+        self.promptController.prompt.isEmpty && self.messages.isEmpty
+    }
     
     var maxHeight: CGFloat {
-        let center: Bool = promptController.prompt.isEmpty && messages.isEmpty
-        return center ? .infinity : 0
+        return self.isCenteredLayout ? .infinity : 0
     }
     
     var body: some View {
@@ -60,6 +63,10 @@ struct ConversationControlsView: View {
             Spacer()
                 .frame(maxHeight: maxHeight)
         }
+        .animation(
+            .easeInOut(duration: 0.22),
+            value: self.isCenteredLayout
+        )
     }
     
     var controls: some View {
@@ -110,6 +117,10 @@ struct ConversationControlsView: View {
             }
         }
         .padding(.leading)
+        .animation(
+            .easeInOut(duration: 0.22),
+            value: self.showQuickPrompts
+        )
         .onDrop(
             of: ["public.file-url"],
             delegate: promptController

@@ -12,12 +12,14 @@ struct MessageContentView: View {
     init(
         message: Message,
         isEditing: Binding<Bool>,
-        shimmer: Bool = false
+        shimmer: Bool = false,
+        deprioritizeStreamingUpdates: Bool = false
     ) {
         self.messageText = message.text
         self.message = message
         self._isEditing = isEditing
         self.shimmer = shimmer
+        self.deprioritizeStreamingUpdates = deprioritizeStreamingUpdates
     }
     
     @EnvironmentObject private var conversationManager: ConversationManager
@@ -25,9 +27,10 @@ struct MessageContentView: View {
     
     @Binding private var isEditing: Bool
     @State private var messageText: String
-    
+
     var message: Message
     var shimmer: Bool
+    var deprioritizeStreamingUpdates: Bool
     
     var selectedConversation: Conversation? {
         guard let selectedConversationId = conversationState.selectedConversationId else {
@@ -90,7 +93,11 @@ struct MessageContentView: View {
                     // Show message response
                     Group {
                         if self.message.getSender() != .user {
-                            MessageTextContentView(text: self.message.responseText)
+                            MessageTextContentView(
+                                text: self.message.responseText,
+                                isStreaming: !self.message.outputEnded,
+                                deprioritizeStreamingUpdates: self.deprioritizeStreamingUpdates
+                            )
                         } else {
                             CollapsibleUserMessageView(text: self.message.responseText)
                         }
