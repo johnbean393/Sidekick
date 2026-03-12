@@ -101,7 +101,7 @@ public class DetectorViewController: ObservableObject {
 		self.perplexityProcess = Process()
 		self.perplexityProcess.executableURL = Bundle
 			.main
-			.resourceURL?
+			.privateFrameworksURL?
 			.appendingPathComponent("llama-perplexity")
 		// Formulate arguments
 		guard let modelPath: String = Settings.modelUrl?.posixPath else {

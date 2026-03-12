@@ -18,6 +18,10 @@ public class CodeFunctions {
         if PythonRunner.isPythonInstalled() {
             baseFunctions.append(CodeFunctions.runPython)
         }
+        // Add runX86Assembly if x86_64 assembly is supported
+        if X86AssemblyRunner.isX86AssemblySupported() {
+            baseFunctions.append(CodeFunctions.runX86Assembly)
+        }
         return baseFunctions
     }()
     
@@ -63,7 +67,7 @@ public class CodeFunctions {
     struct RunPythonParams: FunctionParams {
         let code: String
     }
-
+    
     
     /// A function to run a terminal command
     static let runCommand = Function<RunCommandParams, String>(
@@ -143,5 +147,27 @@ public class CodeFunctions {
         var command: String
         var workingDirectory: String?
     }
-
+    
+    /// A function to run x86_64 assembly code
+    static let runX86Assembly = Function<RunX86AssemblyParams, String>(
+        name: "run_x86_assembly",
+        description: "Compiles and executes x86_64 assembly code using Rosetta 2 on Apple Silicon Macs. The assembly code should use AT&T syntax and include a _main entry point.",
+        clearance: .dangerous,
+        params: [
+            FunctionParameter(
+                label: "code",
+                description: "The x86_64 assembly code to compile and execute. Should use AT&T syntax with .globl _main and _main: label.",
+                datatype: .string,
+                isRequired: true
+            )
+        ],
+        run: { params in
+            return try X86AssemblyRunner.executeX86Assembly(params.code)
+        }
+    )
+    
+    struct RunX86AssemblyParams: FunctionParams {
+        let code: String
+    }
+    
 }

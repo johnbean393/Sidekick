@@ -65,7 +65,7 @@ extension LlamaServer {
         // Initialize `llama-server` process
         process = Process()
         let startTime: Date = Date.now
-        process.executableURL = Bundle.main.resourceURL?.appendingPathComponent("llama-server")
+        process.executableURL = Bundle.main.privateFrameworksURL?.appendingPathComponent("llama-server")
         
         let gpuLayers: Int = 99
         let processors: Int = ProcessInfo.processInfo.activeProcessorCount
