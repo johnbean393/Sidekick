@@ -67,6 +67,7 @@ extension LlamaServer {
         useFunctions: Bool = false,
         functions: [AnyFunctionBox]? = nil,
         expert: Expert? = nil,
+        enableThinking: Bool? = nil,
         updateStatusHandler: (@Sendable (Model.Status) async -> Void)? = nil,
         progressHandler: (@Sendable (String) -> Void)? = nil
     ) async throws -> CompleteResponse {
@@ -80,6 +81,7 @@ extension LlamaServer {
                 useFunctions: useFunctions,
                 functions: functions,
                 expert: expert,
+                enableThinking: enableThinking,
                 updateStatusHandler: updateStatusHandler,
                 progressHandler: progressHandler
             )
@@ -102,6 +104,7 @@ extension LlamaServer {
         useFunctions: Bool = false,
         functions: [AnyFunctionBox]? = nil,
         expert: Expert? = nil,
+        enableThinking: Bool? = nil,
         updateStatusHandler: (@Sendable (Model.Status) async -> Void)? = nil,
         progressHandler: (@Sendable (String) -> Void)? = nil
     ) async throws -> CompleteResponse {
@@ -136,7 +139,8 @@ extension LlamaServer {
                         useWebSearch: useWebSearch,
                         useFunctions: useFunctions,
                         functions: functions,
-                        expert: expert
+                        expert: expert,
+                        enableThinking: enableThinking
                     )
                 case .deepResearch:
                     return await ChatParameters(
@@ -147,14 +151,16 @@ extension LlamaServer {
                         useWebSearch: useWebSearch,
                         useFunctions: useFunctions,
                         functions: functions,
-                        expert: expert
+                        expert: expert,
+                        enableThinking: enableThinking
                     )
                 case .default:
                     return await ChatParameters(
                         modelType: self.modelType,
                         usingRemoteModel: canReachRemoteServer,
                         systemPrompt: self.systemPrompt,
-                        messages: messages
+                        messages: messages,
+                        enableThinking: enableThinking
                     )
             }
         }()
@@ -952,5 +958,4 @@ extension LlamaServer {
 }
 
 extension EventSource.DataTask: @unchecked Sendable {  }
-
 

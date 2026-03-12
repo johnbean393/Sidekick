@@ -63,6 +63,10 @@ struct PromptInputField: View {
     var showQuickPrompts: Bool {
         return promptController.prompt.isEmpty && messages.isEmpty
     }
+
+    var showReasoningToggle: Bool {
+        return self.model.canToggleLiveReasoning
+    }
     
     var addFilesTip: AddFilesTip = .init()
     
@@ -147,6 +151,12 @@ struct PromptInputField: View {
         }
         .overlay(alignment: .bottomLeading) {
             HStack {
+                if self.showReasoningToggle {
+                    ReasoningToggleButton(
+                        activatedFillColor: self.buttonFillColor,
+                        useReasoning: self.$promptController.useReasoning
+                    )
+                }
                 SearchMenuToggleButton(
                     activatedFillColor: self.buttonFillColor,
                     useWebSearch: self.$promptController.useWebSearch,
@@ -546,6 +556,7 @@ struct PromptInputField: View {
                 useWebSearch: useWebSearch,
                 useFunctions: self.promptController.useFunctions,
                 expert: selectedExpert,
+                enableThinking: self.showReasoningToggle ? self.promptController.useReasoning : nil,
                 useCanvas: self.conversationState.useCanvas,
                 canvasSelection: self.canvasController.selection,
                 temporaryResources: preparedResources,
@@ -766,8 +777,11 @@ A user is chatting with an assistant and they have sent the message below. Gener
     }
     
     private func handleModelChange() {
-        // Function to be filled in
-        return
+        guard !self.showReasoningToggle else {
+            return
+        }
+        self.promptController.useReasoning = false
+        self.promptController.didManuallyToggleReasoning = false
     }
     
     private func scheduleDelayedClear() {

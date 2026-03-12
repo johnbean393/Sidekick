@@ -24,6 +24,7 @@ extension Model {
         useFunctions: Bool = false,
         functions: [AnyFunctionBox]? = nil,
         expert: Expert? = nil,
+        enableThinking: Bool? = nil,
         useCanvas: Bool = false,
         canvasSelection: String? = nil,
         temporaryResources: [TemporaryResource] = [],
@@ -106,6 +107,7 @@ extension Model {
                                 mode: mode,
                                 canReachRemoteServer: canReachRemoteServer,
                                 messages: messagesWithSources,
+                                enableThinking: enableThinking,
                                 progressHandler: progressHandler
                             )
                         } catch {
@@ -113,6 +115,7 @@ extension Model {
                                 mode: mode,
                                 canReachRemoteServer: canReachRemoteServer,
                                 messages: messagesWithSources,
+                                enableThinking: enableThinking,
                                 progressHandler: progressHandler
                             )
                         }
@@ -121,6 +124,7 @@ extension Model {
                             mode: mode,
                             canReachRemoteServer: canReachRemoteServer,
                             messages: messagesWithSources,
+                            enableThinking: enableThinking,
                             progressHandler: progressHandler
                         )
                     }
@@ -129,6 +133,7 @@ extension Model {
                         mode: mode,
                         canReachRemoteServer: canReachRemoteServer,
                         messages: messagesWithSources,
+                        enableThinking: enableThinking,
                         progressHandler: { partialResponse in
                             DispatchQueue.main.async {
                                 // Update response
@@ -151,6 +156,7 @@ extension Model {
                     useFunctions: useFunctions,
                     functions: functions,
                     expert: expert,
+                    enableThinking: enableThinking,
                     similarityIndex: similarityIndex,
                     showPreview: showPreview,
                     handleResponseUpdate: handleResponseUpdate
@@ -202,6 +208,7 @@ extension Model {
         useFunctions: Bool,
         functions: [AnyFunctionBox]? = nil,
         expert: Expert? = nil,
+        enableThinking: Bool? = nil,
         similarityIndex: SimilarityIndex? = nil,
         showPreview: Bool,
         handleResponseUpdate: @escaping (String, String) -> Void
@@ -217,6 +224,7 @@ extension Model {
             useFunctions: useFunctions,
             functions: functions,
             expert: expert,
+            enableThinking: enableThinking,
             showPreview: showPreview,
             handleResponseUpdate: handleResponseUpdate,
             increment: increment
@@ -237,6 +245,7 @@ extension Model {
             messages: messagesWithSources,
             useWebSearch: useWebSearch,
             functions: functions,
+            enableThinking: enableThinking,
             similarityIndex: similarityIndex,
             showPreview: showPreview,
             handleResponseUpdate: handleResponseUpdate,
@@ -253,6 +262,7 @@ extension Model {
         useFunctions: Bool,
         functions: [AnyFunctionBox]? = nil,
         expert: Expert? = nil,
+        enableThinking: Bool? = nil,
         showPreview: Bool,
         handleResponseUpdate: @escaping (String, String) -> Void,
         increment: Int
@@ -267,6 +277,7 @@ extension Model {
             useFunctions: useFunctions,
             functions: functions,
             expert: expert,
+            enableThinking: enableThinking,
             updateStatusHandler: { status in
                 await self.updateStatus(status)
             },
@@ -295,6 +306,7 @@ extension Model {
         messages: [Message.MessageSubset],
         useWebSearch: Bool,
         functions: [AnyFunctionBox]? = nil,
+        enableThinking: Bool? = nil,
         similarityIndex: SimilarityIndex?,
         showPreview: Bool,
         handleResponseUpdate: @escaping (
@@ -518,6 +530,7 @@ Call another tool to obtain more information or execute more actions. Try breaki
                         useWebSearch: useWebSearch,
                         useFunctions: true,
                         functions: functions,
+                        enableThinking: enableThinking,
                         updateStatusHandler: { status in
                             await self.updateStatus(status)
                         },
@@ -642,6 +655,7 @@ Please try rephrasing your request or contact support if the issue persists.
                 mode: .default,
                 canReachRemoteServer: canReachRemoteServer,
                 messages: messages,
+                enableThinking: enableThinking,
                 progressHandler: { partialResponse in
                     DispatchQueue.main.async {
                         updateResponse += partialResponse

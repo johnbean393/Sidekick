@@ -140,6 +140,14 @@ public class Model: ObservableObject {
     public var selectedWorkerModelCanReason: Bool? {
         return self.selectedWorkerModel?.isReasoningModel ?? selectedWorkerModelName?.hasSuffix(":thinking")
     }
+
+    public var canToggleLiveReasoning: Bool {
+        let usingRemoteModel: Bool = InferenceSettings.useServer && self.wasRemoteServerAccessible
+        guard !usingRemoteModel else {
+            return false
+        }
+        return InferenceSettings.localModelSupportsLiveReasoningToggle()
+    }
     
     // MARK: - Modes
     

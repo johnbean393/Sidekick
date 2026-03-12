@@ -22,7 +22,8 @@ struct ChatParameters: Codable {
         modelType: ModelType,
         usingRemoteModel: Bool,
         systemPrompt: String,
-        messages: [Message.MessageSubset]
+        messages: [Message.MessageSubset],
+        enableThinking: Bool? = nil
     ) async {
         // Add system prompt if needed
         if !messages.contains(where: { $0.role == .system }) {
@@ -39,6 +40,11 @@ struct ChatParameters: Codable {
             self.messages = messages
         }
         self.model = Self.getModelName(modelType: modelType) ?? ""
+        self.chat_template_kwargs = Self.getChatTemplateKwargs(
+            modelType: modelType,
+            usingRemoteModel: usingRemoteModel,
+            enableThinking: enableThinking
+        )
         
         // Add reasoning parameter for Claude 4+ on OpenRouter
         self.reasoning = Self.getReasoningOptions(modelType: modelType, usingRemoteModel: usingRemoteModel)
@@ -53,7 +59,8 @@ struct ChatParameters: Codable {
         useWebSearch: Bool = false,
         useFunctions: Bool = false,
         functions: [AnyFunctionBox]? = nil,
-        expert: Expert? = nil
+        expert: Expert? = nil,
+        enableThinking: Bool? = nil
     ) async {
         // Formulate messages
         // Formulate system prompt
@@ -139,6 +146,11 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         self.messages = messagesWithSystemPrompt
         self.model = Self.getModelName(modelType: modelType) ?? ""
         self.tools = !useFunctions ? [] : enabledFunctions.map(keyPath: \.openAiFunctionCall)
+        self.chat_template_kwargs = Self.getChatTemplateKwargs(
+            modelType: modelType,
+            usingRemoteModel: usingRemoteModel,
+            enableThinking: enableThinking
+        )
         
         // Add reasoning parameter for Claude 4+ on OpenRouter
         self.reasoning = Self.getReasoningOptions(modelType: modelType, usingRemoteModel: usingRemoteModel)
@@ -153,6 +165,8 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
     
     var stream: Bool = true
     var stream_options: StreamOptions = .init()
+    
+    var chat_template_kwargs: ChatTemplateKwargs?
     
     var reasoning: ReasoningOptions?
     
@@ -182,6 +196,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
             let stream: Bool?
             let stream_options: StreamOptions?
             let tools: [OpenAIFunction]?
+            let chat_template_kwargs: ChatTemplateKwargs?
             let reasoning: ReasoningOptions?
             
             init(
@@ -194,6 +209,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
                 self.stream = omitted.contains(.stream) ? nil : parent.stream
                 self.stream_options = omitted.contains(.stream_options) ? nil : parent.stream_options
                 self.tools = omitted.contains(.tools) ? nil : parent.tools
+                self.chat_template_kwargs = omitted.contains(.chat_template_kwargs) ? nil : parent.chat_template_kwargs
                 self.reasoning = omitted.contains(.reasoning) ? nil : parent.reasoning
             }
             
@@ -206,6 +222,9 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
                 if let stream = stream      { try container.encode(stream, forKey: .stream) }
                 if let stream_options = stream_options { try container.encode(stream_options, forKey: .stream_options) }
                 if let tools = tools        { try container.encode(tools, forKey: .tools) }
+                if let chat_template_kwargs = chat_template_kwargs {
+                    try container.encode(chat_template_kwargs, forKey: .chat_template_kwargs)
+                }
                 if let reasoning = reasoning {
                     try container.encode(reasoning, forKey: .reasoning)
                 }
@@ -234,6 +253,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         case stream
         case stream_options
         case tools
+        case chat_template_kwargs
         case provider
         case reasoning
     }
@@ -281,6 +301,20 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         }
         return nil
     }
+
+    public static func getChatTemplateKwargs(
+        modelType: ModelType,
+        usingRemoteModel: Bool,
+        enableThinking: Bool?
+    ) -> ChatTemplateKwargs? {
+        guard let enableThinking else { return nil }
+        guard !usingRemoteModel else { return nil }
+        guard modelType == .regular else { return nil }
+        guard InferenceSettings.localModelSupportsLiveReasoningToggle() else {
+            return nil
+        }
+        return .init(enable_thinking: enableThinking)
+    }
     
     struct SystemPrompt: Codable {
         
@@ -309,6 +343,10 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
     
     struct StreamOptions: Codable {
         var include_usage: Bool = true
+    }
+
+    struct ChatTemplateKwargs: Codable {
+        var enable_thinking: Bool
     }
     
     struct ReasoningOptions: Codable {

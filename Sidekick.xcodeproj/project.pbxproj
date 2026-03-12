@@ -317,6 +317,7 @@
 		208844332CDDE394003BCB6F /* ModelRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208844322CDDE394003BCB6F /* ModelRowView.swift */; };
 		208855CA2DAD062A00071F0B /* CapsuleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208855C92DAD062A00071F0B /* CapsuleButton.swift */; };
 		208855CC2DAD078800071F0B /* UseFunctionsButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208855CB2DAD078800071F0B /* UseFunctionsButton.swift */; };
+		20F6A0022ED0000100AA1111 /* ReasoningToggleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20F6A0012ED0000100AA1111 /* ReasoningToggleButton.swift */; };
 		208855CF2DAD1D6F00071F0B /* ArithmeticFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208855CE2DAD1D6F00071F0B /* ArithmeticFunctions.swift */; };
 		208855D12DAD1D9900071F0B /* CodeFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208855D02DAD1D9900071F0B /* CodeFunctions.swift */; };
 		208855D32DAD1E1400071F0B /* FileFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208855D22DAD1E1400071F0B /* FileFunctions.swift */; };
@@ -816,6 +817,7 @@
 		208844322CDDE394003BCB6F /* ModelRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelRowView.swift; sourceTree = "<group>"; };
 		208855C92DAD062A00071F0B /* CapsuleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleButton.swift; sourceTree = "<group>"; };
 		208855CB2DAD078800071F0B /* UseFunctionsButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UseFunctionsButton.swift; sourceTree = "<group>"; };
+		20F6A0012ED0000100AA1111 /* ReasoningToggleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReasoningToggleButton.swift; sourceTree = "<group>"; };
 		208855CE2DAD1D6F00071F0B /* ArithmeticFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArithmeticFunctions.swift; sourceTree = "<group>"; };
 		208855D02DAD1D9900071F0B /* CodeFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeFunctions.swift; sourceTree = "<group>"; };
 		208855D22DAD1E1400071F0B /* FileFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileFunctions.swift; sourceTree = "<group>"; };
@@ -2261,6 +2263,7 @@
 		20D01BF82DBFAA3B00EE3DF3 /* Toggle Buttons */ = {
 			isa = PBXGroup;
 			children = (
+				20F6A0012ED0000100AA1111 /* ReasoningToggleButton.swift */,
 				2025E67C2D89197700289E3F /* ToggleSearchButton.swift */,
 				2000EF392DCB7950006F9A95 /* SearchMenuToggleButton.swift */,
 				208855CB2DAD078800071F0B /* UseFunctionsButton.swift */,
@@ -2756,6 +2759,7 @@
 				201A1A9C2CDBB5B1001E9BA9 /* MarkdownScatterPlotView.swift in Sources */,
 				20C62EC32D713D5100996566 /* SlideStudioPromptView.swift in Sources */,
 				208855CC2DAD078800071F0B /* UseFunctionsButton.swift in Sources */,
+				20F6A0022ED0000100AA1111 /* ReasoningToggleButton.swift in Sources */,
 				202D4E792EBCDC97005D6F74 /* PythonRunner.swift in Sources */,
 				2034876F2D6723A200A88DA4 /* ToolCardButton.swift in Sources */,
 				204AE3C62CEC7C030086B42D /* NewCommandView.swift in Sources */,

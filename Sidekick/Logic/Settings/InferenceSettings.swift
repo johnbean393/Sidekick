@@ -254,6 +254,21 @@ You recall the following information about the user from prior interactions:
             return defaults.string(forKey: "inferenceApiKey") ?? ""
         }
     }
+
+    public static func localModelSupportsLiveReasoningToggle(
+        modelUrl: URL?
+    ) -> Bool {
+        guard let modelName = modelUrl?.lastPathComponent.lowercased() else {
+            return false
+        }
+        return modelName.contains("qwen3.5")
+    }
+
+    public static func localModelSupportsLiveReasoningToggle() -> Bool {
+        return self.localModelSupportsLiveReasoningToggle(
+            modelUrl: Settings.modelUrl
+        )
+    }
     
     /// A `String` representing the name of the remote model
     public static var serverModelName: String {
