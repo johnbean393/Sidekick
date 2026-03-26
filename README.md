@@ -53,6 +53,8 @@ Sidekick can even respond with the latest information using **web search**, spee
 
 In addition to its core local-first capabilities, Sidekick allows you to bring your own key for OpenAI compatible APIs. This allows you to tap into additional remote models while still preserving a primarily local-first workflow.
 
+Sidekick ships with built-in presets for popular providers, including **OpenAI**, **Anthropic**, **Google AI Studio**, **DeepSeek**, **Groq**, **MiniMax**, **Mistral**, **xAI**, and more — just select a provider and enter your API key to get started.
+
 ### Function Calling
 
 Sidekick can call functions to boost the mathematical and logical capabilities of models, and to execute actions. Functions are called sequentially in a loop until a result is obtained.
