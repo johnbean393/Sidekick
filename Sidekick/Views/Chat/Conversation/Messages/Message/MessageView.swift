@@ -12,6 +12,7 @@ struct MessageView: View {
 	
     @Environment(\.openWindow) var openWindow
     
+    @EnvironmentObject private var model: Model
 	@EnvironmentObject private var conversationManager: ConversationManager
 	@EnvironmentObject private var conversationState: ConversationState
 	@EnvironmentObject private var promptController: PromptController
@@ -104,7 +105,13 @@ struct MessageView: View {
                 MessageReadAloudButton(
                     message: message
                 )
-                if !self.isGenerating {
+                if self.isGenerating {
+                    StopGenerationButton {
+                        Task { @MainActor in
+                            await self.model.interrupt()
+                        }
+                    }
+                } else {
                     RegenerateButton {
                         self.retryGeneration(
                             message: message

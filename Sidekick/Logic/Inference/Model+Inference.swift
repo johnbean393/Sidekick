@@ -415,6 +415,7 @@ extension Model {
                     self.pendingMessage?.functionCallRecords = functionCallRecords + [functionCallRecord]
                     self.pendingMessage?.text = ""
                 }
+                await Task.yield()
                 // Call function
                 do {
                     // Run

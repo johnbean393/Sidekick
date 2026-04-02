@@ -14,6 +14,7 @@ struct MessagesView: View {
     @Environment(\.colorScheme) var colorScheme
     
     @EnvironmentObject private var model: Model
+    @EnvironmentObject private var promptController: PromptController
     @EnvironmentObject private var conversationManager: ConversationManager
     @EnvironmentObject private var conversationState: ConversationState
     
@@ -43,8 +44,8 @@ struct MessagesView: View {
                     Group {
                         self.messagesView
                         PendingMessageHost(
-                            model: self.model,
                             conversationId: self.selectedConversation?.id,
+                            activeConversationId: self.model.sentConversationId ?? self.promptController.sentConversation?.id,
                             isActivelyScrolling: self.isActivelyScrolling
                         ) { oldValue, newValue in
                             self.handlePreviewVisibilityChange(
@@ -151,150 +152,37 @@ struct MessagesView: View {
 
 private struct PendingMessageHost: View {
 
-    @StateObject private var presenter: PendingMessagePresenter = .init()
+    @EnvironmentObject private var model: Model
 
-    let model: Model
     let conversationId: UUID?
+    let activeConversationId: UUID?
     let isActivelyScrolling: Bool
     let onVisibilityChange: (Bool, Bool) -> Void
 
     var body: some View {
-        let snapshot = self.presenter.snapshot
+        let statusPass = self.model.status.isWorking && self.model.status != .backgroundTask
+        let conversationPass = self.activeConversationId == nil || self.conversationId == self.activeConversationId
+        let isVisible = statusPass && conversationPass
+        let contentType = self.model.displayedContentType
+        let message = self.model.displayedPendingMessage
         Group {
-            if snapshot.isVisible {
-                switch snapshot.contentType {
+            if isVisible {
+                switch contentType {
                     case .text, .indicator:
                         MessageView(
-                            message: snapshot.message,
-                            shimmer: snapshot.contentType == .indicator,
+                            message: message,
+                            shimmer: contentType == .indicator,
                             deprioritizeStreamingUpdates: self.isActivelyScrolling
                         )
-                        .id(snapshot.message.id)
+                        .id(message.id)
                     case .preview:
-                        snapshot.preview
+                        self.model.agent?.preview ?? AnyView(EmptyView())
                 }
             }
         }
-        .onAppear {
-            self.presenter.configure(
-                model: self.model,
-                conversationId: self.conversationId
-            )
-            self.presenter.setScrolling(
-                self.isActivelyScrolling
-            )
-        }
-        .onChange(of: self.presenter.snapshot.isVisible) { oldValue, newValue in
+        .onChange(of: isVisible) { oldValue, newValue in
             self.onVisibilityChange(oldValue, newValue)
         }
-        .onChange(of: self.conversationId) { _, newValue in
-            self.presenter.configure(
-                model: self.model,
-                conversationId: newValue
-            )
-        }
-        .onChange(of: self.isActivelyScrolling) { _, newValue in
-            self.presenter.setScrolling(newValue)
-        }
-    }
-
-}
-
-@MainActor
-private final class PendingMessagePresenter: ObservableObject {
-
-    struct Snapshot {
-        var isVisible: Bool
-        var message: Message
-        var contentType: Model.DisplayedContentType
-        var preview: AnyView
-
-        static let hidden: Self = .init(
-            isVisible: false,
-            message: Message(text: "", sender: .assistant),
-            contentType: .indicator,
-            preview: AnyView(EmptyView())
-        )
-    }
-
-    @Published private(set) var snapshot: Snapshot = .hidden
-
-    private var cancellables: Set<AnyCancellable> = []
-    private weak var model: Model?
-    private var conversationId: UUID?
-    private var isScrolling: Bool = false
-
-    func configure(
-        model: Model,
-        conversationId: UUID?
-    ) {
-        let modelChanged = self.model !== model
-        let conversationChanged = self.conversationId != conversationId
-
-        self.model = model
-        self.conversationId = conversationId
-
-        if modelChanged {
-            self.bind(to: model)
-        }
-
-        if modelChanged || conversationChanged {
-            self.refresh(force: true)
-        }
-    }
-
-    func setScrolling(
-        _ isScrolling: Bool
-    ) {
-        guard self.isScrolling != isScrolling else {
-            return
-        }
-        self.isScrolling = isScrolling
-        if !isScrolling {
-            self.refresh(force: true)
-        }
-    }
-
-    private func bind(
-        to model: Model
-    ) {
-        self.cancellables.removeAll()
-
-        model.objectWillChange
-            .sink { [weak self] _ in
-                DispatchQueue.main.async {
-                    self?.refresh()
-                }
-            }
-            .store(in: &self.cancellables)
-    }
-
-    private func refresh(
-        force: Bool = false
-    ) {
-        guard force || !self.isScrolling else {
-            return
-        }
-        guard let model else {
-            self.snapshot = .hidden
-            return
-        }
-
-        let statusPass = model.status.isWorking && model.status != .backgroundTask
-        let conversationPass = self.conversationId == model.sentConversationId
-        let isVisible = statusPass && conversationPass
-
-        guard isVisible else {
-            self.snapshot = .hidden
-            return
-        }
-
-        self.snapshot = Snapshot(
-            isVisible: true,
-            message: model.displayedPendingMessage,
-            contentType: model.displayedContentType,
-            preview: model.agent?.preview ?? AnyView(EmptyView())
-        )
     }
 
 }

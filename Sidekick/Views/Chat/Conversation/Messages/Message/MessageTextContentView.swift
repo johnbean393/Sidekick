@@ -252,10 +252,14 @@ final class MarkdownRenderCoordinator: ObservableObject {
             isStreaming: request.isStreaming,
             deprioritizeUpdates: request.deprioritizeUpdates
         )
-        Self.renderQueue.asyncAfter(
-            deadline: .now() + delay,
-            execute: workItem!
-        )
+        if case .milliseconds(0) = delay {
+            Self.renderQueue.async(execute: workItem!)
+        } else {
+            Self.renderQueue.asyncAfter(
+                deadline: .now() + delay,
+                execute: workItem!
+            )
+        }
     }
 
     func cancel() {
@@ -1571,6 +1575,9 @@ struct StreamingMarkdownBuffer {
         deprioritizeUpdates: Bool
     ) -> DispatchTimeInterval {
         guard isStreaming else { return .milliseconds(0) }
+        if !deprioritizeUpdates {
+            return .milliseconds(0)
+        }
         if deprioritizeUpdates {
             if text.count < 2_048 {
                 return .milliseconds(80)
