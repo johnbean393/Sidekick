@@ -307,13 +307,16 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         usingRemoteModel: Bool,
         enableThinking: Bool?
     ) -> ChatTemplateKwargs? {
-        guard let enableThinking else { return nil }
         guard !usingRemoteModel else { return nil }
-        guard modelType == .regular else { return nil }
-        guard InferenceSettings.localModelSupportsLiveReasoningToggle() else {
+        guard InferenceSettings.localModelSupportsLiveReasoningToggle(
+            modelType: modelType
+        ) else {
             return nil
         }
-        return .init(enable_thinking: enableThinking)
+        let resolvedEnableThinking: Bool = enableThinking ?? InferenceSettings.localModelLiveReasoningEnabledByDefault(
+            modelType: modelType
+        )
+        return .init(enable_thinking: resolvedEnableThinking)
     }
     
     struct SystemPrompt: Codable {

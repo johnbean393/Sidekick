@@ -22,6 +22,8 @@ public class PromptController: ObservableObject, DropDelegate {
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: PromptController.self)
     )
+
+    private static var liveReasoningPreferenceByModelIdentifier: [String: Bool] = [:]
     
     @Published var sentConversation: Conversation? = nil
     @Published var sentExpertId: UUID? = nil
@@ -30,7 +32,7 @@ public class PromptController: ObservableObject, DropDelegate {
     @Published var imageConcept: String? = nil
     
     @Published var didManuallyToggleReasoning: Bool = false
-    @Published var useReasoning: Bool = InferenceSettings.localModelSupportsLiveReasoningToggle()
+    @Published var useReasoning: Bool = InferenceSettings.localModelLiveReasoningEnabledByDefault()
     
     @Published var useWebSearch: Bool = false
     @Published var selectedSearchState: SearchState = .search
@@ -60,7 +62,38 @@ public class PromptController: ObservableObject, DropDelegate {
         reasoningAvailable: Bool? = nil
     ) {
         self.didManuallyToggleReasoning = false
-        self.useReasoning = reasoningAvailable ?? InferenceSettings.localModelSupportsLiveReasoningToggle()
+        self.useReasoning = reasoningAvailable ?? InferenceSettings.localModelLiveReasoningEnabledByDefault()
+    }
+
+    func applyReasoningPreference(
+        reasoningAvailable: Bool,
+        modelIdentifier: String?
+    ) {
+        guard reasoningAvailable,
+              let modelIdentifier,
+              !modelIdentifier.isEmpty else {
+            self.resetReasoningToDefault(reasoningAvailable: false)
+            return
+        }
+        if let storedPreference = Self.liveReasoningPreferenceByModelIdentifier[modelIdentifier] {
+            self.didManuallyToggleReasoning = true
+            self.useReasoning = storedPreference
+            return
+        }
+        self.resetReasoningToDefault(reasoningAvailable: true)
+    }
+
+    func setManualReasoningPreference(
+        _ useReasoning: Bool,
+        modelIdentifier: String?
+    ) {
+        self.didManuallyToggleReasoning = true
+        self.useReasoning = useReasoning
+        guard let modelIdentifier,
+              !modelIdentifier.isEmpty else {
+            return
+        }
+        Self.liveReasoningPreferenceByModelIdentifier[modelIdentifier] = useReasoning
     }
     
     private var audioEngine: AVAudioEngine = AVAudioEngine()

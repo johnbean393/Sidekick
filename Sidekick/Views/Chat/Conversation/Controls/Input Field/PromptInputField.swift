@@ -39,7 +39,7 @@ struct PromptInputField: View {
     // NSEvent monitor token
     @State private var keyEventMonitor: Any?
     @State private var delayedClearTask: DispatchWorkItem?
-    @State private var lastShowReasoningToggle: Bool = false
+    @State private var lastReasoningToggleModelIdentifier: String?
     
     var selectedConversation: Conversation? {
         guard let selectedConversationId = conversationState.selectedConversationId else {
@@ -67,6 +67,15 @@ struct PromptInputField: View {
 
     var showReasoningToggle: Bool {
         return self.model.canToggleLiveReasoning
+    }
+
+    var reasoningToggleModelIdentifier: String? {
+        guard self.showReasoningToggle else {
+            return nil
+        }
+        return self.model.selectedModelName ?? Settings.modelUrl?
+            .deletingPathExtension()
+            .lastPathComponent
     }
     
     var addFilesTip: AddFilesTip = .init()
@@ -156,6 +165,7 @@ struct PromptInputField: View {
                 if self.showReasoningToggle {
                     ReasoningToggleButton(
                         activatedFillColor: self.buttonFillColor,
+                        modelIdentifier: self.reasoningToggleModelIdentifier,
                         useReasoning: self.$promptController.useReasoning
                     )
                 }
@@ -323,6 +333,7 @@ struct PromptInputField: View {
         conversationManager.update(updatedConversation)
         self.promptController.sentConversation = updatedConversation
         self.promptController.sentExpertId = self.conversationState.selectedExpertId
+        let enableThinking: Bool? = self.resolvedEnableThinking()
         // Capture temp resources
         let tempResources: [TemporaryResource] = currentMessageResources
         // If result type is text, send message
@@ -330,7 +341,8 @@ struct PromptInputField: View {
             case .text:
                 self.startTextGeneration(
                     prompt: promptController.prompt,
-                    tempResources: tempResources
+                    tempResources: tempResources,
+                    enableThinking: enableThinking
                 )
             case .image:
                 // If image generation is available, start generating image
@@ -340,7 +352,8 @@ struct PromptInputField: View {
                     // Else, fall back to text
                     self.startTextGeneration(
                         prompt: promptController.prompt,
-                        tempResources: tempResources
+                        tempResources: tempResources,
+                        enableThinking: enableThinking
                     )
                 }
         }
@@ -356,13 +369,15 @@ struct PromptInputField: View {
     
     private func startTextGeneration(
         prompt: String,
-        tempResources: [TemporaryResource]
+        tempResources: [TemporaryResource],
+        enableThinking: Bool?
     ) {
         // Get response
         Task {
             await self.generateChatResponse(
                 prompt: prompt,
-                tempResources: tempResources
+                tempResources: tempResources,
+                enableThinking: enableThinking
             )
         }
     }
@@ -379,7 +394,6 @@ struct PromptInputField: View {
     
     private func clearInputs() {
         DispatchQueue.main.async {
-            self.handleModelChange(forceDefault: true)
             self.promptController.prompt.removeAll()
             self.promptController.insertionPoint = 0
         }
@@ -502,7 +516,8 @@ struct PromptInputField: View {
     
     private func generateChatResponse(
         prompt: String,
-        tempResources: [TemporaryResource]
+        tempResources: [TemporaryResource],
+        enableThinking: Bool?
     ) async {
         // If processing, use recursion to update
         if (model.status == .processing || model.status == .coldProcessing) {
@@ -512,7 +527,8 @@ struct PromptInputField: View {
                     try? await Task.sleep(for: .seconds(1))
                     await generateChatResponse(
                         prompt: prompt,
-                        tempResources: tempResources
+                        tempResources: tempResources,
+                        enableThinking: enableThinking
                     )
                 }
             }
@@ -558,7 +574,7 @@ struct PromptInputField: View {
                 useWebSearch: useWebSearch,
                 useFunctions: self.promptController.useFunctions,
                 expert: selectedExpert,
-                enableThinking: self.showReasoningToggle ? self.promptController.useReasoning : nil,
+                enableThinking: enableThinking,
                 useCanvas: self.conversationState.useCanvas,
                 canvasSelection: self.canvasController.selection,
                 temporaryResources: preparedResources,
@@ -684,7 +700,8 @@ A user is chatting with an assistant and they have sent the message below. Gener
         let title: String = try await targetServer.getChatCompletion(
             mode: .default,
             canReachRemoteServer: canReachRemoteServer,
-            messages: messageSubsets
+            messages: messageSubsets,
+            enableThinking: false
         ).text
         // Reset pending message text
         self.model.pendingMessage = nil
@@ -781,21 +798,36 @@ A user is chatting with an assistant and they have sent the message below. Gener
     private func handleModelChange(
         forceDefault: Bool = false
     ) {
-        let showReasoningToggle = self.showReasoningToggle
+        let currentIdentifier: String? = self.reasoningToggleModelIdentifier
         defer {
-            self.lastShowReasoningToggle = showReasoningToggle
+            self.lastReasoningToggleModelIdentifier = currentIdentifier
         }
-        guard !showReasoningToggle else {
-            if forceDefault || !self.lastShowReasoningToggle || !self.promptController.didManuallyToggleReasoning {
+        guard let currentIdentifier else {
+            if self.lastReasoningToggleModelIdentifier != nil || forceDefault {
                 self.promptController.resetReasoningToDefault(
-                    reasoningAvailable: true
+                    reasoningAvailable: false
                 )
             }
             return
         }
-        self.promptController.resetReasoningToDefault(
-            reasoningAvailable: false
-        )
+        let didModelChange: Bool = self.lastReasoningToggleModelIdentifier != currentIdentifier
+        let shouldResetToDefault: Bool = didModelChange || self.lastReasoningToggleModelIdentifier == nil
+        if shouldResetToDefault {
+            self.promptController.applyReasoningPreference(
+                reasoningAvailable: true,
+                modelIdentifier: currentIdentifier
+            )
+        }
+    }
+
+    private func resolvedEnableThinking() -> Bool? {
+        guard self.showReasoningToggle else {
+            return nil
+        }
+        if self.promptController.didManuallyToggleReasoning {
+            return self.promptController.useReasoning
+        }
+        return InferenceSettings.localModelLiveReasoningEnabledByDefault()
     }
     
     private func scheduleDelayedClear() {

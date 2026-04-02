@@ -262,10 +262,65 @@ You recall the following information about the user from prior interactions:
             return false
         }
         return modelName.contains("qwen3.5")
+            || modelName.contains("gemma-4")
+            || modelName.contains("gemma4")
+    }
+
+    public static func localModelUrl(
+        modelType: ModelType
+    ) -> URL? {
+        switch modelType {
+            case .regular:
+                return Settings.modelUrl
+            case .worker:
+                return Self.workerModelUrl
+            case .completions:
+                return Self.completionsModelUrl
+        }
+    }
+
+    public static func localModelSupportsLiveReasoningToggle(
+        modelType: ModelType
+    ) -> Bool {
+        return self.localModelSupportsLiveReasoningToggle(
+            modelUrl: self.localModelUrl(
+                modelType: modelType
+            )
+        )
     }
 
     public static func localModelSupportsLiveReasoningToggle() -> Bool {
         return self.localModelSupportsLiveReasoningToggle(
+            modelUrl: Settings.modelUrl
+        )
+    }
+
+    public static func localModelLiveReasoningEnabledByDefault(
+        modelUrl: URL?
+    ) -> Bool {
+        return self.localModelSupportsLiveReasoningToggle(
+            modelUrl: modelUrl
+        )
+    }
+
+    public static func localModelLiveReasoningEnabledByDefault(
+        modelType: ModelType
+    ) -> Bool {
+        guard self.localModelSupportsLiveReasoningToggle(
+            modelType: modelType
+        ) else {
+            return false
+        }
+        switch modelType {
+            case .regular:
+                return true
+            case .worker, .completions:
+                return false
+        }
+    }
+
+    public static func localModelLiveReasoningEnabledByDefault() -> Bool {
+        return self.localModelLiveReasoningEnabledByDefault(
             modelUrl: Settings.modelUrl
         )
     }

@@ -12,6 +12,7 @@ struct ReasoningToggleButton: View {
     @EnvironmentObject private var promptController: PromptController
     
     var activatedFillColor: Color
+    var modelIdentifier: String?
     
     @Binding var useReasoning: Bool
     
@@ -22,8 +23,10 @@ struct ReasoningToggleButton: View {
             activatedFillColor: activatedFillColor,
             isActivated: self.$useReasoning
         ) { newValue in
-            self.promptController.didManuallyToggleReasoning = true
-            self.useReasoning = newValue
+            self.promptController.setManualReasoningPreference(
+                newValue,
+                modelIdentifier: self.modelIdentifier
+            )
         }
     }
     
