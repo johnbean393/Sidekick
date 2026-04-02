@@ -98,7 +98,7 @@ struct ModelRowView: View {
 		// Update variables
         switch self.modelType {
             case .regular:
-                Settings.modelUrl = self.modelFile.url
+				Settings.selectMainLocalModel(self.modelFile.url)
                 self.modelUrl = Settings.modelUrl
             case .speculative:
                 InferenceSettings.speculativeDecodingModelUrl = self.modelFile.url

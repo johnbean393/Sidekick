@@ -242,14 +242,14 @@ struct ModelNameMenu: View {
             }
         }
         
-        private func select() {
-            // Set
-            if !isSelectingSpeculative {
-                Settings.modelUrl = modelFile.url
-            } else {
-                InferenceSettings.speculativeDecodingModelUrl = modelFile.url
-            }
-            // Send notification to reload model
+		private func select() {
+			// Set
+			if !isSelectingSpeculative {
+				Settings.selectMainLocalModel(modelFile.url)
+			} else {
+				InferenceSettings.speculativeDecodingModelUrl = modelFile.url
+			}
+			// Send notification to reload model
             NotificationCenter.default.post(
                 name: Notifications.changedInferenceConfig.name,
                 object: nil

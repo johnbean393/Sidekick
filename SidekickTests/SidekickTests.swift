@@ -19,6 +19,70 @@ struct SidekickTests {
 		await DefaultModels.checkModelRecommendations()
 	}
 
+	@Test func localVisionConfigurationUsesCompanionProjector() async throws {
+		let directoryUrl: URL = FileManager.default.temporaryDirectory
+			.appendingPathComponent(UUID().uuidString, isDirectory: true)
+		try FileManager.default.createDirectory(
+			at: directoryUrl,
+			withIntermediateDirectories: true
+		)
+		defer {
+			try? FileManager.default.removeItem(at: directoryUrl)
+		}
+		let modelUrl: URL = directoryUrl.appendingPathComponent(
+			"gemma-4-26B-A4B-it-Q4_K_M.gguf"
+		)
+		let projectorUrl: URL = directoryUrl.appendingPathComponent(
+			"mmproj-gemma-4-26B-A4B-it-BF16.gguf"
+		)
+		FileManager.default.createFile(atPath: modelUrl.path(), contents: Data())
+		FileManager.default.createFile(atPath: projectorUrl.path(), contents: Data())
+
+		let visionConfiguration = Settings.localVisionConfiguration(
+			for: modelUrl
+		)
+
+		#expect(visionConfiguration.projectorModelUrl == projectorUrl)
+		#expect(visionConfiguration.useVision)
+	}
+
+	@Test func localVisionConfigurationDisablesVisionWithoutProjector() async throws {
+		let directoryUrl: URL = FileManager.default.temporaryDirectory
+			.appendingPathComponent(UUID().uuidString, isDirectory: true)
+		try FileManager.default.createDirectory(
+			at: directoryUrl,
+			withIntermediateDirectories: true
+		)
+		defer {
+			try? FileManager.default.removeItem(at: directoryUrl)
+		}
+		let originalModelUrl: URL = directoryUrl.appendingPathComponent(
+			"gemma-4-26B-A4B-it-Q4_K_M.gguf"
+		)
+		let projectorUrl: URL = directoryUrl.appendingPathComponent(
+			"mmproj-gemma-4-26B-A4B-it-BF16.gguf"
+		)
+		let replacementModelUrl: URL = directoryUrl.appendingPathComponent(
+			"qwen-3-8b-instruct-q4_k_m.gguf"
+		)
+		FileManager.default.createFile(atPath: originalModelUrl.path(), contents: Data())
+		FileManager.default.createFile(atPath: projectorUrl.path(), contents: Data())
+		FileManager.default.createFile(atPath: replacementModelUrl.path(), contents: Data())
+
+		let originalVisionConfiguration = Settings.localVisionConfiguration(
+			for: originalModelUrl
+		)
+		try FileManager.default.removeItem(at: projectorUrl)
+		let replacementVisionConfiguration = Settings.localVisionConfiguration(
+			for: replacementModelUrl
+		)
+
+		#expect(originalVisionConfiguration.projectorModelUrl != nil)
+		#expect(originalVisionConfiguration.useVision)
+		#expect(replacementVisionConfiguration.projectorModelUrl == nil)
+		#expect(replacementVisionConfiguration.useVision == false)
+	}
+
     @Test func markdownStreamingParserMarksOpenCodeFenceAsUnstable() async throws {
         let blocks = StreamingMarkdownBuffer.parse(
             """

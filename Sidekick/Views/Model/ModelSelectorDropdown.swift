@@ -524,7 +524,7 @@ struct ModelSelectorDropdown: View {
     }
     
     private func selectLocalModel(_ modelFile: ModelManager.ModelFile) {
-        Settings.modelUrl = modelFile.url
+        Settings.selectMainLocalModel(modelFile.url)
         NotificationCenter.default.post(
             name: Notifications.changedInferenceConfig.name,
             object: nil

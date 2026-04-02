@@ -98,6 +98,59 @@ public class Settings {
 			UserDefaults.standard.set(newValue, forKey: "modelUrl")
 		}
 	}
+
+	/// Function to select the main local model and auto-configure vision if a projector is bundled alongside it.
+	static func selectMainLocalModel(_ modelUrl: URL) {
+		Self.modelUrl = modelUrl
+		let visionConfiguration = Self.localVisionConfiguration(
+			for: modelUrl
+		)
+		InferenceSettings.projectorModelUrl = visionConfiguration.projectorModelUrl
+		InferenceSettings.localModelUseVision = visionConfiguration.useVision
+	}
+
+	/// Function to determine the local vision configuration for a model.
+	static func localVisionConfiguration(
+		for modelUrl: URL
+	) -> (projectorModelUrl: URL?, useVision: Bool) {
+		guard let projectorModelUrl = Self.matchingProjectorModelUrl(
+			for: modelUrl
+		) else {
+			return (nil, false)
+		}
+		return (projectorModelUrl, true)
+	}
+
+	/// Function to locate a companion `mmproj` model stored next to a GGUF model.
+	static func matchingProjectorModelUrl(
+		for modelUrl: URL
+	) -> URL? {
+		let directoryUrl: URL = modelUrl.deletingLastPathComponent()
+		guard let contents = try? FileManager.default.contentsOfDirectory(
+			at: directoryUrl,
+			includingPropertiesForKeys: nil,
+			options: [.skipsHiddenFiles]
+		) else {
+			return nil
+		}
+		let projectorCandidates: [URL] = contents.filter { url in
+			guard url != modelUrl else {
+				return false
+			}
+			let isGGUF: Bool = url.pathExtension.localizedCaseInsensitiveCompare(
+				"gguf"
+			) == .orderedSame
+			let isProjector: Bool = url.deletingPathExtension()
+				.lastPathComponent
+				.localizedCaseInsensitiveContains("mmproj")
+			return isGGUF && isProjector
+		}
+		return projectorCandidates.sorted {
+			$0.lastPathComponent.localizedStandardCompare(
+				$1.lastPathComponent
+			) == .orderedAscending
+		}.first
+	}
 	
 	/// A `Bool` representing  if an model exists for use, whether it is local or on a server
 	static var hasModel: Bool {
@@ -351,7 +404,7 @@ public class Settings {
 				return false
 			}
 			// Set and signal success
-			Self.modelUrl = modelUrl
+			Self.selectMainLocalModel(modelUrl)
 			// Add to model list
 			ModelManager.shared.add(modelUrl)
 			return true

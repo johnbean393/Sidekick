@@ -214,7 +214,7 @@ extension DownloadManager: URLSessionDelegate, URLSessionDownloadDelegate {
 			Task { @MainActor in
 				if self.shouldAddModel {
 					if Settings.modelUrl == nil {
-						Settings.modelUrl = destinationURL
+						Settings.selectMainLocalModel(destinationURL)
 					}
 					ModelManager.shared.add(destinationURL)
 				}
