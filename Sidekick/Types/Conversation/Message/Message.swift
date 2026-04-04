@@ -418,6 +418,13 @@ DO NOT reference sources outside of those provided below. If you did not referen
 	
     public struct MessageSubset: Codable {
         
+        private enum CodingKeys: String, CodingKey {
+            case role
+            case content
+            case toolCalls = "tool_calls"
+            case toolCallID = "tool_call_id"
+        }
+        
         init(
             modelType: ModelType = .regular,
             usingRemoteModel: Bool,
@@ -431,6 +438,8 @@ DO NOT reference sources outside of those provided below. If you did not referen
             canvasSelection: String? = nil
         ) async {
             self.role = message.sender
+            self.toolCallID = nil
+            self.toolCalls = nil
             // Set up mutable message
             var message: Message = message
             // Apply changes for Canvas
@@ -528,10 +537,92 @@ Output the full text again with the changes applied. Keep as much of the previou
             }
         }
         
+        init(
+            role: Sender,
+            content: ContentValue,
+            toolCallID: String? = nil,
+            toolCalls: [ToolCall]? = nil
+        ) {
+            self.role = role
+            self.content = content
+            self.toolCallID = toolCallID
+            self.toolCalls = toolCalls
+        }
+        
         /// A ``Sender`` object representing the sender
         var role: Sender
         /// The message's content
         var content: ContentValue
+        /// The tool call ID for tool role messages
+        var toolCallID: String?
+        /// The tool calls emitted by an assistant message
+        var toolCalls: [ToolCall]?
+        
+        static func assistantToolCalls(
+            functionCalls: [any DecodableFunctionCall]
+        ) -> MessageSubset {
+            let toolCalls: [ToolCall] = functionCalls.map { functionCall in
+                return ToolCall(functionCall: functionCall)
+            }
+            return MessageSubset(
+                role: .assistant,
+                content: .textOnly(""),
+                toolCalls: toolCalls
+            )
+        }
+        
+        static func toolResult(
+            toolCallID: String,
+            content: String
+        ) -> MessageSubset {
+            return MessageSubset(
+                role: .tool,
+                content: .textOnly(content),
+                toolCallID: toolCallID
+            )
+        }
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.role = try container.decode(Sender.self, forKey: .role)
+            self.content = try container.decode(ContentValue.self, forKey: .content)
+            self.toolCalls = try container.decodeIfPresent([ToolCall].self, forKey: .toolCalls)
+            self.toolCallID = try container.decodeIfPresent(String.self, forKey: .toolCallID)
+        }
+        
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(role, forKey: .role)
+            try container.encode(content, forKey: .content)
+            if let toolCalls, !toolCalls.isEmpty {
+                try container.encode(toolCalls, forKey: .toolCalls)
+            }
+            if let toolCallID, !toolCallID.isEmpty {
+                try container.encode(toolCallID, forKey: .toolCallID)
+            }
+        }
+        
+        public struct ToolCall: Codable {
+            
+            let id: String
+            let type: String
+            let function: ToolCallFunction
+            
+            init(functionCall: any DecodableFunctionCall) {
+                self.id = functionCall.toolCallID ?? UUID().uuidString
+                self.type = "function"
+                self.function = ToolCallFunction(
+                    name: functionCall.name,
+                    arguments: functionCall.getArgumentsJSONString()
+                )
+            }
+        }
+        
+        public struct ToolCallFunction: Codable {
+            
+            let name: String
+            let arguments: String
+        }
         
         public enum Content: Codable {
             

@@ -54,6 +54,14 @@ In this environment you have access to a set of tools you can use to answer the 
 After a tool is run, a result will be provided. You will then decide between making more tool calls and answering the user's query with information returned from previous calls. 
 """
     
+    /// Static constant for the part of the system prompt telling the LLM to use native tool calling
+    public static let useNativeFunctionsPrompt: String = """
+In this environment you have access to tools you can use to answer the user's question.
+
+Use tools whenever they would help you obtain information or complete actions for the user.
+After a tool result is returned, either use another tool if needed or answer the user's query normally.
+"""
+    
     /// Static constant for the part of the system prompt telling the LLM what functions are available
     public static let functionsSchemaPrompt: String = """
 Here are the functions available in JSON schema format:

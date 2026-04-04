@@ -27,6 +27,7 @@ public class ExpertFunctions {
 \(expertNames)
 """
         }(),
+        allowsParallelExecution: true,
         params: [
             FunctionParameter(
                 label: "database",

@@ -14,15 +14,18 @@ public protocol DecodableFunctionCall: Decodable {
     
     init?(
         name: String,
-        params: any FunctionParams
+        params: any FunctionParams,
+        toolCallID: String?
     )
     
     static func parse(from data: Data, using decoder: JSONDecoder) -> Self?
     
     var name: String { get }
+    var toolCallID: String? { get set }
     
-    mutating func call() async throws -> String?
+    mutating func call(using registry: ToolRegistry) async throws -> String?
     func getJsonSchema() -> String
+    func getArgumentsJSONString() -> String
     
 }
 
@@ -81,6 +84,7 @@ public struct Function<Parameter: FunctionParams, Result: Codable>: FunctionProt
     public var name: String
     public var description: String
     public var clearance: Clearance
+    public var allowsParallelExecution: Bool
     
     public var params: [FunctionParameter]
     public var run: (Parameter) async throws -> Result
@@ -92,12 +96,14 @@ public struct Function<Parameter: FunctionParams, Result: Codable>: FunctionProt
         name: String,
         description: String,
         clearance: Clearance = .regular,
+        allowsParallelExecution: Bool = false,
         params: [FunctionParameter] = [],
         run: @MainActor @escaping (Parameter) async throws -> Result
     ) {
         self.name = name
         self.description = description
         self.clearance = clearance
+        self.allowsParallelExecution = allowsParallelExecution
         self.params = params
         self.paramsType = Parameter.self
         self.resultType = Result.self
@@ -228,7 +234,7 @@ Do you wish to permit this?
             name: self.name,
             description: self.description,
             parameters: parameterSchema,
-            strict: false
+            strict: true
         )
         
         return OpenAIFunction(
@@ -341,6 +347,8 @@ Do you wish to permit this?
         public var name: String {
             return self.config.name
         }
+        
+        public var toolCallID: String?
         /// The function call's configuration
         let config: FunctionCallConfig
         
@@ -353,12 +361,14 @@ Do you wish to permit this?
         // Custom initializer to handle OpenAI tool calling format
         public init?(
             name: String,
-            params: any FunctionParams
+            params: any FunctionParams,
+            toolCallID: String? = nil
         ) {
             // Cast params
             guard let params = params as? Parameter else {
                 return nil
             }
+            self.toolCallID = toolCallID
             // Create config
             self.config = FunctionCallConfig(
                 name: name,
@@ -375,11 +385,13 @@ Do you wish to permit this?
                 forKey: .functionCall
             ) {
                 self.config = config
+                self.toolCallID = nil
             } else if let config = try? container.decode(
                 FunctionCallConfig.self,
                 forKey: .function
             ) {
                 self.config = config
+                self.toolCallID = nil
             } else {
                 throw DecodingError.dataCorrupted(
                     DecodingError.Context(
@@ -397,11 +409,9 @@ Do you wish to permit this?
         }
         
         /// Function to call the function
-        mutating public func call() async throws -> String? {
+        mutating public func call(using registry: ToolRegistry) async throws -> String? {
             // Locate the function by name
-            guard let function = DefaultFunctions.allFunctions.first(
-                where: { $0.name == self.config.name }
-            ) else {
+            guard let function = registry.function(named: self.config.name) else {
                 throw FunctionCallError.functionNotFound
             }
             // Instead of expecting a raw type (like a tuple or a simple String), we are using Codable structs for parameters
@@ -417,6 +427,13 @@ Do you wish to permit this?
             let encoder: JSONEncoder = JSONEncoder()
             let jsonData: Data? = try? encoder.encode(self)
             return String(data: jsonData!, encoding: .utf8)!
+        }
+        
+        public func getArgumentsJSONString() -> String {
+            let encoder: JSONEncoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let jsonData: Data? = try? encoder.encode(self.config.arguments)
+            return String(data: jsonData ?? Data("{}".utf8), encoding: .utf8) ?? "{}"
         }
         
         /// Function to decode the function from data

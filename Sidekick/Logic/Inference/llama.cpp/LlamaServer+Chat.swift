@@ -66,6 +66,7 @@ extension LlamaServer {
         useWebSearch: Bool = false,
         useFunctions: Bool = false,
         functions: [AnyFunctionBox]? = nil,
+        toolChoice: ChatParameters.ToolChoice? = nil,
         expert: Expert? = nil,
         enableThinking: Bool? = nil,
         updateStatusHandler: (@Sendable (Model.Status) async -> Void)? = nil,
@@ -80,6 +81,7 @@ extension LlamaServer {
                 useWebSearch: useWebSearch,
                 useFunctions: useFunctions,
                 functions: functions,
+                toolChoice: toolChoice,
                 expert: expert,
                 enableThinking: enableThinking,
                 updateStatusHandler: updateStatusHandler,
@@ -103,6 +105,7 @@ extension LlamaServer {
         useWebSearch: Bool = false,
         useFunctions: Bool = false,
         functions: [AnyFunctionBox]? = nil,
+        toolChoice: ChatParameters.ToolChoice? = nil,
         expert: Expert? = nil,
         enableThinking: Bool? = nil,
         updateStatusHandler: (@Sendable (Model.Status) async -> Void)? = nil,
@@ -127,6 +130,17 @@ extension LlamaServer {
         }
         // Get start time
         let start: CFAbsoluteTime = CFAbsoluteTimeGetCurrent()
+        let resolvedFunctions: [AnyFunctionBox]
+        if let functions {
+            resolvedFunctions = functions
+        } else if useFunctions {
+            resolvedFunctions = await MainActor.run {
+                FunctionSelectionManager.shared.getEnabledFunctions()
+            }
+        } else {
+            resolvedFunctions = []
+        }
+        let toolRegistry = ToolRegistry(functions: resolvedFunctions)
         // Formulate parameters
         async let params = {
             switch mode {
@@ -138,7 +152,8 @@ extension LlamaServer {
                         messages: messages,
                         useWebSearch: useWebSearch,
                         useFunctions: useFunctions,
-                        functions: functions,
+                        functions: resolvedFunctions.isEmpty ? nil : resolvedFunctions,
+                        toolChoice: toolChoice,
                         expert: expert,
                         enableThinking: enableThinking
                     )
@@ -150,7 +165,8 @@ extension LlamaServer {
                         messages: messages,
                         useWebSearch: useWebSearch,
                         useFunctions: useFunctions,
-                        functions: functions,
+                        functions: resolvedFunctions.isEmpty ? nil : resolvedFunctions,
+                        toolChoice: toolChoice,
                         expert: expert,
                         enableThinking: enableThinking
                     )
@@ -234,6 +250,7 @@ extension LlamaServer {
         
         // Track tool calls by index
         struct ToolCallAccumulator {
+            var id: String?
             var name: String?
             var arguments: String = ""
         }
@@ -345,6 +362,10 @@ extension LlamaServer {
                                         toolCalls[index] = ToolCallAccumulator()
                                     }
                                     
+                                    if let id = toolCall.id {
+                                        toolCalls[index]?.id = id
+                                    }
+                                    
                                     // Accumulate function name
                                     if let name = toolCall.function.name {
                                         toolCalls[index]?.name = name
@@ -420,7 +441,9 @@ extension LlamaServer {
             
             if let function = StreamMessage.OpenAIToolCall.Function.getFunctionCall(
                 name: name,
-                arguments: args
+                arguments: args,
+                toolCallID: toolCall.id,
+                toolRegistry: toolRegistry
             ) {
                 blockFunctionCalls.append(function)
                 Self.logger.info("Successfully decoded tool call #\(index): \(name)")
@@ -504,6 +527,7 @@ extension LlamaServer {
             modelName: modelName,
             usage: stopResponse?.usage,
             usedServer: rawUrl.usingRemoteServer,
+            availableFunctions: resolvedFunctions,
             blockFunctionCalls: blockFunctionCalls,
             malformedToolCalls: malformedToolCalls.isEmpty ? nil : malformedToolCalls
         )
@@ -636,10 +660,12 @@ extension LlamaServer {
                 /// Function to get the corresponding function call
                 public static func getFunctionCall(
                     name: String,
-                    arguments: String
+                    arguments: String,
+                    toolCallID: String?,
+                    toolRegistry: ToolRegistry
                 ) -> (any DecodableFunctionCall)? {
                     // Try to init each function type
-                    for function in DefaultFunctions.sortedFunctions {
+                    for function in toolRegistry.sortedFunctions {
                         // If function name matches
                         if function.name == name {
                             // Try to formulate arguments
@@ -649,7 +675,8 @@ extension LlamaServer {
                             if let result = Self.tryDecode(
                                 arguments: arguments,
                                 function: function,
-                                decoder: decoder
+                                decoder: decoder,
+                                toolCallID: toolCallID
                             ) {
                                 return result
                             }
@@ -660,7 +687,8 @@ extension LlamaServer {
                                 if let result = Self.tryDecode(
                                     arguments: recoveredArgs,
                                     function: function,
-                                    decoder: decoder
+                                    decoder: decoder,
+                                    toolCallID: toolCallID
                                 ) {
                                     LlamaServer.logger.info("Successfully recovered malformed arguments for '\(name)' using automatic correction")
                                     return result
@@ -676,13 +704,18 @@ extension LlamaServer {
                 private static func tryDecode(
                     arguments: String,
                     function: any AnyFunctionBox,
-                    decoder: JSONDecoder
+                    decoder: JSONDecoder,
+                    toolCallID: String?
                 ) -> (any DecodableFunctionCall)? {
                     guard let data = arguments.data(using: .utf8),
                           let params = try? decoder.decode(function.paramsType.self, from: data) else {
                         return nil
                     }
-                    return function.functionCallType.init(name: function.name, params: params)
+                    return function.functionCallType.init(
+                        name: function.name,
+                        params: params,
+                        toolCallID: toolCallID
+                    )
                 }
                 
                 /// Generate recovery attempts for common JSON errors
@@ -800,6 +833,8 @@ extension LlamaServer {
         var usage: Usage?
         /// A `Bool` indicating whether a remote server was used
         var usedServer: Bool
+        /// The tools available while this response was generated
+        var availableFunctions: [AnyFunctionBox] = []
         
         /// An array of ``FunctionCallRecord`` executed in the response
         var functionCallRecords: [FunctionCallRecord] = []
@@ -826,14 +861,19 @@ extension LlamaServer {
         var malformedToolCalls: [MalformedToolCall]?
         /// All inline function call found in the text
         var inlineFunctionCalls: [(any DecodableFunctionCall)]? {
-            // Configure input
-            let input: String = self.text.reasoningRemoved
-            // Init decoder
+            let fullInput: String = self.text
+            let strippedInput: String = self.text.reasoningRemoved
             let decoder = JSONDecoder()
-            // Decode
-            return Self.decodeAllFunctionCalls(
-                in: input,
-                decoder: decoder
+            if let jsonCalls = Self.decodeAllFunctionCalls(
+                in: strippedInput,
+                decoder: decoder,
+                toolRegistry: ToolRegistry(functions: self.availableFunctions)
+            ) {
+                return jsonCalls
+            }
+            return Self.decodeXMLToolCalls(
+                in: fullInput,
+                toolRegistry: ToolRegistry(functions: self.availableFunctions)
             )
         }
         
@@ -841,6 +881,7 @@ extension LlamaServer {
         private static func decodeAllFunctionCalls(
             in input: String,
             decoder: JSONDecoder,
+            toolRegistry: ToolRegistry,
             searchStartIndex: String.Index? = nil
         ) -> [(any DecodableFunctionCall)]? {
             var results: [(any DecodableFunctionCall)] = []
@@ -881,7 +922,7 @@ extension LlamaServer {
                     let jsonString = String(jsonSubstring)
                     if let jsonData = jsonString.data(using: .utf8) {
                         // Try for all function types
-                        for function in DefaultFunctions.sortedFunctions {
+                        for function in toolRegistry.sortedFunctions {
                             if let functionCall = function.functionCallType.parse(
                                 from: jsonData,
                                 using: decoder
@@ -901,6 +942,184 @@ extension LlamaServer {
                 }
             }
             return results.isEmpty ? nil : results
+        }
+        
+        /// Decode XML-style tool calls emitted by some chat templates
+        private static func decodeXMLToolCalls(
+            in input: String,
+            toolRegistry: ToolRegistry
+        ) -> [(any DecodableFunctionCall)]? {
+            guard !input.isEmpty else {
+                return nil
+            }
+            
+            let toolCallPattern = #"<tool_call>\s*(.*?)\s*</tool_call>"#
+            guard let toolCallRegex = try? NSRegularExpression(
+                pattern: toolCallPattern,
+                options: [.dotMatchesLineSeparators]
+            ) else {
+                return nil
+            }
+            
+            let inputRange = NSRange(input.startIndex..<input.endIndex, in: input)
+            let matches = toolCallRegex.matches(in: input, range: inputRange)
+            guard !matches.isEmpty else {
+                return nil
+            }
+            
+            var decodedCalls: [(any DecodableFunctionCall)] = []
+            for match in matches {
+                guard match.numberOfRanges > 1,
+                      let callRange = Range(match.range(at: 1), in: input) else {
+                    continue
+                }
+                let toolCallBody = String(input[callRange])
+                guard let functionCall = Self.decodeSingleXMLToolCall(
+                    toolCallBody,
+                    toolRegistry: toolRegistry
+                ) else {
+                    continue
+                }
+                decodedCalls.append(functionCall)
+            }
+            
+            return decodedCalls.isEmpty ? nil : decodedCalls
+        }
+        
+        private static func decodeSingleXMLToolCall(
+            _ body: String,
+            toolRegistry: ToolRegistry
+        ) -> (any DecodableFunctionCall)? {
+            let functionPattern = #"<function=([A-Za-z0-9_]+)>\s*(.*?)\s*</function>"#
+            guard let functionRegex = try? NSRegularExpression(
+                pattern: functionPattern,
+                options: [.dotMatchesLineSeparators]
+            ) else {
+                return nil
+            }
+            
+            let bodyRange = NSRange(body.startIndex..<body.endIndex, in: body)
+            guard let match = functionRegex.firstMatch(in: body, range: bodyRange),
+                  match.numberOfRanges > 2,
+                  let functionNameRange = Range(match.range(at: 1), in: body),
+                  let functionBodyRange = Range(match.range(at: 2), in: body) else {
+                return nil
+            }
+            
+            let functionName = String(body[functionNameRange])
+            let functionBody = String(body[functionBodyRange])
+            guard let function = toolRegistry.function(named: functionName) else {
+                return nil
+            }
+            
+            let parameterPattern = #"<parameter=([A-Za-z0-9_]+)>\s*(.*?)\s*</parameter>"#
+            guard let parameterRegex = try? NSRegularExpression(
+                pattern: parameterPattern,
+                options: [.dotMatchesLineSeparators]
+            ) else {
+                return nil
+            }
+            
+            let functionBodyRangeNS = NSRange(
+                functionBody.startIndex..<functionBody.endIndex,
+                in: functionBody
+            )
+            let parameterMatches = parameterRegex.matches(
+                in: functionBody,
+                range: functionBodyRangeNS
+            )
+            var rawParameters: [String: [String]] = [:]
+            for parameterMatch in parameterMatches {
+                guard parameterMatch.numberOfRanges > 2,
+                      let parameterNameRange = Range(parameterMatch.range(at: 1), in: functionBody),
+                      let parameterValueRange = Range(parameterMatch.range(at: 2), in: functionBody) else {
+                    continue
+                }
+                let parameterName = String(functionBody[parameterNameRange])
+                let parameterValue = String(functionBody[parameterValueRange])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                rawParameters[parameterName, default: []].append(parameterValue)
+            }
+            
+            guard let argumentObject = Self.makeJSONObject(
+                from: rawParameters,
+                function: function
+            ),
+            let argumentData = try? JSONSerialization.data(
+                withJSONObject: argumentObject
+            ),
+            let params = try? JSONDecoder().decode(
+                function.paramsType.self,
+                from: argumentData
+            ) else {
+                return nil
+            }
+            
+            return function.functionCallType.init(
+                name: function.name,
+                params: params,
+                toolCallID: nil
+            )
+        }
+        
+        private static func makeJSONObject(
+            from rawParameters: [String: [String]],
+            function: AnyFunctionBox
+        ) -> [String: Any]? {
+            var jsonObject: [String: Any] = [:]
+            
+            for parameter in function.params {
+                guard let rawValues = rawParameters[parameter.label], !rawValues.isEmpty else {
+                    continue
+                }
+                
+                switch parameter.datatype {
+                    case .string:
+                        jsonObject[parameter.label] = rawValues[0]
+                    case .integer:
+                        guard let value = Int(rawValues[0]) else { return nil }
+                        jsonObject[parameter.label] = value
+                    case .float:
+                        guard let value = Double(rawValues[0]) else { return nil }
+                        jsonObject[parameter.label] = value
+                    case .boolean:
+                        guard let value = Self.parseBoolean(rawValues[0]) else { return nil }
+                        jsonObject[parameter.label] = value
+                    case .stringArray:
+                        jsonObject[parameter.label] = Self.parseArrayValues(rawValues)
+                    case .integerArray:
+                        let values = Self.parseArrayValues(rawValues).compactMap(Int.init)
+                        guard values.count == Self.parseArrayValues(rawValues).count else { return nil }
+                        jsonObject[parameter.label] = values
+                    case .floatArray:
+                        let values = Self.parseArrayValues(rawValues).compactMap(Double.init)
+                        guard values.count == Self.parseArrayValues(rawValues).count else { return nil }
+                        jsonObject[parameter.label] = values
+                }
+            }
+            
+            return jsonObject
+        }
+        
+        private static func parseArrayValues(_ rawValues: [String]) -> [String] {
+            return rawValues
+                .flatMap { value in
+                    value.split(separator: ",").map {
+                        String($0).trimmingCharacters(in: .whitespacesAndNewlines)
+                    }
+                }
+                .filter { !$0.isEmpty }
+        }
+        
+        private static func parseBoolean(_ rawValue: String) -> Bool? {
+            switch rawValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+                case "true", "1", "yes":
+                    return true
+                case "false", "0", "no":
+                    return false
+                default:
+                    return nil
+            }
         }
         
     }
@@ -958,4 +1177,3 @@ extension LlamaServer {
 }
 
 extension EventSource.DataTask: @unchecked Sendable {  }
-

@@ -20,6 +20,7 @@ public class ArithmeticFunctions {
     static let sum = Function<SumParams, Float>(
         name: "sum",
         description: "Adds a maximum of 5 numbers together. All but the first number is optional.",
+        allowsParallelExecution: true,
         params: [
             FunctionParameter(
                 label: "a",
@@ -68,6 +69,7 @@ public class ArithmeticFunctions {
     static let multiply = Function<MultiplyParams, Float>(
         name: "multiply",
         description: "Multiplies 2 numbers.",
+        allowsParallelExecution: true,
         params: [
             FunctionParameter(
                 label: "a",
@@ -95,6 +97,7 @@ public class ArithmeticFunctions {
     static let sumRange = Function<SumRangeParams, Int>(
         name: "sum_range",
         description: "Sums all integers between 2 integers, inclusive.",
+        allowsParallelExecution: true,
         params: [
             FunctionParameter(
                 label: "a",
@@ -122,6 +125,7 @@ public class ArithmeticFunctions {
     static let average = Function<AverageParams, Float>(
         name: "average",
         description: "Calculates the average of an array of numbers.",
+        allowsParallelExecution: true,
         params: [
             FunctionParameter(
                 label: "numbers",

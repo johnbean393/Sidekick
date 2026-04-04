@@ -22,6 +22,7 @@ public class FileFunctions {
     static let listDirectory = Function<ListDirectoryParams, [String]>(
         name: "list_directory",
         description: "Lists the files in a directory, non-recursively.\n\nThe user's home directory is `\(URL.homeDirectory.posixPath)`, their downloads directory is \(URL.downloadsDirectory.posixPath), and their desktop directory is \(URL.desktopDirectory.posixPath)",
+        allowsParallelExecution: true,
         params: [
             FunctionParameter(
                 label: "posixPath",

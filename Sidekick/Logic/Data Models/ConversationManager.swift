@@ -50,29 +50,18 @@ public class ConversationManager: ObservableObject {
     /// Computed property returning the first conversation
     var firstConversation: Conversation? {
         guard self.isLoaded else { return nil }
-        if self.conversations.first == nil {
-            self.newConversation()
-        }
         return self.conversations.first
     }
     
     /// Computed property returning the last conversation
     var lastConversation: Conversation? {
         guard self.isLoaded else { return nil }
-        if self.conversations.last == nil {
-            self.newConversation()
-        }
         return self.conversations.last
     }
     
     /// Computed property returning the most recent conversation
     var recentConversation: Conversation? {
         guard self.isLoaded else { return nil }
-        if self.conversations.sorted(
-            by: \.createdAt
-        ).last == nil {
-            self.newConversation()
-        }
         return self.conversations.sorted(
             by: \.createdAt
         ).last
@@ -146,9 +135,6 @@ public class ConversationManager: ObservableObject {
                 guard let self else { return }
                 self.conversations = conversations
                 self.isLoaded = true
-                if self.conversations.isEmpty {
-                    self.newConversation()
-                }
                 self.loadTask = nil
             }
         }
@@ -175,9 +161,6 @@ public class ConversationManager: ObservableObject {
             )
             self.conversations = conversations
             self.isLoaded = true
-            if self.conversations.isEmpty {
-                self.newConversation()
-            }
         } catch {
             print("Failed to load conversations: \(error)")
             self.newDatastore()
@@ -240,18 +223,6 @@ public class ConversationManager: ObservableObject {
         self.conversations = []
         self.isLoaded = true
         self.save()
-    }
-    
-    /// Ensures a blank conversation exists and is selected on launch
-    public func ensureBlankConversationForLaunch() {
-        if let blankConversation = self.conversations.first(where: { $0.messages.isEmpty }) {
-            NotificationCenter.default.post(
-                name: Notifications.switchToConversation.name,
-                object: blankConversation.id
-            )
-        } else {
-            self.newConversation()
-        }
     }
     
     /// Function to reset datastore

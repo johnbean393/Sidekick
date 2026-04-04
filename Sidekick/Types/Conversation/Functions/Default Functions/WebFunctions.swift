@@ -79,6 +79,7 @@ public class WebFunctions {
         return Function<TavilyWebSearchParams, String>(
             name: "web_search",
             description: "Retrieves information from the web with the provided query, instead of estimating it.",
+            allowsParallelExecution: true,
             params: [
                 FunctionParameter(
                     label: "query",
@@ -150,6 +151,7 @@ The content from each site here is an incomplete except. Use the `get_website_co
     static let standardWebSearch = Function<StandardSearchParams, String>(
         name: "web_search",
         description: "Retrieves information from the web with the provided query, instead of estimating it.",
+        allowsParallelExecution: true,
         params: [
             FunctionParameter(
                 label: "query",
@@ -268,6 +270,7 @@ The content from each site here is an incomplete except. Use the `get_website_co
     static let getWebsiteContent = Function<GetWebsiteContentParams, String>(
         name: "get_website_content",
         description: "Retrieves the full content of a website via its URL.",
+        allowsParallelExecution: true,
         params: [
             FunctionParameter(
                 label: "url",
@@ -382,6 +385,7 @@ The content from each site here is an incomplete except. Use the `get_website_co
     static let getLocation = Function<BlankParams, String>(
         name: "get_location",
         description: "A function to get the user's location. Use this before providing answers that depend on location, such as weather or holidays.",
+        allowsParallelExecution: true,
         params: [
         ],
         run: { params in

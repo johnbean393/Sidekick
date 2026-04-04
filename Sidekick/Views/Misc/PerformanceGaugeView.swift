@@ -19,15 +19,42 @@ struct PerformanceGaugeView: View {
 	var performance: CGFloat {
 		return (self.gpu?.flops ?? 0) / pow(10, 12)
 	}
+
+	var historicalGPUs: [GPU] {
+		let lastIndexByName = Dictionary(
+			GPU.all.enumerated().map { ($0.element.name, $0.offset) },
+			uniquingKeysWith: { _, latest in latest }
+		)
+		
+		return GPU.all.enumerated().compactMap { index, gpu in
+			lastIndexByName[gpu.name] == index ? gpu : nil
+		}
+	}
+
+	var matchedHistoricalGPU: GPU? {
+		return historicalGPUs.first { $0.name == self.name }
+	}
+
+	var displayedHistoricalGPUs: [GPU] {
+		guard let matchedHistoricalGPU else {
+			return historicalGPUs
+		}
+		
+		return historicalGPUs.filter { $0.id != matchedHistoricalGPU.id }
+	}
+
+	var currentDisplayPerformance: CGFloat {
+		return matchedHistoricalGPU?.tflops ?? performance
+	}
 	
 	var minTflops: CGFloat {
-		let historicalMin: CGFloat = GPU.all.map(\.tflops).sorted().first ?? 0
-		return min(historicalMin, performance)
+		let allValues = displayedHistoricalGPUs.map(\.tflops) + [currentDisplayPerformance]
+		return allValues.sorted().first ?? 0
 	}
 	
 	var maxTflops: CGFloat {
-		let historicalMax: CGFloat = GPU.all.map(\.tflops).sorted().last ?? 0
-		return max(historicalMax, performance)
+		let allValues = displayedHistoricalGPUs.map(\.tflops) + [currentDisplayPerformance]
+		return allValues.sorted().last ?? 0
 	}
 	
 	let colors: [Color] = [.red, .yellow, .green]
@@ -51,28 +78,28 @@ struct PerformanceGaugeView: View {
 				.clipShape(
 					Capsule()
 				)
-				.overlay(alignment: .leading) {
-					Group {
-						ForEach(GPU.all) { gpu in
+					.overlay(alignment: .leading) {
+						Group {
+							ForEach(displayedHistoricalGPUs) { gpu in
+								PerformancePointView(
+									name: gpu.name,
+									width: proxy.size.width,
+									min: minTflops,
+									max: maxTflops,
+									value: gpu.tflops
+								)
+							}
 							PerformancePointView(
-								name: gpu.name,
+								name: self.name,
+								isCurrentDevice: true,
 								width: proxy.size.width,
 								min: minTflops,
 								max: maxTflops,
-								value: gpu.tflops
+								value: currentDisplayPerformance
 							)
+							.shadow(radius: 10)
 						}
-						PerformancePointView(
-							name: String(localized: "Your ") + self.name,
-							isCurrentDevice: true,
-							width: proxy.size.width,
-							min: minTflops,
-							max: maxTflops,
-							value: self.performance
-						)
-						.shadow(radius: 10)
 					}
-				}
 		}
 		.frame(maxHeight: 15)
 	}

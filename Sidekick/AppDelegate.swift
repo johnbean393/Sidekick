@@ -41,10 +41,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         )
         // Configure keyboard shortcuts
         ShortcutController.setup()
-        // Prepare an empty conversation for launch
-        Task { @MainActor in
-            await self.prepareInitialConversation()
-        }
         // Update endpoint format
         Task { @MainActor in
             await Refactorer.updateEndpoint()
@@ -73,19 +69,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // Remove non-persisted resources
         ExpertManager.shared.removeUnpersistedResources()
         return .terminateNow
-    }
-    
-}
-
-extension AppDelegate {
-    
-    @MainActor
-    private func prepareInitialConversation() async {
-        let conversationManager = ConversationManager.shared
-        while !conversationManager.isLoaded {
-            try? await Task.sleep(nanoseconds: 50_000_000)
-        }
-        conversationManager.ensureBlankConversationForLaunch()
     }
     
 }

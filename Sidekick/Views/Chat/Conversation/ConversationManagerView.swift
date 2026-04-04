@@ -118,6 +118,15 @@ struct ConversationManagerView: View {
         ) {
             self.loadLatestSnapshot()
         }
+        .onAppear {
+            self.selectInitialConversationIfNeeded()
+        }
+        .onChange(of: conversationManager.isLoaded) {
+            self.selectInitialConversationIfNeeded()
+        }
+        .onChange(of: conversationManager.conversations) {
+            self.selectInitialConversationIfNeeded()
+        }
         .onReceive(
             NotificationCenter.default.publisher(
                 for: Notifications.systemPromptChanged.name
@@ -260,6 +269,21 @@ struct ConversationManagerView: View {
             self.conversationState.useCanvas = true
         }
     }
+
+    private func selectInitialConversationIfNeeded() {
+        guard self.conversationManager.isLoaded else {
+            return
+        }
+        guard self.conversationState.selectedConversationId == nil else {
+            return
+        }
+        guard let recentConversationId = self.conversationManager.recentConversation?.id else {
+            return
+        }
+        withAnimation(.linear) {
+            self.conversationState.selectedConversationId = recentConversationId
+        }
+    }
     
     private func toggleCanvas() {
         withAnimation(.linear) {
@@ -309,4 +333,3 @@ struct ConversationManagerView: View {
     }
     
 }
-

@@ -9,7 +9,7 @@ import Foundation
 import OSLog
 import SimilaritySearchKit
 
-struct ChatParameters: Codable {
+public struct ChatParameters: Codable {
     
     /// A `Logger` object for the ``ChatParameters`` object
     private static let logger: Logger = .init(
@@ -59,6 +59,7 @@ struct ChatParameters: Codable {
         useWebSearch: Bool = false,
         useFunctions: Bool = false,
         functions: [AnyFunctionBox]? = nil,
+        toolChoice: ToolChoice? = nil,
         expert: Expert? = nil,
         enableThinking: Bool? = nil
     ) async {
@@ -118,9 +119,12 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
             }
         }
         if Settings.useFunctions && useFunctions {
-            fullSystemPromptComponents.append(InferenceSettings.useFunctionsPrompt)
-            // Inject function schema if no native tool calling
-            if !InferenceSettings.hasNativeToolCalling {
+            if InferenceSettings.hasNativeToolCalling {
+                fullSystemPromptComponents.append(
+                    InferenceSettings.useNativeFunctionsPrompt
+                )
+            } else {
+                fullSystemPromptComponents.append(InferenceSettings.useFunctionsPrompt)
                 fullSystemPromptComponents.append(InferenceSettings.functionsSchemaPrompt)
                 let functions: [any AnyFunctionBox] = enabledFunctions
                 for function in functions {
@@ -146,6 +150,9 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         self.messages = messagesWithSystemPrompt
         self.model = Self.getModelName(modelType: modelType) ?? ""
         self.tools = !useFunctions ? [] : enabledFunctions.map(keyPath: \.openAiFunctionCall)
+        if InferenceSettings.hasNativeToolCalling && useFunctions {
+            self.tool_choice = toolChoice ?? .auto
+        }
         self.chat_template_kwargs = Self.getChatTemplateKwargs(
             modelType: modelType,
             usingRemoteModel: usingRemoteModel,
@@ -160,6 +167,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
     var messages: [Message.MessageSubset]
     
     var tools: [OpenAIFunction] = []
+    var tool_choice: ToolChoice?
     
     var temperature = InferenceSettings.temperature
     
@@ -179,7 +187,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         // Omit tools if non-regular, or has no native tool calling
         var omittedParams = omittedParams
         if modelType != .regular || !InferenceSettings.hasNativeToolCalling {
-            omittedParams.append(.tools)
+            omittedParams += [.tools, .tool_choice]
         }
         // If is remote model, omit temperature to use provider reccomended params
         if usingRemoteModel {
@@ -196,6 +204,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
             let stream: Bool?
             let stream_options: StreamOptions?
             let tools: [OpenAIFunction]?
+            let tool_choice: ToolChoice?
             let chat_template_kwargs: ChatTemplateKwargs?
             let reasoning: ReasoningOptions?
             
@@ -209,6 +218,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
                 self.stream = omitted.contains(.stream) ? nil : parent.stream
                 self.stream_options = omitted.contains(.stream_options) ? nil : parent.stream_options
                 self.tools = omitted.contains(.tools) ? nil : parent.tools
+                self.tool_choice = omitted.contains(.tool_choice) ? nil : parent.tool_choice
                 self.chat_template_kwargs = omitted.contains(.chat_template_kwargs) ? nil : parent.chat_template_kwargs
                 self.reasoning = omitted.contains(.reasoning) ? nil : parent.reasoning
             }
@@ -222,6 +232,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
                 if let stream = stream      { try container.encode(stream, forKey: .stream) }
                 if let stream_options = stream_options { try container.encode(stream_options, forKey: .stream_options) }
                 if let tools = tools        { try container.encode(tools, forKey: .tools) }
+                if let tool_choice = tool_choice { try container.encode(tool_choice, forKey: .tool_choice) }
                 if let chat_template_kwargs = chat_template_kwargs {
                     try container.encode(chat_template_kwargs, forKey: .chat_template_kwargs)
                 }
@@ -253,9 +264,15 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         case stream
         case stream_options
         case tools
+        case tool_choice
         case chat_template_kwargs
         case provider
         case reasoning
+    }
+    
+    public enum ToolChoice: String, Codable {
+        case auto
+        case none
     }
     
     /// Function to get the name of the model that will be used
@@ -283,7 +300,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
     }
     
     /// Function to determine if reasoning options should be added
-    public static func getReasoningOptions(
+    static func getReasoningOptions(
         modelType: ModelType,
         usingRemoteModel: Bool
     ) -> ReasoningOptions? {
@@ -302,7 +319,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         return nil
     }
 
-    public static func getChatTemplateKwargs(
+    static func getChatTemplateKwargs(
         modelType: ModelType,
         usingRemoteModel: Bool,
         enableThinking: Bool?

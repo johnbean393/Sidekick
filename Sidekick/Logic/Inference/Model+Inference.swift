@@ -319,12 +319,28 @@ extension Model {
         if self.status != .deepResearch {
             self.status = .usingFunctions
         }
+        let activeFunctions: [AnyFunctionBox]
+        if !initialResponse.availableFunctions.isEmpty {
+            activeFunctions = initialResponse.availableFunctions
+        } else if let functions {
+            activeFunctions = functions
+        } else {
+            activeFunctions = await DefaultFunctions.getEnabledFunctions()
+        }
+        let toolRegistry: ToolRegistry = {
+            if !activeFunctions.isEmpty {
+                return ToolRegistry(functions: activeFunctions)
+            }
+            return ToolRegistry(functions: [])
+        }()
+        var useStructuredToolMessages: Bool = InferenceSettings.hasNativeToolCalling &&
+        !(initialResponse.blockFunctionCalls?.isEmpty ?? true)
         // Execute functions on a loop
         var maxIterations: Int = 30 // Max 30 tool calls
         var response: LlamaServer.CompleteResponse? = initialResponse
         var messages: [Message.MessageSubset] = messages
-        // Capture results
         var results: [FunctionCallResult] = []
+        var functionCallRecords: [FunctionCallRecord] = self.pendingMessage?.functionCallRecords ?? []
         // Track consecutive malformed call attempts for circuit breaking
         var consecutiveMalformedAttempts: Int = 0
         let maxConsecutiveMalformed: Int = 3
@@ -333,12 +349,10 @@ extension Model {
         if let malformedCalls = response?.malformedToolCalls, !malformedCalls.isEmpty {
             Self.logger.warning("Initial response contains \(malformedCalls.count) malformed tool call(s)")
             
-            // If ALL tool calls are malformed and there are no valid ones, provide feedback
             if response?.functionCalls?.isEmpty ?? true {
                 consecutiveMalformedAttempts += 1
                 Self.logger.error("All tool calls in response are malformed. Providing error feedback to model.")
                 
-                // Create error feedback for each malformed call
                 for malformedCall in malformedCalls {
                     let errorResult = FunctionCallResult(
                         call: malformedCall.name ?? "unknown_function",
@@ -348,10 +362,8 @@ extension Model {
                     results.append(errorResult)
                 }
                 
-                // Check if we should break the circuit
                 if consecutiveMalformedAttempts >= maxConsecutiveMalformed {
                     Self.logger.error("Maximum consecutive malformed attempts reached. Breaking agentic loop.")
-                    // Create a helpful error message
                     let errorMessage = """
                     The model has made \(maxConsecutiveMalformed) consecutive attempts with malformed tool calls.
                     
@@ -370,14 +382,11 @@ extension Model {
                         modelName: initialResponse.modelName,
                         usage: initialResponse.usage,
                         usedServer: initialResponse.usedServer,
-                        blockFunctionCalls: nil,
-                        malformedToolCalls: malformedCalls
+                        availableFunctions: activeFunctions,
+                        malformedToolCalls: malformedCalls,
                     )
                 }
-                
-                // Continue to provide feedback and let model retry
             } else {
-                // Some calls succeeded, some failed - add errors for failed ones
                 Self.logger.info("Some tool calls succeeded, adding error feedback for \(malformedCalls.count) malformed call(s)")
                 for malformedCall in malformedCalls {
                     let errorResult = FunctionCallResult(
@@ -387,85 +396,47 @@ extension Model {
                     )
                     results.append(errorResult)
                 }
-                // Reset counter since we have some valid calls
                 consecutiveMalformedAttempts = 0
             }
         } else if response?.functionCalls?.isEmpty ?? true {
-            // No tool calls at all (valid or malformed) - normal exit condition
             consecutiveMalformedAttempts = 0
         } else {
-            // Has valid tool calls - reset counter
             consecutiveMalformedAttempts = 0
         }
         
-        while maxIterations > 0, let functionCalls = response?.functionCalls {
-            // Execute each call
-            var functionCallRecords = self.pendingMessage?.functionCallRecords ?? []
-            for index in functionCalls.indices {
-                var functionCall = functionCalls[index]
-                // Log function call
-                let callJsonSchema: String = functionCall.getJsonSchema()
-                Self.logger.info("Executing function call: \(callJsonSchema, privacy: .public)")
-                // Display call to user
-                functionCallRecords = self.pendingMessage?.functionCallRecords ?? []
-                var functionCallRecord: FunctionCallRecord = FunctionCallRecord(
-                    name: functionCall.name
-                )
-                withAnimation(.linear) {
-                    self.pendingMessage?.functionCallRecords = functionCallRecords + [functionCallRecord]
-                    self.pendingMessage?.text = ""
-                }
-                await Task.yield()
-                // Call function
-                do {
-                    // Run
-                    let result: String = try await functionCall.call() ?? "Function evaluated successfully"
-                    // Mark as succeeded
-                    functionCallRecord.markAsFinished(
-                        status: .succeeded,
-                        result: result
-                    )
-                    // Record tools called
-                    let newResult: FunctionCallResult = FunctionCallResult(
-                        call: callJsonSchema,
-                        result: result,
-                        type: .result
-                    )
-                    results.append(newResult)
-                } catch {
-                    // Get error description
-                    let errorDescription: String = error.localizedDescription
-                    // Mark as failed
-                    functionCallRecord.markAsFinished(
-                        status: .failed,
-                        result: errorDescription
-                    )
-                    // Record tools called
-                    let newResult: FunctionCallResult = FunctionCallResult(
-                        call: callJsonSchema,
-                        result: errorDescription,
-                        type: .error
-                    )
-                    results.append(newResult)
-                }
-                withAnimation(.linear) {
-                    functionCallRecords += [functionCallRecord]
-                    self.pendingMessage?.functionCallRecords = functionCallRecords
-                }
+        while maxIterations > 0, let responseFunctionCalls = response?.functionCalls, !responseFunctionCalls.isEmpty {
+            var functionCalls = responseFunctionCalls
+            for index in functionCalls.indices where functionCalls[index].toolCallID == nil {
+                functionCalls[index].toolCallID = UUID().uuidString
             }
-            // Add assistant response message
-            let responseMessage: Message = Message(
-                text: response?.text ?? "",
-                sender: .assistant
+            
+            let executionOutput = await self.executeFunctionCalls(
+                functionCalls,
+                using: toolRegistry,
+                existingRecords: functionCallRecords
             )
-            let responseMessageSubset: Message.MessageSubset = await Message.MessageSubset(
-                usingRemoteModel: self.wasRemoteServerAccessible,
-                message: responseMessage
-            )
-            messages.append(responseMessageSubset)
-            // Check if further tool call is needed
+            functionCallRecords = executionOutput.functionCallRecords
+            results += executionOutput.results
+            
+            if useStructuredToolMessages {
+                let assistantToolCallMessage = Message.MessageSubset.assistantToolCalls(
+                    functionCalls: functionCalls
+                )
+                messages.append(assistantToolCallMessage)
+                messages += executionOutput.toolMessages
+            } else {
+                let responseMessage: Message = Message(
+                    text: response?.text ?? "",
+                    sender: .assistant
+                )
+                let responseMessageSubset: Message.MessageSubset = await Message.MessageSubset(
+                    usingRemoteModel: self.wasRemoteServerAccessible,
+                    message: responseMessage
+                )
+                messages.append(responseMessageSubset)
+            }
+            
             var hasMadeSufficientCalls: Bool = false
-            // If there are incomplete to-do items, skip the sufficiency check and continue with tools
             let hasIncompleteTodos: Bool = TodoFunctions.getIncompleteTodoSummary() != nil
             if !hasIncompleteTodos {
                 let checkMode = Settings.FunctionCompletionCheckMode(
@@ -481,7 +452,7 @@ extension Model {
                     )
                 }
             }
-            // Add prompt to steer the next agent step
+            
             let changePrompt: String = {
                 if hasMadeSufficientCalls {
                     return """
@@ -494,30 +465,34 @@ Call another tool to obtain more information or execute more actions. Try breaki
                 }
             }()
             
-            // We'll append (or replace) this change message while retrying if compression is needed
             var hasAppendedChangeMessage = false
             var compressionAttempts = 0
+            let toolChoice: ChatParameters.ToolChoice? = useStructuredToolMessages ? (
+                hasMadeSufficientCalls ? ChatParameters.ToolChoice.none : .auto
+            ) : nil
             
             retryLoop: while true {
-                var messageStringComponents: [String] = results.map(\.description)
-                if let todoSummary = TodoFunctions.getIncompleteTodoSummary() {
-                    messageStringComponents.append(todoSummary)
-                }
-                messageStringComponents.append(changePrompt)
-                
-                let changeMessage = Message(
-                    text: messageStringComponents.joined(separator: "\n\n"),
-                    sender: .user
-                )
-                let changeMessageSubset = await Message.MessageSubset(
-                    usingRemoteModel: self.wasRemoteServerAccessible,
-                    message: changeMessage
-                )
-                if hasAppendedChangeMessage {
-                    messages[messages.count - 1] = changeMessageSubset
-                } else {
-                    messages.append(changeMessageSubset)
-                    hasAppendedChangeMessage = true
+                if !useStructuredToolMessages {
+                    var messageStringComponents: [String] = results.map(\.description)
+                    if let todoSummary = TodoFunctions.getIncompleteTodoSummary() {
+                        messageStringComponents.append(todoSummary)
+                    }
+                    messageStringComponents.append(changePrompt)
+                    
+                    let changeMessage = Message(
+                        text: messageStringComponents.joined(separator: "\n\n"),
+                        sender: .user
+                    )
+                    let changeMessageSubset = await Message.MessageSubset(
+                        usingRemoteModel: self.wasRemoteServerAccessible,
+                        message: changeMessage
+                    )
+                    if hasAppendedChangeMessage {
+                        messages[messages.count - 1] = changeMessageSubset
+                    } else {
+                        messages.append(changeMessageSubset)
+                        hasAppendedChangeMessage = true
+                    }
                 }
                 
                 var updateResponse: String = ""
@@ -530,7 +505,8 @@ Call another tool to obtain more information or execute more actions. Try breaki
                         messages: messages,
                         useWebSearch: useWebSearch,
                         useFunctions: true,
-                        functions: functions,
+                        functions: toolRegistry.functions,
+                        toolChoice: toolChoice,
                         enableThinking: enableThinking,
                         updateStatusHandler: { status in
                             await self.updateStatus(status)
@@ -557,7 +533,8 @@ Call another tool to obtain more information or execute more actions. Try breaki
                 } catch let error as LlamaServerError {
                     if case .contextWindowExceeded = error,
                        InferenceSettings.enableContextCompression,
-                       compressionAttempts < 3 {
+                       compressionAttempts < 3,
+                       !useStructuredToolMessages {
                         compressionAttempts += 1
                         Self.logger.warning("Context window exceeded (attempt \(compressionAttempts)). Compressing tool results.")
                         results = try await ContextCompressor.compressFunctionResults(
@@ -571,17 +548,16 @@ Call another tool to obtain more information or execute more actions. Try breaki
                 }
             }
             response?.functionCallRecords = functionCallRecords
+            useStructuredToolMessages = InferenceSettings.hasNativeToolCalling &&
+            !(response?.blockFunctionCalls?.isEmpty ?? true)
             
-            // Check for malformed tool calls in the new response
             if let malformedCalls = response?.malformedToolCalls, !malformedCalls.isEmpty {
                 Self.logger.warning("Response contains \(malformedCalls.count) malformed tool call(s)")
                 
-                // If ALL tool calls are malformed and there are no valid ones
                 if response?.functionCalls?.isEmpty ?? true {
                     consecutiveMalformedAttempts += 1
                     Self.logger.error("All tool calls in iteration are malformed. Providing error feedback to model.")
                     
-                    // Add error feedback for each malformed call
                     for malformedCall in malformedCalls {
                         let errorResult = FunctionCallResult(
                             call: malformedCall.name ?? "unknown_function",
@@ -591,10 +567,8 @@ Call another tool to obtain more information or execute more actions. Try breaki
                         results.append(errorResult)
                     }
                     
-                    // Check if we should break the circuit
                     if consecutiveMalformedAttempts >= maxConsecutiveMalformed {
                         Self.logger.error("Maximum consecutive malformed attempts (\(maxConsecutiveMalformed)) reached in loop. Breaking.")
-                        // Create a helpful error message
                         let errorMessage = """
 After \(maxConsecutiveMalformed) consecutive attempts, the model continues to produce malformed tool calls.
 
@@ -610,12 +584,11 @@ Please try rephrasing your request or contact support if the issue persists.
                             modelName: response?.modelName,
                             usage: response?.usage,
                             usedServer: response?.usedServer ?? false,
-                            blockFunctionCalls: nil,
-                            malformedToolCalls: malformedCalls
+                            availableFunctions: toolRegistry.functions,
+                            malformedToolCalls: malformedCalls,
                         )
                     }
                 } else {
-                    // Some calls succeeded, some failed - add errors for failed ones
                     Self.logger.info("Some tool calls succeeded in iteration, adding error feedback for malformed ones")
                     for malformedCall in malformedCalls {
                         let errorResult = FunctionCallResult(
@@ -625,18 +598,14 @@ Please try rephrasing your request or contact support if the issue persists.
                         )
                         results.append(errorResult)
                     }
-                    // Reset counter since we have some valid calls
                     consecutiveMalformedAttempts = 0
                 }
             } else if response?.functionCalls?.isEmpty ?? true {
-                // No more tool calls - normal loop exit
                 consecutiveMalformedAttempts = 0
             } else {
-                // Has valid tool calls - reset counter
                 consecutiveMalformedAttempts = 0
             }
             
-            // Increment counter & reset
             maxIterations -= 1
         }
         // Switch status to show stream for final answer
@@ -683,6 +652,176 @@ Please try rephrasing your request or contact support if the issue persists.
         // An enum of reasons for finishing
         enum FinishReason {
             case noFunctionCall, maxIterationsReached
+        }
+    }
+    
+    private struct PlannedFunctionCall {
+        let originalIndex: Int
+        let recordIndex: Int
+        let callJsonSchema: String
+        let call: any DecodableFunctionCall
+    }
+    
+    private struct ExecutedFunctionCall {
+        let originalIndex: Int
+        let recordIndex: Int
+        let functionCallRecord: FunctionCallRecord
+        let result: FunctionCallResult
+        let toolMessage: Message.MessageSubset?
+    }
+    
+    private struct FunctionExecutionOutput {
+        let results: [FunctionCallResult]
+        let toolMessages: [Message.MessageSubset]
+        let functionCallRecords: [FunctionCallRecord]
+    }
+    
+    private func executeFunctionCalls(
+        _ functionCalls: [any DecodableFunctionCall],
+        using toolRegistry: ToolRegistry,
+        existingRecords: [FunctionCallRecord]
+    ) async -> FunctionExecutionOutput {
+        var functionCallRecords = existingRecords
+        let plannedCalls: [PlannedFunctionCall] = functionCalls.enumerated().map { index, functionCall in
+            let callJsonSchema = functionCall.getJsonSchema()
+            Self.logger.info("Executing function call: \(callJsonSchema, privacy: .public)")
+            let recordIndex = functionCallRecords.count + index
+            let functionCallRecord = FunctionCallRecord(name: functionCall.name)
+            functionCallRecords.append(functionCallRecord)
+            return PlannedFunctionCall(
+                originalIndex: index,
+                recordIndex: recordIndex,
+                callJsonSchema: callJsonSchema,
+                call: functionCall
+            )
+        }
+        
+        withAnimation(.linear) {
+            self.pendingMessage?.functionCallRecords = functionCallRecords
+            self.pendingMessage?.text = ""
+        }
+        await Task.yield()
+        
+        var executedCalls: [ExecutedFunctionCall] = []
+        var batchStartIndex = 0
+        while batchStartIndex < plannedCalls.count {
+            let currentCall = plannedCalls[batchStartIndex]
+            let isParallelSafe = toolRegistry.function(named: currentCall.call.name)?.allowsParallelExecution ?? false
+            var batchEndIndex = batchStartIndex + 1
+            if isParallelSafe {
+                while batchEndIndex < plannedCalls.count,
+                      toolRegistry.function(named: plannedCalls[batchEndIndex].call.name)?.allowsParallelExecution ?? false {
+                    batchEndIndex += 1
+                }
+            }
+            let batch = Array(plannedCalls[batchStartIndex..<batchEndIndex])
+            let batchResults = await self.executeFunctionCallBatch(
+                batch,
+                using: toolRegistry
+            )
+            executedCalls += batchResults
+            batchStartIndex = batchEndIndex
+        }
+        
+        for executedCall in executedCalls {
+            functionCallRecords[executedCall.recordIndex] = executedCall.functionCallRecord
+        }
+        
+        withAnimation(.linear) {
+            self.pendingMessage?.functionCallRecords = functionCallRecords
+        }
+        
+        let orderedCalls = executedCalls.sorted(by: { $0.originalIndex < $1.originalIndex })
+        return FunctionExecutionOutput(
+            results: orderedCalls.map(\.result),
+            toolMessages: orderedCalls.compactMap(\.toolMessage),
+            functionCallRecords: functionCallRecords
+        )
+    }
+    
+    private func executeFunctionCallBatch(
+        _ plannedCalls: [PlannedFunctionCall],
+        using toolRegistry: ToolRegistry
+    ) async -> [ExecutedFunctionCall] {
+        if plannedCalls.count <= 1 {
+            guard let plannedCall = plannedCalls.first else {
+                return []
+            }
+            return [await self.executeSingleFunctionCall(plannedCall, using: toolRegistry)]
+        }
+        
+        return await withTaskGroup(of: ExecutedFunctionCall.self) { group in
+            for plannedCall in plannedCalls {
+                group.addTask {
+                    return await self.executeSingleFunctionCall(
+                        plannedCall,
+                        using: toolRegistry
+                    )
+                }
+            }
+            
+            var executedCalls: [ExecutedFunctionCall] = []
+            for await executedCall in group {
+                executedCalls.append(executedCall)
+            }
+            return executedCalls
+        }
+    }
+    
+    private func executeSingleFunctionCall(
+        _ plannedCall: PlannedFunctionCall,
+        using toolRegistry: ToolRegistry
+    ) async -> ExecutedFunctionCall {
+        var functionCall = plannedCall.call
+        var functionCallRecord = FunctionCallRecord(name: functionCall.name)
+        do {
+            let result: String = try await functionCall.call(using: toolRegistry) ?? "Function evaluated successfully"
+            functionCallRecord.markAsFinished(
+                status: .succeeded,
+                result: result
+            )
+            let functionResult = FunctionCallResult(
+                call: plannedCall.callJsonSchema,
+                result: result,
+                type: .result
+            )
+            let toolMessage = functionCall.toolCallID.map {
+                Message.MessageSubset.toolResult(
+                    toolCallID: $0,
+                    content: result
+                )
+            }
+            return ExecutedFunctionCall(
+                originalIndex: plannedCall.originalIndex,
+                recordIndex: plannedCall.recordIndex,
+                functionCallRecord: functionCallRecord,
+                result: functionResult,
+                toolMessage: toolMessage
+            )
+        } catch {
+            let errorDescription: String = error.localizedDescription
+            functionCallRecord.markAsFinished(
+                status: .failed,
+                result: errorDescription
+            )
+            let functionResult = FunctionCallResult(
+                call: plannedCall.callJsonSchema,
+                result: errorDescription,
+                type: .error
+            )
+            let toolMessage = functionCall.toolCallID.map {
+                Message.MessageSubset.toolResult(
+                    toolCallID: $0,
+                    content: errorDescription
+                )
+            }
+            return ExecutedFunctionCall(
+                originalIndex: plannedCall.originalIndex,
+                recordIndex: plannedCall.recordIndex,
+                functionCallRecord: functionCallRecord,
+                result: functionResult,
+                toolMessage: toolMessage
+            )
         }
     }
     
