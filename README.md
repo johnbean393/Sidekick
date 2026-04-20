@@ -196,6 +196,12 @@ Optionally, you can offload generation to speed up processing while extending th
 - A Mac with Apple Silicon
 - RAM ≥ 8 GB
 
+### Via Homebrew
+
+```bash
+brew install --cask arcadi4/tap/sidekick
+```
+
 ### Download and Setup
 
 - Follow the guide [here](https://johnbean393.github.io/Sidekick/Markdown/gettingStarted/).
