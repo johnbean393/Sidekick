@@ -1,5 +1,7 @@
 <h1 align="center">
-  <img src="https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/appIcon.png" width = "200" height = "200">
+  <p align="center">
+    <img src="https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/appIcon.png" alt="Logo" width = "200" height = "200">
+  </p>
   <br />
   Sidekick
 </h1>
@@ -61,11 +63,11 @@ For example, when asking Sidekick to calculate Q3 2025 financial metrics for Nvi
 
 ![Screenshot](https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/Features/Function%20Calling/functionCallingFinancialMetrics.png)
 
-When telling Sidekick to draft an invitation email for a birthday celebration to my friend Jean, Sidekick finds my birthday and Jean's email address from my contacts book, and creates a draft in my default email client. 
+When telling Sidekick to draft an invitation email for a birthday celebration to my friend Jean, Sidekick finds my birthday and Jean's email address from my contacts book, and creates a draft in my default email client.
 
 ![Screenshot](https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/Features/Function%20Calling/functionCallingDraftEmail.png)
 
-This enables agents running fully locally. 
+This enables agents running fully locally.
 
 ### Deep Research
 
@@ -101,7 +103,7 @@ Select parts of the text, then prompt the chatbot to perform selective edits.
 
 ### Image Generation
 
-Sidekick can generate images from text, allowing you to create visual aids for your work. 
+Sidekick can generate images from text, allowing you to create visual aids for your work.
 
 There are no buttons, no switches to flick, no `Image Generation` mode. Instead, a built-in CoreML model **automatically identifies** image generation prompts, and generates an image when necessary.
 
@@ -189,11 +191,19 @@ Optionally, you can offload generation to speed up processing while extending th
 
 ## Installation
 
-**Requirements**
+### Requirements
+
 - A Mac with Apple Silicon
 - RAM ≥ 8 GB
 
-**Download and Setup**
+### Via Homebrew
+
+```bash
+brew install --cask arcadi4/tap/sidekick
+```
+
+### Download and Setup
+
 - Follow the guide [here](https://johnbean393.github.io/Sidekick/Markdown/gettingStarted/).
 
 ## Goals
@@ -204,15 +214,17 @@ Read more about our mission [here](https://johnbean393.github.io/Sidekick/Markdo
 
 ## Developer Setup
 
-**Requirements**
+### Requirements
+
 - A Mac with Apple Silicon
 - RAM ≥ 8 GB
 
 ### Developer Setup Instructions
+
 1. Clone this repository.
 1. Run `security find-identity -p codesigning -v` to find your signing identity.
    - You'll see something like
-   - `  1) <SIGNING IDENTITY> "Apple Development: Michael DiGovanni ( XXXXXXXXXX)"`
+   - `1) <SIGNING IDENTITY> "Apple Development: Michael DiGovanni ( XXXXXXXXXX)"`
 1. Run `./setup.sh <TEAM_NAME> <SIGNING IDENTITY FROM STEP 2>` to change the team in the Xcode project and download and sign the `marp` binary.
    - The `marp` binary is required for building and must be signed to create presentations.
 1. Open and run in Xcode.
@@ -223,7 +235,7 @@ Contributions are very welcome. Let's make Sidekick simple and powerful.
 
 ## Contact
 
-Contact this repository's owner at johnbean393@gmail.com, or file an issue.
+Contact this repository's owner at <johnbean393@gmail.com>, or file an issue.
 
 ## Credits
 
