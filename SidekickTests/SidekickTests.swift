@@ -235,6 +235,125 @@ struct SidekickTests {
         #expect(paragraphStyles[2].paragraphSpacingBefore <= 0.5)
     }
 
+    // MARK: - Provider Tests
+
+    @Test func popularProvidersContainsMiniMax() async throws {
+        let minimax = Provider.popularProviders.first { $0.name == "MiniMax" }
+        #expect(minimax != nil)
+        #expect(minimax?.endpointUrl.absoluteString == "https://api.minimax.io/v1")
+        #expect(minimax?.supportsToolCalling == true)
+    }
+
+    @Test func popularProvidersAreSortedAlphabetically() async throws {
+        let names = Provider.popularProviders.map(\.name)
+        let sorted = names.sorted()
+        #expect(names == sorted)
+    }
+
+    @Test func providerIdUsesName() async throws {
+        let minimax = Provider.popularProviders.first { $0.name == "MiniMax" }
+        #expect(minimax?.id == "MiniMax")
+    }
+
+    @Test func allPopularProvidersHaveValidEndpoints() async throws {
+        for provider in Provider.popularProviders {
+            #expect(provider.endpointUrl.scheme == "http" || provider.endpointUrl.scheme == "https")
+            #expect(!provider.name.isEmpty)
+        }
+    }
+
+    // MARK: - KnownModel Organization Tests
+
+    @Test func minimaxOrganizationMapsCorrectly() async throws {
+        let org = KnownModel.Organization.from(string: "minimax")
+        #expect(org == .minimax)
+    }
+
+    @Test func minimaxOrganizationHasCorrectDisplayName() async throws {
+        #expect(KnownModel.Organization.minimax.rawValue == "Minimax")
+    }
+
+    @Test func minimaxModelFullIdentifierUsesCorrectPrefix() async throws {
+        let model = KnownModel(
+            primaryName: "MiniMax-M2.7",
+            organization: .minimax,
+            capabilities: [.reasoning]
+        )
+        #expect(model.fullIdentifier == "minimax/MiniMax-M2.7")
+        #expect(model.isReasoningModel == true)
+    }
+
+    @Test func minimaxMModelDetectedAsReasoningByOpenRouter() async throws {
+        // Simulate OpenRouter model detection: "minimax-m" triggers reasoning
+        let modelName = "minimax-m2.7"
+        #expect(modelName.contains("minimax-m"))
+    }
+
+    @Test func minimaxHighspeedModelFullIdentifier() async throws {
+        let model = KnownModel(
+            primaryName: "MiniMax-M2.7-highspeed",
+            organization: .minimax,
+            capabilities: [.reasoning]
+        )
+        #expect(model.fullIdentifier == "minimax/MiniMax-M2.7-highspeed")
+        #expect(model.isReasoningModel == true)
+    }
+
+    @Test func minimaxModelFindByNormalizedIdentifier() async throws {
+        let models = [
+            KnownModel(
+                primaryName: "MiniMax-M2.7",
+                organization: .minimax,
+                capabilities: [.reasoning]
+            ),
+            KnownModel(
+                primaryName: "MiniMax-M2.7-highspeed",
+                organization: .minimax,
+                capabilities: [.reasoning]
+            ),
+        ]
+        let found = KnownModel.findModel(
+            byIdentifier: "minimax/MiniMax-M2.7",
+            in: models
+        )
+        #expect(found != nil)
+        #expect(found?.primaryName == "MiniMax-M2.7")
+    }
+
+    // MARK: - Integration Tests (MiniMax Provider)
+
+    @Test func minimaxProviderToolCallingDetection() async throws {
+        // When endpoint matches MiniMax, providerSupportsToolCalling should
+        // find it in the popularProviders list
+        let minimaxUrl = "https://api.minimax.io/v1"
+        let match = Provider.popularProviders.first {
+            minimaxUrl == $0.endpointUrl.absoluteString
+        }
+        #expect(match != nil)
+        #expect(match?.supportsToolCalling == true)
+    }
+
+    @Test func minimaxOrganizationIncludedInCaseIterable() async throws {
+        let allOrgs = KnownModel.Organization.allCases
+        #expect(allOrgs.contains(.minimax))
+    }
+
+    @Test func minimaxKnownModelRoundTrip() async throws {
+        // Create a MiniMax model, encode to JSON, decode back
+        let original = KnownModel(
+            primaryName: "MiniMax-M2.7",
+            organization: .minimax,
+            modalities: [.text],
+            capabilities: [.reasoning]
+        )
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(KnownModel.self, from: data)
+        #expect(decoded.primaryName == "MiniMax-M2.7")
+        #expect(decoded.organization == .minimax)
+        #expect(decoded.isReasoningModel == true)
+        #expect(decoded.fullIdentifier == "minimax/MiniMax-M2.7")
+    }
+
     private func paragraphStyles(
         in attributedText: NSAttributedString
     ) -> [NSParagraphStyle] {

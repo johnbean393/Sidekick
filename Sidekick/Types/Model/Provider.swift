@@ -51,6 +51,11 @@ public struct Provider: Identifiable {
             supportsToolCalling: true
         ),
         Provider(
+            name: "MiniMax",
+            endpointUrl: URL(string: "https://api.minimax.io/v1")!,
+            supportsToolCalling: true
+        ),
+        Provider(
             name: "Mistral",
             endpointUrl: URL(string: "https://api.mistral.ai/v1")!
         ),
