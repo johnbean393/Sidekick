@@ -411,8 +411,8 @@ DO NOT reference sources outside of those provided below. If you did not referen
 		
 	
 	/// Function to end a message
-	public mutating func end() {
-		self.lastUpdated = .now
+	public mutating func end(at date: Date = .now) {
+		self.lastUpdated = date
 		self.outputEnded = true
 	}
 	

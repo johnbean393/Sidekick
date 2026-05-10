@@ -607,11 +607,12 @@ struct PromptInputField: View {
                 functionCallRecords: response.functionCallRecords,
                 expertId: promptController.sentExpertId
             )
+            responseMessage.startTime = response.startTime
             responseMessage.update(
                 response: response,
                 includeReferences: didUseSources
             )
-            responseMessage.end()
+            responseMessage.end(at: response.endTime)
             // Update conversation
             let _ = conversation.addMessage(
                 responseMessage

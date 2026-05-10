@@ -380,6 +380,8 @@ extension Model {
                     """
                     return LlamaServer.CompleteResponse(
                         text: errorMessage,
+                        startTime: initialResponse.startTime,
+                        endTime: .now,
                         responseStartSeconds: initialResponse.responseStartSeconds,
                         predictedPerSecond: initialResponse.predictedPerSecond,
                         modelName: initialResponse.modelName,
@@ -600,6 +602,8 @@ Please try rephrasing your request or contact support if the issue persists.
 """
                         return LlamaServer.CompleteResponse(
                             text: errorMessage,
+                            startTime: response?.startTime ?? initialResponse.startTime,
+                            endTime: .now,
                             responseStartSeconds: response?.responseStartSeconds ?? 0,
                             predictedPerSecond: response?.predictedPerSecond,
                             modelName: response?.modelName,
@@ -1025,6 +1029,7 @@ Respond with YES if ALL 3 criteria above have been met. Respond with YES or NO o
         )
         if showPreview {
             self.pendingMessage?.text = fullMessage
+            self.pendingMessage?.lastUpdated = .now
         }
     }
 

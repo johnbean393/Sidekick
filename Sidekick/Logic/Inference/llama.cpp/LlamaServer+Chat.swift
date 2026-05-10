@@ -223,6 +223,7 @@ extension LlamaServer {
         let dataTask = eventSource.dataTask(
             for: request
         )
+        let startTime = Date(timeIntervalSinceReferenceDate: start)
         let session = URLSession(
             configuration: .default
         )
@@ -522,6 +523,8 @@ extension LlamaServer {
         // Return response
         return CompleteResponse(
             text: cleanText,
+            startTime: startTime,
+            endTime: .now,
             responseStartSeconds: responseDiff,
             predictedPerSecond: tokensPerSecond,
             modelName: modelName,
@@ -944,6 +947,8 @@ extension LlamaServer {
     public struct CompleteResponse {
 
         var text: String
+        var startTime: Date = .now
+        var endTime: Date = .now
         var responseStartSeconds: Double
         var predictedPerSecond: Double?
         var modelName: String?
