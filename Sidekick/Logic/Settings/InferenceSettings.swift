@@ -270,8 +270,62 @@ You recall the following information about the user from prior interactions:
             return false
         }
         return modelName.contains("qwen3.5")
+            || modelNameSupportsQwen36NativeToolCalling(modelName)
             || modelName.contains("gemma-4")
             || modelName.contains("gemma4")
+    }
+
+    public static func modelSupportsNativeToolCalling(
+        modelType: ModelType,
+        usingRemoteModel: Bool
+    ) -> Bool {
+        let modelName: String
+        if usingRemoteModel {
+            switch modelType {
+                case .regular:
+                    modelName = Self.serverModelName
+                case .worker:
+                    modelName = Self.serverWorkerModelName
+                case .completions:
+                    modelName = Self.completionsModelUrl?
+                        .deletingPathExtension()
+                        .lastPathComponent ?? ""
+            }
+        } else {
+            modelName = Self.localModelUrl(modelType: modelType)?
+                .deletingPathExtension()
+                .lastPathComponent ?? ""
+        }
+        return Self.modelNameSupportsNativeToolCalling(modelName)
+    }
+
+    public static func supportsNativeToolCalling(
+        modelType: ModelType,
+        usingRemoteModel: Bool
+    ) -> Bool {
+        if Self.modelSupportsNativeToolCalling(
+            modelType: modelType,
+            usingRemoteModel: usingRemoteModel
+        ) {
+            return true
+        }
+        return Self.hasNativeToolCalling
+    }
+
+    public static func modelNameSupportsNativeToolCalling(
+        _ modelName: String
+    ) -> Bool {
+        return modelNameSupportsQwen36NativeToolCalling(modelName)
+    }
+
+    private static func modelNameSupportsQwen36NativeToolCalling(
+        _ modelName: String
+    ) -> Bool {
+        let normalized = modelName.lowercased()
+            .replacingOccurrences(of: "_", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: " ", with: "")
+        return normalized.contains("qwen3.6") || normalized.contains("qwen36")
     }
 
     public static func localModelUrl(

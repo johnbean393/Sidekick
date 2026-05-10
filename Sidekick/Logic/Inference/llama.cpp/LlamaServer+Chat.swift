@@ -12,7 +12,7 @@ import OSLog
 import SimilaritySearchKit
 
 extension LlamaServer {
-    
+
     /// Function to retry an operation on network failures
     /// - Parameters:
     ///   - maxRetries: Maximum number of retry attempts
@@ -24,7 +24,7 @@ extension LlamaServer {
         operation: @escaping () async throws -> T
     ) async throws -> T {
         var lastError: Error?
-        
+
         for attempt in 0...maxRetries {
             do {
                 return try await operation()
@@ -46,11 +46,11 @@ extension LlamaServer {
                 throw error
             }
         }
-        
+
         // If we exhausted all retries, throw the last error
         throw lastError ?? LlamaServerError.errorResponse("Unknown error after retries")
     }
-    
+
     /// Function to get a chat completion from the LLM
     /// - Parameters:
     ///   - modelType: The type of model used for completion
@@ -89,7 +89,7 @@ extension LlamaServer {
             )
         }
     }
-    
+
     /// Internal function to get a chat completion from the LLM (without retry logic)
     /// - Parameters:
     ///   - modelType: The type of model used for completion
@@ -247,7 +247,7 @@ extension LlamaServer {
         var pendingMessage: String = ""
         var responseDiff: Double = 0.0
         var wasReasoningToken: Bool = false
-        
+
         // Track tool calls by index
         struct ToolCallAccumulator {
             var id: String?
@@ -257,7 +257,7 @@ extension LlamaServer {
         var toolCalls: [Int: ToolCallAccumulator] = [:] // Dictionary keyed by tool call index
         var blockFunctionCalls: [(any DecodableFunctionCall)] = []
         var toolCallInProgress: Bool = false
-        
+
         // Init variables for usage
         var tokenCount: Int = 0
         var usage: Usage? = nil
@@ -341,7 +341,7 @@ extension LlamaServer {
                             }.joined()
                             pendingMessage.append(fragment)
                             progressHandler?(fragment)
-                            
+
                             // Handle tool calls properly with multiple indices
                             if let firstChoice = responseObj.choices.first?.delta,
                                let toolCallDeltas = firstChoice.tool_calls {
@@ -352,32 +352,32 @@ extension LlamaServer {
                                         await updateStatusHandler(.usingFunctions)
                                     }
                                 }
-                                
+
                                 // Process each tool call delta
                                 for toolCall in toolCallDeltas {
                                     let index = toolCall.index
-                                    
+
                                     // Initialize accumulator for this index if needed
                                     if toolCalls[index] == nil {
                                         toolCalls[index] = ToolCallAccumulator()
                                     }
-                                    
+
                                     if let id = toolCall.id {
                                         toolCalls[index]?.id = id
                                     }
-                                    
+
                                     // Accumulate function name
                                     if let name = toolCall.function.name {
                                         toolCalls[index]?.name = name
                                     }
-                                    
+
                                     // Accumulate arguments chunks
                                     if let argument = toolCall.function.arguments {
                                         toolCalls[index]?.arguments += argument
                                     }
                                 }
                             }
-                            
+
                             // Document usage
                             tokenCount += 1
                             usage = responseObj.usage
@@ -426,10 +426,10 @@ extension LlamaServer {
                 }
                 continue
             }
-            
+
             var args = toolCall.arguments
             Self.logger.info("Decoding tool call  \(index): \(name) with args: \(args, privacy: .public)")
-            
+
             // Handle double-wrapped arguments from some APIs
             if let data = args.data(using: .utf8),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -438,7 +438,7 @@ extension LlamaServer {
                let unwrappedString = String(data: unwrappedData, encoding: .utf8) {
                 args = unwrappedString
             }
-            
+
             if let function = StreamMessage.OpenAIToolCall.Function.getFunctionCall(
                 name: name,
                 arguments: args,
@@ -450,7 +450,7 @@ extension LlamaServer {
             } else {
                 // Track malformed tool call with detailed error
                 let errorDescription: String
-                
+
                 // Try to determine the specific error
                 if args.isEmpty {
                     errorDescription = "Tool call arguments are empty"
@@ -467,7 +467,7 @@ extension LlamaServer {
                 } else {
                     errorDescription = "Arguments could not be decoded as UTF-8 string"
                 }
-                
+
                 let malformed = MalformedToolCall(
                     index: index,
                     name: name,
@@ -479,7 +479,7 @@ extension LlamaServer {
                 Self.logger.error("Raw args: \(args, privacy: .public)")
             }
         }
-        
+
         // Adding a trailing quote or space is a common mistake with the smaller model output
         let cleanText: String = pendingMessage.removeUnmatchedTrailingQuote()
         // Indicate response finished
@@ -532,7 +532,7 @@ extension LlamaServer {
             malformedToolCalls: malformedToolCalls.isEmpty ? nil : malformedToolCalls
         )
     }
-    
+
     /// Function to get a completion from the LLM
     /// - Parameter text: The text to complete
     /// - Parameter tokenNumber: The number of tokens to predict
@@ -611,23 +611,23 @@ extension LlamaServer {
         let content = response.choices.first?.logprobs.content
         return content
     }
-    
+
 }
 
 // MARK: - Streaming Types
 
 extension LlamaServer {
-    
+
     struct StreamMessage: Codable {
-        
+
         /// The new token generated, decoded to type `String?`
         let content: String?
-        
+
         /// The new reasoning token generated, decoded to type `String?`, for OpenRouter
         let reasoning: String?
         /// The new reasoning token generated, decoded to type `String?`, for Bailian
         let reasoning_content: String?
-        
+
         /// The new reasoning token generated, if available
         var reasoningContent: String? {
             if let reasoning = self.reasoning,
@@ -640,23 +640,54 @@ extension LlamaServer {
                 return nil
             }
         }
-        
+
         /// A list of ``ToolCalls``, if it exists
         var tool_calls: [OpenAIToolCall]?
-        
+
         struct OpenAIToolCall: Codable {
-            
+
             var index: Int
             var id: String?
             var type: String?
-            
+
             var function: Function
-            
+
             struct Function: Codable {
-                
+
                 var name: String?
                 var arguments: String?
-                
+
+                enum CodingKeys: String, CodingKey {
+                    case name
+                    case arguments
+                }
+
+                init(
+                    name: String? = nil,
+                    arguments: String? = nil
+                ) {
+                    self.name = name
+                    self.arguments = arguments
+                }
+
+                init(from decoder: Decoder) throws {
+                    let container = try decoder.container(keyedBy: CodingKeys.self)
+                    self.name = try container.decodeIfPresent(String.self, forKey: .name)
+                    if let arguments = try? container.decodeIfPresent(String.self, forKey: .arguments) {
+                        self.arguments = arguments
+                    } else if let jsonValue = try? container.decodeIfPresent(JSONValue.self, forKey: .arguments) {
+                        self.arguments = jsonValue.jsonString
+                    } else {
+                        self.arguments = nil
+                    }
+                }
+
+                func encode(to encoder: Encoder) throws {
+                    var container = encoder.container(keyedBy: CodingKeys.self)
+                    try container.encodeIfPresent(name, forKey: .name)
+                    try container.encodeIfPresent(arguments, forKey: .arguments)
+                }
+
                 /// Function to get the corresponding function call
                 public static func getFunctionCall(
                     name: String,
@@ -670,27 +701,18 @@ extension LlamaServer {
                         if function.name == name {
                             // Try to formulate arguments
                             let decoder: JSONDecoder = JSONDecoder()
-                            
-                            // Attempt to decode with original arguments first
-                            if let result = Self.tryDecode(
-                                arguments: arguments,
-                                function: function,
-                                decoder: decoder,
-                                toolCallID: toolCallID
-                            ) {
-                                return result
-                            }
-                            
-                            // Try automatic recovery for common JSON issues
-                            let recoveryAttempts = Self.getRecoveryAttempts(for: arguments)
-                            for recoveredArgs in recoveryAttempts {
+
+                            let candidates = Self.normalizedArgumentCandidates(for: arguments)
+                            for recoveredArgs in candidates {
                                 if let result = Self.tryDecode(
                                     arguments: recoveredArgs,
                                     function: function,
                                     decoder: decoder,
                                     toolCallID: toolCallID
                                 ) {
-                                    LlamaServer.logger.info("Successfully recovered malformed arguments for '\(name)' using automatic correction")
+                                    if recoveredArgs != arguments {
+                                        LlamaServer.logger.info("Successfully recovered malformed arguments for '\(name)' using automatic correction")
+                                    }
                                     return result
                                 }
                             }
@@ -699,7 +721,7 @@ extension LlamaServer {
                     // If failed to init, return nil
                     return nil
                 }
-                
+
                 /// Helper to attempt decoding with given arguments
                 private static func tryDecode(
                     arguments: String,
@@ -717,12 +739,43 @@ extension LlamaServer {
                         toolCallID: toolCallID
                     )
                 }
-                
-                /// Generate recovery attempts for common JSON errors
+
+                /// Generate normalized and recovered argument candidates for common provider and JSON variants.
+                private static func normalizedArgumentCandidates(for arguments: String) -> [String] {
+                    var candidates = [arguments]
+                    let cleaned = arguments.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if cleaned != arguments {
+                        candidates.append(cleaned)
+                    }
+
+                    for candidate in candidates {
+                        guard let data = candidate.data(using: .utf8),
+                              let json = try? JSONSerialization.jsonObject(with: data) else {
+                            continue
+                        }
+                        if let object = json as? [String: Any],
+                           let innerArguments = object["arguments"] {
+                            if let innerString = innerArguments as? String {
+                                candidates.append(innerString)
+                            } else if JSONSerialization.isValidJSONObject(innerArguments),
+                                      let innerData = try? JSONSerialization.data(withJSONObject: innerArguments),
+                                      let innerString = String(data: innerData, encoding: .utf8) {
+                                candidates.append(innerString)
+                            }
+                        } else if let string = json as? String {
+                            candidates.append(string)
+                        }
+                    }
+
+                    candidates += Self.getRecoveryAttempts(for: cleaned)
+                    return Self.uniqued(candidates)
+                }
+
+                /// Generate recovery attempts for common JSON errors.
                 private static func getRecoveryAttempts(for arguments: String) -> [String] {
                     var attempts: [String] = []
                     let cleaned = arguments.trimmingCharacters(in: .whitespacesAndNewlines)
-                    
+
                     // 1. Remove trailing commas before closing braces/brackets
                     let trailingCommaPattern = #",(\s*[}\]])"#
                     if let regex = try? NSRegularExpression(pattern: trailingCommaPattern) {
@@ -736,12 +789,12 @@ extension LlamaServer {
                             attempts.append(fixed)
                         }
                     }
-                    
+
                     // 2. Wrap in braces if missing (for single-parameter functions)
                     if !cleaned.hasPrefix("{") {
                         attempts.append("{\(cleaned)}")
                     }
-                    
+
                     // 3. Fix common boolean representations
                     let booleanMappings = [
                         ("True", "true"),
@@ -757,74 +810,139 @@ extension LlamaServer {
                             }
                         }
                     }
-                    
+
                     // 4. Fix single quotes to double quotes (common Python-style mistake)
                     if cleaned.contains("'") {
                         let fixed = cleaned.replacingOccurrences(of: "'", with: "\"")
                         attempts.append(fixed)
                     }
-                    
+
                     // 5. Empty object if arguments are completely empty or whitespace
                     if cleaned.isEmpty {
                         attempts.append("{}")
                     }
-                    
+
                     return attempts
                 }
-                
+
+                private static func uniqued(_ values: [String]) -> [String] {
+                    var seen = Set<String>()
+                    var result: [String] = []
+                    for value in values where seen.insert(value).inserted {
+                        result.append(value)
+                    }
+                    return result
+                }
+
             }
-            
+
         }
     }
-    
+
+    enum JSONValue: Codable {
+        case string(String)
+        case number(Double)
+        case bool(Bool)
+        case object([String: JSONValue])
+        case array([JSONValue])
+        case null
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            if container.decodeNil() {
+                self = .null
+            } else if let value = try? container.decode(String.self) {
+                self = .string(value)
+            } else if let value = try? container.decode(Bool.self) {
+                self = .bool(value)
+            } else if let value = try? container.decode(Double.self) {
+                self = .number(value)
+            } else if let value = try? container.decode([String: JSONValue].self) {
+                self = .object(value)
+            } else if let value = try? container.decode([JSONValue].self) {
+                self = .array(value)
+            } else {
+                throw DecodingError.dataCorruptedError(
+                    in: container,
+                    debugDescription: "Unsupported JSON value"
+                )
+            }
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            switch self {
+                case .string(let value):
+                    try container.encode(value)
+                case .number(let value):
+                    try container.encode(value)
+                case .bool(let value):
+                    try container.encode(value)
+                case .object(let value):
+                    try container.encode(value)
+                case .array(let value):
+                    try container.encode(value)
+                case .null:
+                    try container.encodeNil()
+            }
+        }
+
+        var jsonString: String? {
+            guard let data = try? JSONEncoder().encode(self) else {
+                return nil
+            }
+            return String(data: data, encoding: .utf8)
+        }
+    }
+
     struct StreamChoice: Codable {
-        
+
         /// The new token generated, as a ``StreamMessage``
         let delta: StreamMessage
         /// The reason for finishing generation; returns `nil` if completion is not finished
         let finish_reason: String?
-        
+
     }
-    
+
     struct StreamResponse: Codable {
-        
+
         let choices: [StreamChoice]
         let created: Double
         let usage: Usage?
         let error: ResponseError?
-        
+
         /// A structure modeling error information in the response
         struct ResponseError: Codable {
             let message: String
             let code: Int?
             let metadata: [String: String]?
-            
+
             /// Check if this is a network error (5xx status codes)
             var isNetworkError: Bool {
                 guard let code = code else { return false }
                 return code >= 500 && code < 600
             }
         }
-        
+
     }
-    
+
     struct Usage: Codable {
-        
+
         let completion_tokens: Int?
         let prompt_tokens: Int?
         let total_tokens: Int?
-        
+
     }
-    
+
     struct StopResponse: Codable {
-        
+
         let model: String
         let usage: Usage
-        
+
     }
-    
+
     public struct CompleteResponse {
-        
+
         var text: String
         var responseStartSeconds: Double
         var predictedPerSecond: Double?
@@ -835,7 +953,7 @@ extension LlamaServer {
         var usedServer: Bool
         /// The tools available while this response was generated
         var availableFunctions: [AnyFunctionBox] = []
-        
+
         /// An array of ``FunctionCallRecord`` executed in the response
         var functionCallRecords: [FunctionCallRecord] = []
         /// A `Bool` representing if a function was called
@@ -845,6 +963,10 @@ extension LlamaServer {
                 return true
             }
             return false
+        }
+        /// A `Bool` indicating whether this response needs the function handling loop.
+        var requiresFunctionHandling: Bool {
+            return self.containsFunctionCall || !(self.malformedToolCalls?.isEmpty ?? true)
         }
         /// Any function call in the response
         var functionCalls: [(any DecodableFunctionCall)]? {
@@ -876,7 +998,7 @@ extension LlamaServer {
                 toolRegistry: ToolRegistry(functions: self.availableFunctions)
             )
         }
-        
+
         /// Function to decode all function calls
         private static func decodeAllFunctionCalls(
             in input: String,
@@ -892,17 +1014,22 @@ extension LlamaServer {
                 var braceCount = 0
                 var currentIndex = startIndex
                 var insideString = false
-                var previousChar: Character? = nil
+                var isEscapingStringCharacter = false
                 var endIndex: String.Index? = nil
                 // Attempt to balance the braces from here
                 while currentIndex < input.endIndex {
                     let character = input[currentIndex]
-                    // Toggle whether we're inside a string, ignoring escaped quotes
-                    if character == "\"" && previousChar != "\\" {
-                        insideString.toggle()
-                    }
-                    // Only process braces if we're not inside a string literal
-                    if !insideString {
+                    if insideString {
+                        if isEscapingStringCharacter {
+                            isEscapingStringCharacter = false
+                        } else if character == "\\" {
+                            isEscapingStringCharacter = true
+                        } else if character == "\"" {
+                            insideString = false
+                        }
+                    } else if character == "\"" {
+                        insideString = true
+                    } else {
                         if character == "{" {
                             braceCount += 1
                         } else if character == "}" {
@@ -913,7 +1040,6 @@ extension LlamaServer {
                             }
                         }
                     }
-                    previousChar = character
                     currentIndex = input.index(after: currentIndex)
                 }
                 // If we found matching braces, attempt to decode
@@ -921,17 +1047,16 @@ extension LlamaServer {
                     let jsonSubstring = input[startIndex...finalIndex]
                     let jsonString = String(jsonSubstring)
                     if let jsonData = jsonString.data(using: .utf8) {
-                        // Try for all function types
-                        for function in toolRegistry.sortedFunctions {
-                            if let functionCall = function.functionCallType.parse(
+                        if let functionName = Self.decodeFunctionName(
+                            from: jsonData,
+                            using: decoder
+                        ),
+                           let function = toolRegistry.function(named: functionName),
+                           let functionCall = function.functionCallType.parse(
                                 from: jsonData,
                                 using: decoder
-                            ), jsonString.contains(
-                                "\"\(function.name)\""
-                            ) {
-                                results.append(functionCall)
-                                break
-                            }
+                           ) {
+                            results.append(functionCall)
                         }
                     }
                     // Move searchStartIndex past this function call for the next iteration
@@ -943,7 +1068,45 @@ extension LlamaServer {
             }
             return results.isEmpty ? nil : results
         }
-        
+
+        private static func decodeFunctionName(
+            from data: Data,
+            using decoder: JSONDecoder
+        ) -> String? {
+            return try? decoder.decode(
+                FunctionNameEnvelope.self,
+                from: data
+            ).name
+        }
+
+        private struct FunctionNameEnvelope: Decodable {
+            let name: String
+
+            enum CodingKeys: String, CodingKey {
+                case functionCall = "function_call"
+                case function
+            }
+
+            init(from decoder: Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                if let config = try? container.decode(
+                    FunctionNameConfig.self,
+                    forKey: .functionCall
+                ) {
+                    self.name = config.name
+                } else {
+                    self.name = try container.decode(
+                        FunctionNameConfig.self,
+                        forKey: .function
+                    ).name
+                }
+            }
+
+            private struct FunctionNameConfig: Decodable {
+                let name: String
+            }
+        }
+
         /// Decode XML-style tool calls emitted by some chat templates
         private static func decodeXMLToolCalls(
             in input: String,
@@ -952,7 +1115,7 @@ extension LlamaServer {
             guard !input.isEmpty else {
                 return nil
             }
-            
+
             let toolCallPattern = #"<tool_call>\s*(.*?)\s*</tool_call>"#
             guard let toolCallRegex = try? NSRegularExpression(
                 pattern: toolCallPattern,
@@ -960,13 +1123,13 @@ extension LlamaServer {
             ) else {
                 return nil
             }
-            
+
             let inputRange = NSRange(input.startIndex..<input.endIndex, in: input)
             let matches = toolCallRegex.matches(in: input, range: inputRange)
             guard !matches.isEmpty else {
                 return nil
             }
-            
+
             var decodedCalls: [(any DecodableFunctionCall)] = []
             for match in matches {
                 guard match.numberOfRanges > 1,
@@ -982,10 +1145,10 @@ extension LlamaServer {
                 }
                 decodedCalls.append(functionCall)
             }
-            
+
             return decodedCalls.isEmpty ? nil : decodedCalls
         }
-        
+
         private static func decodeSingleXMLToolCall(
             _ body: String,
             toolRegistry: ToolRegistry
@@ -997,7 +1160,7 @@ extension LlamaServer {
             ) else {
                 return nil
             }
-            
+
             let bodyRange = NSRange(body.startIndex..<body.endIndex, in: body)
             guard let match = functionRegex.firstMatch(in: body, range: bodyRange),
                   match.numberOfRanges > 2,
@@ -1005,13 +1168,13 @@ extension LlamaServer {
                   let functionBodyRange = Range(match.range(at: 2), in: body) else {
                 return nil
             }
-            
+
             let functionName = String(body[functionNameRange])
             let functionBody = String(body[functionBodyRange])
             guard let function = toolRegistry.function(named: functionName) else {
                 return nil
             }
-            
+
             let parameterPattern = #"<parameter=([A-Za-z0-9_]+)>\s*(.*?)\s*</parameter>"#
             guard let parameterRegex = try? NSRegularExpression(
                 pattern: parameterPattern,
@@ -1019,7 +1182,7 @@ extension LlamaServer {
             ) else {
                 return nil
             }
-            
+
             let functionBodyRangeNS = NSRange(
                 functionBody.startIndex..<functionBody.endIndex,
                 in: functionBody
@@ -1040,7 +1203,7 @@ extension LlamaServer {
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 rawParameters[parameterName, default: []].append(parameterValue)
             }
-            
+
             guard let argumentObject = Self.makeJSONObject(
                 from: rawParameters,
                 function: function
@@ -1054,25 +1217,25 @@ extension LlamaServer {
             ) else {
                 return nil
             }
-            
+
             return function.functionCallType.init(
                 name: function.name,
                 params: params,
                 toolCallID: nil
             )
         }
-        
+
         private static func makeJSONObject(
             from rawParameters: [String: [String]],
             function: AnyFunctionBox
         ) -> [String: Any]? {
             var jsonObject: [String: Any] = [:]
-            
+
             for parameter in function.params {
                 guard let rawValues = rawParameters[parameter.label], !rawValues.isEmpty else {
                     continue
                 }
-                
+
                 switch parameter.datatype {
                     case .string:
                         jsonObject[parameter.label] = rawValues[0]
@@ -1097,10 +1260,10 @@ extension LlamaServer {
                         jsonObject[parameter.label] = values
                 }
             }
-            
+
             return jsonObject
         }
-        
+
         private static func parseArrayValues(_ rawValues: [String]) -> [String] {
             return rawValues
                 .flatMap { value in
@@ -1110,7 +1273,7 @@ extension LlamaServer {
                 }
                 .filter { !$0.isEmpty }
         }
-        
+
         private static func parseBoolean(_ rawValue: String) -> Bool? {
             switch rawValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
                 case "true", "1", "yes":
@@ -1121,59 +1284,59 @@ extension LlamaServer {
                     return nil
             }
         }
-        
+
     }
-    
+
     struct CompletionParams: Codable {
-        
+
         var prompt: String
         var max_tokens: Int
         var logprobs: Int = 1
         var temperature: Double = 0.0
-        
+
     }
-    
+
     struct CompletionResponse: Codable {
-        
+
         var completion: String? {
             return choices.first?.text
         }
         var logprob: Double? {
             return choices.first?.logprob
         }
-        
+
         var choices: [Choice]
-        
+
         var usage: Usage
-        
+
         struct Choice: Codable {
-            
+
             var text: String
-            
+
             var logprobs: Logprob
             var logprob: Double {
                 return self.logprobs.content
                     .map(keyPath: \.logprob)
                     .reduce(0, +)
             }
-            
+
             struct Logprob: Codable {
-                
+
                 var content: [Token]
-                
+
             }
-            
+
         }
-        
+
     }
-    
+
     public struct Token: Codable {
-        
+
         var token: String
         var logprob: Double
-        
+
     }
-    
+
 }
 
 extension EventSource.DataTask: @unchecked Sendable {  }

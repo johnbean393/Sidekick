@@ -102,6 +102,10 @@ public struct ChatParameters: Codable {
         } else {
             enabledFunctions = await MainActor.run { FunctionSelectionManager.shared.getEnabledFunctions() }
         }
+        let supportsNativeToolCalling = InferenceSettings.supportsNativeToolCalling(
+            modelType: modelType,
+            usingRemoteModel: usingRemoteModel
+        )
         // Check if we should encourage using query_database function
         if let expert = expert,
            !expert.isDefault,
@@ -119,7 +123,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
             }
         }
         if Settings.useFunctions && useFunctions {
-            if InferenceSettings.hasNativeToolCalling {
+            if supportsNativeToolCalling {
                 fullSystemPromptComponents.append(
                     InferenceSettings.useNativeFunctionsPrompt
                 )
@@ -150,7 +154,7 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         self.messages = messagesWithSystemPrompt
         self.model = Self.getModelName(modelType: modelType) ?? ""
         self.tools = !useFunctions ? [] : enabledFunctions.map(keyPath: \.openAiFunctionCall)
-        if InferenceSettings.hasNativeToolCalling && useFunctions {
+        if supportsNativeToolCalling && useFunctions {
             self.tool_choice = toolChoice ?? .auto
         }
         self.chat_template_kwargs = Self.getChatTemplateKwargs(
@@ -186,7 +190,10 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
     ) -> String {
         // Omit tools if non-regular, or has no native tool calling
         var omittedParams = omittedParams
-        if modelType != .regular || !InferenceSettings.hasNativeToolCalling {
+        if modelType != .regular || !InferenceSettings.supportsNativeToolCalling(
+            modelType: modelType,
+            usingRemoteModel: usingRemoteModel
+        ) {
             omittedParams += [.tools, .tool_choice]
         }
         // If is remote model, omit temperature to use provider reccomended params

@@ -13,7 +13,11 @@ import Testing
 @testable import Sidekick
 
 struct SidekickTests {
-	
+    struct ToolCallingEchoParams: FunctionParams {
+        var text: String
+    }
+
+
 	/// Test to check model reccomendations on different hardware
 	@Test func checkModelReccomendations() async throws {
 		await DefaultModels.checkModelRecommendations()
@@ -42,7 +46,7 @@ struct SidekickTests {
 			for: modelUrl
 		)
 
-		#expect(visionConfiguration.projectorModelUrl == projectorUrl)
+			#expect(visionConfiguration.projectorModelUrl?.standardizedFileURL == projectorUrl.standardizedFileURL)
 		#expect(visionConfiguration.useVision)
 	}
 
@@ -193,6 +197,213 @@ struct SidekickTests {
             kind: .paragraph
         )
         #expect(normalized.contains("**Ingredients:**  \nFlour  \nWater"))
+    }
+
+    @Test func malformedOnlyToolCallsStillRequireFunctionHandling() async throws {
+        let response = LlamaServer.CompleteResponse(
+            text: "",
+            responseStartSeconds: 0,
+            predictedPerSecond: nil,
+            modelName: nil,
+            usage: nil,
+            usedServer: false,
+            availableFunctions: ArithmeticFunctions.functions,
+            malformedToolCalls: [
+                MalformedToolCall(
+                    index: 0,
+                    name: "sum",
+                    rawArguments: #"{"a": 1"#,
+                    errorDescription: "Invalid JSON format"
+                )
+            ]
+        )
+
+        #expect(response.containsFunctionCall == false)
+        #expect(response.requiresFunctionHandling)
+    }
+
+    @Test func qwen36ModelNamesSupportNativeToolCalling() async throws {
+        #expect(InferenceSettings.modelNameSupportsNativeToolCalling("Qwen3.6-235B-A22B-Instruct-2509"))
+        #expect(InferenceSettings.modelNameSupportsNativeToolCalling("qwen/qwen3.6-coder"))
+        #expect(InferenceSettings.modelNameSupportsNativeToolCalling("Qwen3_6-30B-A3B.gguf"))
+        #expect(InferenceSettings.localModelSupportsLiveReasoningToggle(
+            modelUrl: URL(fileURLWithPath: "/tmp/Qwen3.6-30B-A3B-Q4_K_M.gguf")
+        ))
+    }
+
+    @Test func localQwen36UsesNativeToolCallingEvenWhenStoredToggleIsOff() async throws {
+        let defaults = UserDefaults.standard
+        let originalModelUrl = defaults.url(forKey: "modelUrl")
+        let originalHasNativeToolCallingExists = defaults.exists(key: "hasNativeToolCalling")
+        let originalHasNativeToolCalling = defaults.bool(forKey: "hasNativeToolCalling")
+        let originalUseFunctionsExists = defaults.exists(key: "useFunctions")
+        let originalUseFunctions = defaults.bool(forKey: "useFunctions")
+        defer {
+            Settings.modelUrl = originalModelUrl
+            if originalHasNativeToolCallingExists {
+                InferenceSettings.hasNativeToolCalling = originalHasNativeToolCalling
+            } else {
+                defaults.removeObject(forKey: "hasNativeToolCalling")
+            }
+            if originalUseFunctionsExists {
+                Settings.useFunctions = originalUseFunctions
+            } else {
+                defaults.removeObject(forKey: "useFunctions")
+            }
+        }
+
+        Settings.modelUrl = URL(fileURLWithPath: "/tmp/Qwen3.6-30B-A3B-Q4_K_M.gguf")
+        InferenceSettings.hasNativeToolCalling = false
+        Settings.useFunctions = true
+
+        let params = await ChatParameters(
+            modelType: .regular,
+            usingRemoteModel: false,
+            systemPrompt: "System",
+            messages: [],
+            useFunctions: true,
+            functions: [ArithmeticFunctions.sum]
+        )
+        let json = params.toJSON(
+            usingRemoteModel: false,
+            modelType: .regular
+        )
+        let object = try JSONSerialization.jsonObject(
+            with: Data(json.utf8)
+        ) as? [String: Any]
+
+        #expect(InferenceSettings.supportsNativeToolCalling(
+            modelType: .regular,
+            usingRemoteModel: false
+        ))
+        #expect(object?["tools"] != nil)
+        #expect(object?["tool_choice"] as? String == "auto")
+    }
+
+    @Test func nativeToolCallDecoderAcceptsObjectArguments() async throws {
+        let data = Data(
+            """
+            {
+              "choices": [
+                {
+                  "delta": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_sum",
+                        "type": "function",
+                        "function": {
+                          "name": "sum",
+                          "arguments": {
+                            "a": 2,
+                            "b": 3
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "finish_reason": null
+                }
+              ],
+              "created": 0,
+              "usage": null
+            }
+            """.utf8
+        )
+
+        let response = try JSONDecoder().decode(
+            LlamaServer.StreamResponse.self,
+            from: data
+        )
+        let nativeToolCall = response.choices.first?.delta.tool_calls?.first
+        let decodedCall = LlamaServer.StreamMessage.OpenAIToolCall.Function.getFunctionCall(
+            name: nativeToolCall?.function.name ?? "",
+            arguments: nativeToolCall?.function.arguments ?? "",
+            toolCallID: nativeToolCall?.id,
+            toolRegistry: ToolRegistry(functions: ArithmeticFunctions.functions)
+        )
+
+        #expect(decodedCall?.name == "sum")
+        #expect(decodedCall?.toolCallID == "call_sum")
+        guard var decodedCall else {
+            return
+        }
+        let result = try await decodedCall.call(
+            using: ToolRegistry(functions: ArithmeticFunctions.functions)
+        )
+        #expect(result == "5.0")
+    }
+
+    @Test func nativeToolCallDecoderUnwrapsStringifiedArguments() async throws {
+        let decodedCall = LlamaServer.StreamMessage.OpenAIToolCall.Function.getFunctionCall(
+            name: "sum",
+            arguments: #"{"arguments":"{\"a\":4,\"b\":6}"}"#,
+            toolCallID: "call_wrapped",
+            toolRegistry: ToolRegistry(functions: ArithmeticFunctions.functions)
+        )
+
+        #expect(decodedCall?.name == "sum")
+        #expect(decodedCall?.toolCallID == "call_wrapped")
+        guard var decodedCall else {
+            return
+        }
+        let result = try await decodedCall.call(
+            using: ToolRegistry(functions: ArithmeticFunctions.functions)
+        )
+        #expect(result == "10.0")
+    }
+
+    @Test func inlineToolCallParserIgnoresBracesInsideStringArguments() async throws {
+        let echoFunction = Function<ToolCallingEchoParams, String>(
+            name: "echo_tool",
+            description: "Returns the provided text.",
+            params: [
+                FunctionParameter(
+                    label: "text",
+                    description: "Text to echo",
+                    datatype: .string
+                )
+            ],
+            run: { params in
+                params.text
+            }
+        )
+        let otherFunctionWithSameSchema = Function<ToolCallingEchoParams, String>(
+            name: "other_tool",
+            description: "Should not be selected when only mentioned in an argument.",
+            params: [
+                FunctionParameter(
+                    label: "text",
+                    description: "Text to echo",
+                    datatype: .string
+                )
+            ],
+            run: { params in
+                "wrong function: \(params.text)"
+            }
+        )
+        let functions: [AnyFunctionBox] = [otherFunctionWithSameSchema, echoFunction]
+        let registry = ToolRegistry(functions: functions)
+        let response = LlamaServer.CompleteResponse(
+            text: """
+            Here is the call:
+            {"function_call":{"name":"echo_tool","arguments":{"text":"value with { braces }, mentions other_tool, and an escaped \\\"quote\\\""}}}
+            """,
+            responseStartSeconds: 0,
+            predictedPerSecond: nil,
+            modelName: nil,
+            usage: nil,
+            usedServer: false,
+            availableFunctions: functions
+        )
+
+        let functionCalls = response.functionCalls
+        #expect(functionCalls?.count == 1)
+        guard var functionCall = functionCalls?.first else {
+            return
+        }
+        let result = try await functionCall.call(using: registry)
+        #expect(result == #"value with { braces }, mentions other_tool, and an escaped "quote""#)
     }
 
     @Test func streamingAttributedTextDoesNotAddParagraphSpacingToEachListItem() async throws {
