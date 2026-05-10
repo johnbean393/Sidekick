@@ -19,6 +19,7 @@ struct GeneralSettingsView: View {
     @AppStorage("voiceId") private var voiceId: String = ""
     
     @AppStorage("useFunctions") private var useFunctions: Bool = Settings.useFunctions
+    @AppStorage("runFunctionsWithoutApproval") private var runFunctionsWithoutApproval: Bool = Settings.runFunctionsWithoutApproval
     @AppStorage("checkFunctionsCompletion") private var checkFunctionsCompletion: Int = 0
 
     @StateObject private var speechSynthesizer: SpeechSynthesizer = .shared
@@ -41,6 +42,7 @@ struct GeneralSettingsView: View {
             }
             Section {
                 useFunctionsToggle
+                runFunctionsWithoutApprovalToggle
                 checkFunctionsCompletionPicker
             } header: {
                 Text("Functions")
@@ -104,7 +106,7 @@ struct GeneralSettingsView: View {
             }
         }
     }
-    
+
 	var soundEffects: some View {
 		HStack(alignment: .center) {
 			VStack(alignment: .leading) {
@@ -159,6 +161,22 @@ struct GeneralSettingsView: View {
 		}
 	}
     
+    var runFunctionsWithoutApprovalToggle: some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading) {
+                Text("Run Functions Without Approval")
+                    .font(.title3)
+                    .bold()
+                Text("Allow sensitive and dangerous functions to run without confirmation dialogs or password verification.")
+                    .font(.caption)
+            }
+            Spacer()
+            Toggle("", isOn: $runFunctionsWithoutApproval)
+                .toggleStyle(.switch)
+                .disabled(!useFunctions)
+        }
+    }
+
     var checkFunctionsCompletionPicker: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading) {

@@ -177,6 +177,25 @@ public class Settings {
 		}
 	}
     
+    /// A `Bool` representing whether sensitive and dangerous functions can run without prompting for confirmation or authentication
+    static var runFunctionsWithoutApproval: Bool {
+        get {
+            // Default to requiring approval
+            if !UserDefaults.standard.exists(key: "runFunctionsWithoutApproval") {
+                Self.runFunctionsWithoutApproval = false
+            }
+            return UserDefaults.standard.bool(
+                forKey: "runFunctionsWithoutApproval"
+            )
+        }
+        set {
+            UserDefaults.standard.set(
+                newValue,
+                forKey: "runFunctionsWithoutApproval"
+            )
+        }
+    }
+
     /// A `Bool` representing whether completion if checked in the midst of a function call
     static var checkFunctionsCompletion: Int {
         get {

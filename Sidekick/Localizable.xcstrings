@@ -308,6 +308,9 @@
         }
       }
     },
+    "Allow sensitive and dangerous functions to run without confirmation dialogs or password verification." : {
+
+    },
     "Alternatively..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -4247,6 +4250,9 @@
           }
         }
       }
+    },
+    "Run Functions Without Approval" : {
+
     },
     "Save" : {
       "localizations" : {

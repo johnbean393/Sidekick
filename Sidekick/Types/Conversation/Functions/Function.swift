@@ -174,36 +174,38 @@ public struct Function<Parameter: FunctionParams, Result: Codable>: FunctionProt
             from: data
         )
         // Ask for permissions if needed
-        let requestDescription: String = String(localized: """
+        if !Settings.runFunctionsWithoutApproval {
+            let requestDescription: String = String(localized: """
 Sidekick wants to run the function `\(self.name)` to complete your request with the parameters below.
 
 \(String(data: data, encoding: .utf8)!)
 
 Do you wish to permit this?
 """)
-        switch self.clearance {
-            case .regular:
-                break
-            case .sensitive:
-                // Ask with dialog
-                if await !Dialogs.showConfirmation(
-                    title: String(localized: "Function Use"),
-                    message: requestDescription
-                ) {
-                    // If denied, throw error
-                    throw FunctionCallError.permissionsDenied
-                }
-            case .dangerous:
-                // Ask for identification
-                let context: LAContext = LAContext()
-                let policy: LAPolicy = LAPolicy.deviceOwnerAuthentication
-                let result = try await context.evaluatePolicy(
-                    policy,
-                    localizedReason: requestDescription
-                )
-                if !result {
-                    // If denied, throw error
-                    throw FunctionCallError.permissionsDenied
+            switch self.clearance {
+                case .regular:
+                    break
+                case .sensitive:
+                    // Ask with dialog
+                    if await !Dialogs.showConfirmation(
+                        title: String(localized: "Function Use"),
+                        message: requestDescription
+                    ) {
+                        // If denied, throw error
+                        throw FunctionCallError.permissionsDenied
+                    }
+                case .dangerous:
+                    // Ask for identification
+                    let context: LAContext = LAContext()
+                    let policy: LAPolicy = LAPolicy.deviceOwnerAuthentication
+                    let result = try await context.evaluatePolicy(
+                        policy,
+                        localizedReason: requestDescription
+                    )
+                    if !result {
+                        // If denied, throw error
+                        throw FunctionCallError.permissionsDenied
+                    }
                 }
         }
         // Execute the wrapped run closure.
