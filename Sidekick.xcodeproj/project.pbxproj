@@ -123,14 +123,10 @@
 		200FBFF32CB66B8300A92A74 /* ServerHealth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200FBFF22CB66B8300A92A74 /* ServerHealth.swift */; };
 		200FBFF52CB66C0000A92A74 /* LlamaServerError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200FBFF42CB66C0000A92A74 /* LlamaServerError.swift */; };
 		200FBFF72CB68ABF00A92A74 /* ChatParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200FBFF62CB68ABF00A92A74 /* ChatParameters.swift */; };
-		201A1A8E2CDB7C1C001E9BA9 /* MarkdownDataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201A1A8D2CDB7C1C001E9BA9 /* MarkdownDataView.swift */; };
-		201A1A912CDB7D8E001E9BA9 /* MarkdownDataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201A1A902CDB7D8E001E9BA9 /* MarkdownDataViewController.swift */; };
 		201A1A932CDB8109001E9BA9 /* Extension+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201A1A922CDB8109001E9BA9 /* Extension+Collection.swift */; };
-		201A1A962CDB99C6001E9BA9 /* MarkdownTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201A1A952CDB99C6001E9BA9 /* MarkdownTableView.swift */; };
-		201A1A982CDB9DED001E9BA9 /* MarkdownPieChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201A1A972CDB9DED001E9BA9 /* MarkdownPieChartView.swift */; };
-		201A1A9A2CDBA802001E9BA9 /* MarkdownBarChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201A1A992CDBA802001E9BA9 /* MarkdownBarChartView.swift */; };
-		201A1A9C2CDBB5B1001E9BA9 /* MarkdownScatterPlotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201A1A9B2CDBB5B1001E9BA9 /* MarkdownScatterPlotView.swift */; };
-		201A1A9E2CDBBA25001E9BA9 /* MarkdownLineChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201A1A9D2CDBBA25001E9BA9 /* MarkdownLineChartView.swift */; };
+		2EBEEF0100000000DEADBEE2 /* ChatMarkdownWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBEEF0100000000DEADBEE1 /* ChatMarkdownWebView.swift */; };
+		2EBEEF0200000000DEADBEE2 /* ChatMarkdownWebView in Resources */ = {isa = PBXBuildFile; fileRef = 2EBEEF0200000000DEADBEE1 /* ChatMarkdownWebView */; };
+		2EBEEF0300000000DEADBEE2 /* ChatMarkdownAssetSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBEEF0300000000DEADBEE1 /* ChatMarkdownAssetSchemeHandler.swift */; };
 		201BB9942D8AF77F00890EE6 /* ConversationSidebarButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201BB9932D8AF77F00890EE6 /* ConversationSidebarButtons.swift */; };
 		201BB9962D8AF8AA00890EE6 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201BB9952D8AF8AA00890EE6 /* CanvasView.swift */; };
 		201BB99A2D8AFDE000890EE6 /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201BB9992D8AFDE000890EE6 /* Snapshot.swift */; };
@@ -654,14 +650,10 @@
 		200FBFF22CB66B8300A92A74 /* ServerHealth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerHealth.swift; sourceTree = "<group>"; };
 		200FBFF42CB66C0000A92A74 /* LlamaServerError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaServerError.swift; sourceTree = "<group>"; };
 		200FBFF62CB68ABF00A92A74 /* ChatParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatParameters.swift; sourceTree = "<group>"; };
-		201A1A8D2CDB7C1C001E9BA9 /* MarkdownDataView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDataView.swift; sourceTree = "<group>"; };
-		201A1A902CDB7D8E001E9BA9 /* MarkdownDataViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDataViewController.swift; sourceTree = "<group>"; };
 		201A1A922CDB8109001E9BA9 /* Extension+Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+Collection.swift"; sourceTree = "<group>"; };
-		201A1A952CDB99C6001E9BA9 /* MarkdownTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTableView.swift; sourceTree = "<group>"; };
-		201A1A972CDB9DED001E9BA9 /* MarkdownPieChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPieChartView.swift; sourceTree = "<group>"; };
-		201A1A992CDBA802001E9BA9 /* MarkdownBarChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownBarChartView.swift; sourceTree = "<group>"; };
-		201A1A9B2CDBB5B1001E9BA9 /* MarkdownScatterPlotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownScatterPlotView.swift; sourceTree = "<group>"; };
-		201A1A9D2CDBBA25001E9BA9 /* MarkdownLineChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownLineChartView.swift; sourceTree = "<group>"; };
+		2EBEEF0100000000DEADBEE1 /* ChatMarkdownWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMarkdownWebView.swift; sourceTree = "<group>"; };
+		2EBEEF0200000000DEADBEE1 /* ChatMarkdownWebView */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ChatMarkdownWebView; sourceTree = "<group>"; };
+		2EBEEF0300000000DEADBEE1 /* ChatMarkdownAssetSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMarkdownAssetSchemeHandler.swift; sourceTree = "<group>"; };
 		201BB9932D8AF77F00890EE6 /* ConversationSidebarButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationSidebarButtons.swift; sourceTree = "<group>"; };
 		201BB9952D8AF8AA00890EE6 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
 		201BB9992D8AFDE000890EE6 /* Snapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snapshot.swift; sourceTree = "<group>"; };
@@ -1089,7 +1081,6 @@
 			isa = PBXGroup;
 			children = (
 				2004D7632CBC9DA2009F294E /* ConversationState.swift */,
-				201A1A902CDB7D8E001E9BA9 /* MarkdownDataViewController.swift */,
 				201BB99D2D8B17C700890EE6 /* CanvasController.swift */,
 			);
 			path = Conversation;
@@ -1422,14 +1413,10 @@
 		201A1A942CDB99B6001E9BA9 /* Markdown */ = {
 			isa = PBXGroup;
 			children = (
-				201A1A8D2CDB7C1C001E9BA9 /* MarkdownDataView.swift */,
-				201A1A952CDB99C6001E9BA9 /* MarkdownTableView.swift */,
-				201A1A972CDB9DED001E9BA9 /* MarkdownPieChartView.swift */,
-				201A1A992CDBA802001E9BA9 /* MarkdownBarChartView.swift */,
-				201A1A9B2CDBB5B1001E9BA9 /* MarkdownScatterPlotView.swift */,
-				201A1A9D2CDBBA25001E9BA9 /* MarkdownLineChartView.swift */,
 				20AF0A092CDC6339007780FE /* MarkdownCodeBlockView.swift */,
 				2040DBA42D85CB2200A8F6BD /* MarkdownImageProvider.swift */,
+				2EBEEF0100000000DEADBEE1 /* ChatMarkdownWebView.swift */,
+				2EBEEF0300000000DEADBEE1 /* ChatMarkdownAssetSchemeHandler.swift */,
 			);
 			path = Markdown;
 			sourceTree = "<group>";
@@ -1763,6 +1750,7 @@
 			isa = PBXGroup;
 			children = (
 				20692A082DE91FC700152345 /* conversationExportTemplate.html */,
+				2EBEEF0200000000DEADBEE1 /* ChatMarkdownWebView */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -2573,6 +2561,7 @@
 				203224392EBAB4400003E1A8 /* Sidekick.icon in Resources */,
 				206934902D5CC87E006619FD /* Credits.html in Resources */,
 				20692A092DE91FC700152345 /* conversationExportTemplate.html in Resources */,
+				2EBEEF0200000000DEADBEE2 /* ChatMarkdownWebView in Resources */,
 				20B97CB32CAFE86C009A0A5D /* Preview Assets.xcassets in Resources */,
 				20F2D5122CC1F33B004CE730 /* Localizable.xcstrings in Resources */,
 				20B97CB42CAFE86C009A0A5D /* Assets.xcassets in Resources */,
@@ -2707,7 +2696,6 @@
 				2083AEA22D8853DD0049C139 /* WebsiteSelectionView.swift in Sources */,
 				20BF49CD2D64A08200C329F8 /* ModelExplorerViewController.swift in Sources */,
 				200B236A2DB1227A00127D48 /* DuckDuckGoSearch.swift in Sources */,
-				201A1A962CDB99C6001E9BA9 /* MarkdownTableView.swift in Sources */,
 				206AB9652DB096C100385510 /* Extension+EKEvent.swift in Sources */,
 				206AB9632DB0889F00385510 /* CalendarFunctions.swift in Sources */,
 				20A40C872D7190BA00A9D9A9 /* SlideStudioPromptOptionsView.swift in Sources */,
@@ -2731,7 +2719,6 @@
 				208388E22CBF51F900C2A9F8 /* RetrievalSettingsView.swift in Sources */,
 				207A9F5F2CB903FD00E727DE /* Extension+Binding.swift in Sources */,
 				202E936C2DB54CDE00AB361E /* ChatPromptEditor.swift in Sources */,
-				201A1A982CDB9DED001E9BA9 /* MarkdownPieChartView.swift in Sources */,
 				2030D6262D6D680800F18BF4 /* DetectorEntitySentencesView.swift in Sources */,
 				2030D61E2D6C523600F18BF4 /* DetectorResultView.swift in Sources */,
 				20AC3CE52CDA700700947FDA /* AppState.swift in Sources */,
@@ -2756,7 +2743,6 @@
 				2031B9902CEAE33900627D53 /* InlineAssistantController.swift in Sources */,
 				2031B9982CEAE78F00627D53 /* ShortcutController.swift in Sources */,
 				2099BDA92CB81A1300E02732 /* ExpertListView.swift in Sources */,
-				201A1A9C2CDBB5B1001E9BA9 /* MarkdownScatterPlotView.swift in Sources */,
 				20C62EC32D713D5100996566 /* SlideStudioPromptView.swift in Sources */,
 				208855CC2DAD078800071F0B /* UseFunctionsButton.swift in Sources */,
 				20F6A0022ED0000100AA1111 /* ReasoningToggleButton.swift in Sources */,
@@ -2819,7 +2805,6 @@
 				208C5FD42D79CA5900D82AA6 /* Bubble.swift in Sources */,
 				20C5CBC62DA3D7310071F5F7 /* Function.swift in Sources */,
 				2030D6202D6C74E400F18BF4 /* DetectorEvaluationResultView.swift in Sources */,
-				201A1A9A2CDBA802001E9BA9 /* MarkdownBarChartView.swift in Sources */,
 				20571F742CBCEE90004F3344 /* LengthyTasksToolbarButton.swift in Sources */,
 				20B97CEB2CB00912009A0A5D /* Extension+URL.swift in Sources */,
 				20A8B65D2CB2829500B756FD /* ExpertManager.swift in Sources */,
@@ -2851,6 +2836,8 @@
 				2025E67F2D894DFC00289E3F /* MessageCopyButton.swift in Sources */,
 				20B97CB62CAFE86C009A0A5D /* SidekickApp.swift in Sources */,
 				2040DBA52D85CB2200A8F6BD /* MarkdownImageProvider.swift in Sources */,
+				2EBEEF0100000000DEADBEE2 /* ChatMarkdownWebView.swift in Sources */,
+				2EBEEF0300000000DEADBEE2 /* ChatMarkdownAssetSchemeHandler.swift in Sources */,
 				200363292D769AC700770391 /* JavaScriptRunner.swift in Sources */,
 				208388DA2CBF4DF500C2A9F8 /* Tavily.swift in Sources */,
 				2099BDA52CB8069800E02732 /* ConversationNameEditor.swift in Sources */,
@@ -2866,7 +2853,6 @@
 				20571F812CBD6A6D004F3344 /* SoundEffects.swift in Sources */,
 				20E48C292CB560B50085E7D6 /* ConversationControlsView.swift in Sources */,
 				20B97CEF2CB010AD009A0A5D /* ThumbnailView.swift in Sources */,
-				201A1A912CDB7D8E001E9BA9 /* MarkdownDataViewController.swift in Sources */,
 				208388EF2CBF86A100C2A9F8 /* Extension+UserDefaults.swift in Sources */,
 				204FC5CA2CC9C8B400CA1DB4 /* TemporaryResourcesView.swift in Sources */,
 				20C2210B2CC4B88F00A99796 /* SourcesButton.swift in Sources */,
@@ -2934,7 +2920,6 @@
 				20C62EBF2D71373500996566 /* SlideStudioView.swift in Sources */,
 				2000EF3F2DCC3A72006F9A95 /* Agent.swift in Sources */,
 				2000EDFA2DC9B971006F9A95 /* ArgumentPickerView.swift in Sources */,
-				201A1A8E2CDB7C1C001E9BA9 /* MarkdownDataView.swift in Sources */,
 				203224352EBAAC0A0003E1A8 /* Extension+Sequence.swift in Sources */,
 				202E93662DB22D3000AB361E /* InputFunctions.swift in Sources */,
 				20A8B65B2CB2709100B756FD /* Resources.swift in Sources */,
@@ -2951,7 +2936,6 @@
 				2034876D2D67236000A88DA4 /* DiagrammerView.swift in Sources */,
 				204AE3B92CEAF57E0086B42D /* CommandManager.swift in Sources */,
 				208855D12DAD1D9900071F0B /* CodeFunctions.swift in Sources */,
-				201A1A9E2CDBBA25001E9BA9 /* MarkdownLineChartView.swift in Sources */,
 				200FBFF32CB66B8300A92A74 /* ServerHealth.swift in Sources */,
 				201BB9C72D8BDCA800890EE6 /* SnapshotTextEditor.swift in Sources */,
 				2099BDB22CB828A500E02732 /* PopoverButton.swift in Sources */,

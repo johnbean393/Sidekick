@@ -562,6 +562,7 @@
       }
     },
     "Bar Chart" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2108,6 +2109,7 @@
       }
     },
     "Export as Image" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2384,6 +2386,7 @@
       }
     },
     "Flip Axis" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3021,6 +3024,7 @@
       }
     },
     "Line Chart" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3667,6 +3671,7 @@
       }
     },
     "Pie Chart" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4305,6 +4310,7 @@
       }
     },
     "Scatter Plot" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4921,6 +4927,7 @@
       }
     },
     "Table" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
