@@ -9,12 +9,10 @@ import FSKit_macOS
 import SwiftUI
 
 struct ModelRowView: View {
-	
-	@EnvironmentObject private var modelManager: ModelManager
-    
-	@Binding var modelFile: ModelManager.ModelFile
+
+    let modelFile: ModelManager.ModelFile
     @Binding var modelUrl: URL?
-	@State var isHovering: Bool = false
+    @State var isHovering: Bool = false
 	
     var modelType: ModelListView.ModelType
 	
@@ -74,12 +72,10 @@ struct ModelRowView: View {
 		Group {
 			 if isHovering {
 				Button {
-                    // If is selected, set selection to nil
                     if self.isSelected {
                         self.modelUrl = nil
                     }
-                    // Delete
-					self.modelManager.delete(self.modelFile)
+                    ModelManager.delete(id: self.modelFile.id)
 				} label: {
 					Label(
 						"Delete",

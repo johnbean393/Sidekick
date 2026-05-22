@@ -47,7 +47,7 @@ public class DefaultFunctions {
     
     /// Get enabled functions based on FunctionSelectionManager
     static func getEnabledFunctions() async -> [AnyFunctionBox] {
-        return await MainActor.run { FunctionSelectionManager.shared.getEnabledFunctions() }
+        return await MainActor.run { FunctionSelection.getEnabledFunctions() }
     }
     
     /// Get sorted enabled functions based on FunctionSelectionManager

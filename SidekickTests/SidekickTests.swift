@@ -8,6 +8,7 @@
 import AppKit
 import DefaultModels
 import Foundation
+import SwiftData
 import SwiftUI
 import Testing
 @testable import Sidekick
@@ -395,6 +396,29 @@ struct SidekickTests {
     @Test func minimaxOrganizationIncludedInCaseIterable() async throws {
         let allOrgs = KnownModel.Organization.allCases
         #expect(allOrgs.contains(.minimax))
+    }
+
+    // MARK: - SwiftData Persistence Tests
+
+    @Test func inMemoryContainerSupportsBasicInsertAndFetch() async throws {
+        // Exercises the in-memory ``ModelContainer`` factory so the
+        // SwiftData schema is at least round-tripped end-to-end by
+        // the test suite. Insertion + fetch on `CommandEntity` is
+        // representative because the entity has no relationships,
+        // making the test independent of the heavier graph types.
+        let container = PersistenceController.inMemoryContainer()
+        let context = ModelContext(container)
+        let entity = CommandEntity(
+            id: UUID(),
+            name: "Test",
+            prompt: "Hello"
+        )
+        context.insert(entity)
+        try context.save()
+
+        let fetched = try context.fetch(FetchDescriptor<CommandEntity>())
+        #expect(fetched.count == 1)
+        #expect(fetched.first?.name == "Test")
     }
 
     @Test func minimaxKnownModelRoundTrip() async throws {

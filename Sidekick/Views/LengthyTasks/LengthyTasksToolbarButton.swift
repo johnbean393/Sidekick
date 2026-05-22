@@ -14,15 +14,13 @@ struct LengthyTasksButton: View {
 	
 	@Environment(\.colorScheme) var colorScheme
 	
-	@EnvironmentObject private var lengthyTasksController: LengthyTasksController
-	@EnvironmentObject private var conversationState: ConversationState
-	@EnvironmentObject private var expertManager: ExpertManager
-	
-	var selectedExpert: Expert? {
+	@Environment(LengthyTasksController.self) private var lengthyTasksController
+	@Environment(ConversationState.self) private var conversationState
+		var selectedExpert: Expert? {
 		guard let selectedExpertId = conversationState.selectedExpertId else {
 			return nil
 		}
-		return expertManager.getExpert(id: selectedExpertId)
+		return ExpertManager.getExpert(id: selectedExpertId)
 	}
 	
 	var isInverted: Bool {

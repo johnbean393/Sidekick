@@ -100,15 +100,21 @@ public struct ChatParameters: Codable {
         if let customFunctions = functions {
             enabledFunctions = customFunctions
         } else {
-            enabledFunctions = await MainActor.run { FunctionSelectionManager.shared.getEnabledFunctions() }
+            enabledFunctions = await MainActor.run { FunctionSelection.getEnabledFunctions() }
         }
         let supportsNativeToolCalling = InferenceSettings.supportsNativeToolCalling(
             modelType: modelType,
             usingRemoteModel: usingRemoteModel
         )
         // Check if we should encourage using query_database function
+        let isDefaultExpert: Bool
+        if let resolvedExpert = expert {
+            isDefaultExpert = await MainActor.run { resolvedExpert.isDefault }
+        } else {
+            isDefaultExpert = false
+        }
         if let expert = expert,
-           !expert.isDefault,
+           !isDefaultExpert,
            expert.resources.resources.count > 0,
            Settings.useFunctions && useFunctions {
             // Check if query_database function is enabled

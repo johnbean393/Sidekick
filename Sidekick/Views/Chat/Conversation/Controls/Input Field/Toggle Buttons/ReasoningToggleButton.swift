@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ReasoningToggleButton: View {
     
-    @EnvironmentObject private var promptController: PromptController
+    @Environment(PromptController.self) private var promptController
     
     var activatedFillColor: Color
     var modelIdentifier: String?

@@ -10,7 +10,7 @@ import Combine
 
 struct IntroductionView: View {
     
-    @EnvironmentObject private var conversationState: ConversationState
+    @Environment(ConversationState.self) private var conversationState
     
     @StateObject private var introductionViewController: IntroductionViewController = .init()
     

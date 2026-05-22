@@ -12,7 +12,7 @@ import SwiftUI
 struct MessageOptionsView: View {
 	
 	@Environment(\.colorScheme) private var colorScheme
-    @EnvironmentObject private var promptController: PromptController
+    @Environment(PromptController.self) private var promptController
 	
 	@State private var showNerdInfo: Bool = false
     @Binding var isEditing: Bool

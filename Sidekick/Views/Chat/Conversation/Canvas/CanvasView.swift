@@ -12,8 +12,8 @@ import WebViewKit
 struct CanvasView: View {
 	
 	@EnvironmentObject private var canvasController: CanvasController
-	@EnvironmentObject private var conversationState: ConversationState
-	@EnvironmentObject private var conversationManager: ConversationManager
+	@Environment(ConversationState.self) private var conversationState
+	@Environment(ConversationManager.self) private var conversationManager
 	
 	var selectedConversation: Conversation? {
 		guard let selectedConversationId = conversationState.selectedConversationId else {

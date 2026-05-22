@@ -4,187 +4,164 @@
 //
 //  Created by John Bean on 4/29/25.
 //
+//  Replaced in Phase 2 of the SwiftData migration. The legacy
+//  ``ServerArgumentsManager`` `ObservableObject` is gone; all
+//  storage lives in ``ServerArgumentEntity`` rows and views read
+//  them via SwiftData's `@Query`. The static helpers below provide
+//  the small slice of API that non-View call sites (the llama.cpp
+//  server lifecycle) still need.
+//
 
 import Foundation
-import os.log
+import OSLog
+import SwiftData
 import SwiftUI
 
-public class ServerArgumentsManager: ObservableObject {
-    
-    init() {
-        self.patchFileIntegrity()
-        self.load()
-    }
-    
-    /// Static constant for the global `ServerArgumentsManager` object
-    static public let shared: ServerArgumentsManager = .init()
-    
-    /// Published property for all serverArguments
-    @Published public var serverArguments: [ServerArgument] = ServerArgument.defaultServerArguments {
-        didSet {
-            self.save()
-        }
-    }
-    
-    /// A list of active arguments
-    public var activeArguments: [ServerArgument] {
-        return self.serverArguments
-            .filter(\.isActive)
-            .filter { argument in
-                return !argument.flag.isEmpty
-            }
-    }
-    /// A `String` for all the arguments that need to be appended
-    public var allArguments: [String] {
-        return self.activeArguments.map { argument in
-            return argument.arguments
-        }.reduce([], +)
-    }
-    
-    /// Function to save serverArguments to disk
-    public func save() {
-        do {
-            // Save data
-            let rawData: Data = try JSONEncoder().encode(
-                self.serverArguments
-            )
-            try rawData.write(
-                to: self.datastoreUrl,
-                options: .atomic
-            )
-        } catch {
-            os_log("error = %@", error.localizedDescription)
-        }
-    }
-    
-    /// Function to load serverArguments from disk
-    public func load() {
-        do {
-            // Load data
-            let rawData: Data = try Data(
-                contentsOf: self.datastoreUrl
-            )
-            let decoder: JSONDecoder = JSONDecoder()
-            self.serverArguments = try decoder.decode(
-                [ServerArgument].self,
-                from: rawData
-            )
-        } catch {
-            // Indicate error
-            print("Failed to load serverArguments: \(error)")
-            // Make new datastore
-            self.newDatastore()
-        }
-    }
-    
-    /// Function to delete a serverArguments
-    public func delete(_ serverArguments: Binding<ServerArgument>) {
-        withAnimation(.spring()) {
-            self.serverArguments = self.serverArguments.filter {
-                $0.id != serverArguments.wrappedValue.id
-            }
-        }
-    }
-    
-    /// Function to delete a serverArguments
-    public func delete(_ serverArguments: ServerArgument) {
-        withAnimation(.spring()) {
-            self.serverArguments = self.serverArguments.filter {
-                $0.id != serverArguments.id
-            }
-        }
-    }
-    
-    /// Function to add a serverArguments
-    public func add(_ serverArguments: ServerArgument) {
-        withAnimation(.spring()) {
-            self.serverArguments.append(serverArguments)
-        }
-    }
-    
-    /// Function to update a serverArguments
-    public func update(_ serverArguments: ServerArgument) {
-        withAnimation(.spring()) {
-            for serverArgumentsIndex in self.serverArguments.indices {
-                if serverArguments.id == self.serverArguments[serverArgumentsIndex].id {
-                    self.serverArguments[serverArgumentsIndex] = serverArguments
-                    break
-                }
-            }
-        }
-    }
-    
-    /// Function to update a serverArguments
-    public func update(_ serverArguments: Binding<ServerArgument>) {
-        withAnimation(.spring()) {
-            let targetId: UUID = serverArguments.wrappedValue.id
-            for index in self.serverArguments.indices {
-                if targetId == self.serverArguments[index].id {
-                    self.serverArguments[index] = serverArguments.wrappedValue
-                    break
-                }
-            }
-        }
-    }
-    
-    /// Function to make new datastore
-    public func newDatastore() {
-        // Setup directory
-        self.patchFileIntegrity()
-        // Add new datastore
-        self.serverArguments = ServerArgument.defaultServerArguments
-        self.save()
-    }
-    
-    /// Function to reset datastore
-    @MainActor
-    public func resetDatastore() {
-        // Present confirmation modal
-        let _ = Dialogs.showConfirmation(
-            title: String(localized: "Delete All Server Arguments"),
-            message: String(localized: "Are you sure you want to delete all server arguments?")
-        ) {
-            // If yes, delete datastore
-            FileManager.removeItem(at: self.datastoreUrl)
-            // Make new datastore
-            self.newDatastore()
-        }
-    }
-    
-    /// Function to patch file integrity
-    public func patchFileIntegrity() {
-        // Setup directory if needed
-        if !self.datastoreDirExists {
-            try! FileManager.default.createDirectory(
-                at: datastoreDirUrl,
-                withIntermediateDirectories: true
-            )
-        }
-    }
-    
-    /// Computed property returning the datastore's directory's url
-    public var datastoreDirUrl: URL {
-        return Settings.containerUrl.appendingPathComponent(
-            "Server Arguments"
-        )
-    }
-    
-    /// Computed property returning if datastore directory exists
-    private var datastoreDirExists: Bool {
-        return self.datastoreDirUrl.fileExists
-    }
-    
-    /// Computed property returning the datastore's url
-    public var datastoreUrl: URL {
-        return self.datastoreDirUrl.appendingPathComponent(
-            "serverArguments.json"
-        )
-    }
-    
-    /// Computed property returning if datastore exists
-    private var datastoreExists: Bool {
-        return self.datastoreUrl.fileExists
-    }
-    
-}
+@MainActor
+public enum ServerArgumentsStore {
 
+    private static let logger: Logger = .init(
+        subsystem: Bundle.main.bundleIdentifier!,
+        category: "ServerArgumentsStore"
+    )
+
+    /// Returns the persisted arguments, in sort order. Lazily seeds
+    /// the store with the defaults on first read.
+    public static func arguments() -> [ServerArgument] {
+        let context = ModelContext(PersistenceController.shared.container)
+        do {
+            var descriptor = FetchDescriptor<ServerArgumentEntity>(
+                sortBy: [SortDescriptor(\.sortIndex)]
+            )
+            descriptor.fetchLimit = 1024
+            let rows = try context.fetch(descriptor)
+            if rows.isEmpty {
+                replace(with: ServerArgument.defaultServerArguments)
+                return ServerArgument.defaultServerArguments
+            }
+            return rows.map {
+                ServerArgument(
+                    id: $0.id,
+                    isActive: $0.isActive,
+                    flag: $0.flag,
+                    value: $0.value
+                )
+            }
+        } catch {
+            Self.logger.error(
+                "Failed to read server arguments: \(error.localizedDescription, privacy: .public)"
+            )
+            return ServerArgument.defaultServerArguments
+        }
+    }
+
+    /// Arguments that have a non-empty flag and are marked active.
+    public static func activeArguments() -> [ServerArgument] {
+        return arguments()
+            .filter(\.isActive)
+            .filter { !$0.flag.isEmpty }
+    }
+
+    /// Flattened argv slice produced by all active arguments.
+    public static func allArguments() -> [String] {
+        return activeArguments().flatMap(\.arguments)
+    }
+
+    /// Wholesale replace the persisted argument list.
+    public static func replace(with arguments: [ServerArgument]) {
+        let context = ModelContext(PersistenceController.shared.container)
+        do {
+            let existing = try context.fetch(FetchDescriptor<ServerArgumentEntity>())
+            for row in existing {
+                context.delete(row)
+            }
+            for (index, argument) in arguments.enumerated() {
+                context.insert(
+                    ServerArgumentEntity(
+                        id: argument.id,
+                        isActive: argument.isActive,
+                        flag: argument.flag,
+                        value: argument.value,
+                        sortIndex: index
+                    )
+                )
+            }
+            try context.save()
+        } catch {
+            Self.logger.error(
+                "Failed to save server arguments: \(error.localizedDescription, privacy: .public)"
+            )
+        }
+    }
+
+    /// Append a new argument row.
+    public static func add(_ argument: ServerArgument) {
+        let context = ModelContext(PersistenceController.shared.container)
+        do {
+            var descriptor = FetchDescriptor<ServerArgumentEntity>(
+                sortBy: [SortDescriptor(\.sortIndex)]
+            )
+            descriptor.fetchLimit = 1024
+            let existing = try context.fetch(descriptor)
+            let nextIndex = (existing.last?.sortIndex ?? -1) + 1
+            context.insert(
+                ServerArgumentEntity(
+                    id: argument.id,
+                    isActive: argument.isActive,
+                    flag: argument.flag,
+                    value: argument.value,
+                    sortIndex: nextIndex
+                )
+            )
+            try context.save()
+        } catch {
+            Self.logger.error(
+                "Failed to add server argument: \(error.localizedDescription, privacy: .public)"
+            )
+        }
+    }
+
+    /// Delete a single argument by id.
+    public static func delete(id: UUID) {
+        let context = ModelContext(PersistenceController.shared.container)
+        do {
+            let descriptor = FetchDescriptor<ServerArgumentEntity>(
+                predicate: #Predicate { $0.id == id }
+            )
+            if let row = try context.fetch(descriptor).first {
+                context.delete(row)
+                try context.save()
+            }
+        } catch {
+            Self.logger.error(
+                "Failed to delete server argument: \(error.localizedDescription, privacy: .public)"
+            )
+        }
+    }
+
+    /// Update an existing argument row's mutable fields.
+    public static func update(_ argument: ServerArgument) {
+        let id = argument.id
+        let context = ModelContext(PersistenceController.shared.container)
+        do {
+            let descriptor = FetchDescriptor<ServerArgumentEntity>(
+                predicate: #Predicate { $0.id == id }
+            )
+            if let row = try context.fetch(descriptor).first {
+                row.isActive = argument.isActive
+                row.flag = argument.flag
+                row.value = argument.value
+                try context.save()
+            }
+        } catch {
+            Self.logger.error(
+                "Failed to update server argument: \(error.localizedDescription, privacy: .public)"
+            )
+        }
+    }
+
+    /// Restore the default argument set.
+    public static func resetToDefaults() {
+        replace(with: ServerArgument.defaultServerArguments)
+    }
+}

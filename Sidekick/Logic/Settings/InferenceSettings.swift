@@ -76,7 +76,7 @@ Current date & time: \(Date.now.formatted(date: .complete, time: .omitted))
     /// Function to obtain the part of the system prompt where memorized information is fed to the LLM
     public static func getMemoryPrompt(prompt: String) async -> String? {
         // Get memories
-        if let memories: [String] = await Memories.shared.recall(
+        if let memories: [String] = await MemoryIndex.shared.recall(
             prompt: prompt
         ), !memories.isEmpty {
             // Else, compile and return

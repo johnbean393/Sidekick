@@ -11,14 +11,13 @@ struct ExpertSelectionMenu: View {
     
     @Environment(\.colorScheme) var colorScheme
     
-    @EnvironmentObject private var expertManager: ExpertManager
-    @EnvironmentObject private var conversationState: ConversationState
+        @Environment(ConversationState.self) private var conversationState
     
     var selectedExpert: Expert? {
         guard let selectedExpertId = conversationState.selectedExpertId else {
             return nil
         }
-        return expertManager.getExpert(id: selectedExpertId)
+        return ExpertManager.getExpert(id: selectedExpertId)
     }
     
     var isInverted: Bool {
@@ -42,7 +41,7 @@ struct ExpertSelectionMenu: View {
     }
     
     var inactiveExperts: [Expert] {
-        return expertManager.experts.filter({ expert in
+        return ExpertManager.experts().filter({ expert in
             expert != selectedExpert
         })
     }
@@ -158,10 +157,10 @@ struct ExpertSelectionMenu: View {
     
     /// Function to switch to the next expert
     private func switchToNextExpert() {
-        let expertsIds: [UUID] = (expertManager.experts + expertManager.experts).map({ $0.id })
+        let expertsIds: [UUID] = (ExpertManager.experts() + ExpertManager.experts()).map({ $0.id })
         guard let selectedExpertId = conversationState.selectedExpertId else {
             withAnimation(.linear) {
-                self.conversationState.selectedExpertId = expertManager.firstExpert?.id
+                self.conversationState.selectedExpertId = ExpertManager.experts().first?.id
             }
             return
         }
@@ -175,10 +174,10 @@ struct ExpertSelectionMenu: View {
     
     /// Function to switch to the last expert
     private func switchToPrevExpert() {
-        let expertsIds: [UUID] = (expertManager.experts + expertManager.experts).map({ $0.id })
+        let expertsIds: [UUID] = (ExpertManager.experts() + ExpertManager.experts()).map({ $0.id })
         guard let selectedExpertId = conversationState.selectedExpertId else {
             withAnimation(.linear) {
-                self.conversationState.selectedExpertId = expertManager.lastExpert?.id
+                self.conversationState.selectedExpertId = ExpertManager.experts().last?.id
             }
             return
         }

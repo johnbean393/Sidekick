@@ -7,6 +7,7 @@
 
 import AVFoundation
 import Foundation
+import Observation
 import OSLog
 import Speech
 import SwiftUI
@@ -15,43 +16,52 @@ import AppKit
 import UniformTypeIdentifiers
 
 @MainActor
-public class PromptController: ObservableObject, DropDelegate {
-    
+@Observable
+public final class PromptController: NSObject, DropDelegate {
+
     /// A `Logger` object for the `PromptController` object
     private static let logger: Logger = .init(
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: PromptController.self)
     )
 
+    @ObservationIgnored
     private static var liveReasoningPreferenceByModelIdentifier: [String: Bool] = [:]
-    
-    @Published var sentConversation: Conversation? = nil
-    @Published var sentExpertId: UUID? = nil
-    
-    @Published var isGeneratingImage: Bool = false
-    @Published var imageConcept: String? = nil
-    
-    @Published var didManuallyToggleReasoning: Bool = false
-    @Published var useReasoning: Bool = InferenceSettings.localModelLiveReasoningEnabledByDefault()
-    
-    @Published var useWebSearch: Bool = false
-    @Published var selectedSearchState: SearchState = .search
+
+    var sentConversation: Conversation? = nil
+    var sentExpertId: UUID? = nil
+
+    var isGeneratingImage: Bool = false
+    var imageConcept: String? = nil
+
+    var didManuallyToggleReasoning: Bool = false
+    var useReasoning: Bool = InferenceSettings.localModelLiveReasoningEnabledByDefault()
+
+    var useWebSearch: Bool = false
+    var selectedSearchState: SearchState = .search
     var isUsingDeepResearch: Bool {
         return self.useWebSearch && self.selectedSearchState == .deepResearch
     }
-    
-    @Published var useFunctions: Bool = Settings.useFunctions
-    
-    @Published var prompt: String = ""
-    @Published var insertionPoint: Int = 0
-    @FocusState public var isFocused: Bool
-    
-    @Published var isRecording: Bool = false
-    @Published var audioLevel: Float = 0.0
-    @Published var audioSamples: [Float] = []
-    
+
+    var useFunctions: Bool = Settings.useFunctions
+
+    var prompt: String = ""
+    var insertionPoint: Int = 0
+    /// Hosted in views via a separate `@FocusState` binding because
+    /// `@FocusState` storage cannot live inside an `@Observable`
+    /// class. Views set this from their own `@FocusState`.
+    var isFocused: Bool = false
+
+    var isRecording: Bool = false
+    var audioLevel: Float = 0.0
+    var audioSamples: [Float] = []
+
     /// A list of resources temporarily passed to the chatbot, of type ``[TemporaryResource]``
-    @Published var tempResources: [TemporaryResource] = []
+    var tempResources: [TemporaryResource] = []
+
+    public override init() {
+        super.init()
+    }
     
     /// A `Bool` representing whether resources will be passed to the chatbot
     public var hasResources: Bool {
@@ -96,9 +106,13 @@ public class PromptController: ObservableObject, DropDelegate {
         Self.liveReasoningPreferenceByModelIdentifier[modelIdentifier] = useReasoning
     }
     
+    @ObservationIgnored
     private var audioEngine: AVAudioEngine = AVAudioEngine()
+    @ObservationIgnored
     private var speechRecognizer: SFSpeechRecognizer? = SFSpeechRecognizer()
+    @ObservationIgnored
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    @ObservationIgnored
     private var recognitionTask: SFSpeechRecognitionTask?
     
     func toggleRecording() {

@@ -18,16 +18,15 @@ struct ConversationManagerView: View {
     @StateObject private var model: Model = .shared
     @StateObject private var canvasController: CanvasController = .init()
     
-    @EnvironmentObject private var appState: AppState
-    @EnvironmentObject private var expertManager: ExpertManager
-    @EnvironmentObject private var conversationManager: ConversationManager
-    @EnvironmentObject private var conversationState: ConversationState
+    @Environment(AppState.self) private var appState
+        @Environment(ConversationManager.self) private var conversationManager
+    @Environment(ConversationState.self) private var conversationState
     
     var selectedExpert: Expert? {
         guard let selectedExpertId = conversationState.selectedExpertId else {
             return nil
         }
-        return expertManager.getExpert(id: selectedExpertId)
+        return ExpertManager.getExpert(id: selectedExpertId)
     }
     
     var toolbarTextColor: Color {
@@ -107,7 +106,7 @@ struct ConversationManagerView: View {
         ) {
             withAnimation(.linear) {
                 // Use most recently selected expert
-                let expertId: UUID? = selectedConversation?.messages.last?.expertId ?? expertManager.default?.id
+                let expertId: UUID? = selectedConversation?.messages.last?.expertId ?? ExpertManager.default?.id
                 self.conversationState.selectedExpertId = expertId
                 // Turn off artifacts
                 self.conversationState.useCanvas = false
@@ -147,7 +146,7 @@ struct ConversationManagerView: View {
             )
         ) { output in
             withAnimation(.linear) {
-                self.conversationState.selectedExpertId = expertManager.default?.id
+                self.conversationState.selectedExpertId = ExpertManager.default?.id
             }
             if let recentConversationId = conversationManager.recentConversation?.id {
                 withAnimation(.linear) {

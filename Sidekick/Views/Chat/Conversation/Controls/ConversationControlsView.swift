@@ -11,10 +11,9 @@ import SwiftUI
 
 struct ConversationControlsView: View {
     
-    @EnvironmentObject private var promptController: PromptController
-    @EnvironmentObject private var conversationManager: ConversationManager
-    @EnvironmentObject private var expertManager: ExpertManager
-    @EnvironmentObject private var conversationState: ConversationState
+    @Environment(PromptController.self) private var promptController
+    @Environment(ConversationManager.self) private var conversationManager
+        @Environment(ConversationState.self) private var conversationState
     
     @State private var didFinishTyping: Bool = false
     
@@ -33,7 +32,7 @@ struct ConversationControlsView: View {
         guard let selectedExpertId = conversationState.selectedExpertId else {
             return nil
         }
-        return expertManager.getExpert(id: selectedExpertId)
+        return ExpertManager.getExpert(id: selectedExpertId)
     }
     
     var messages: [Message] {
@@ -70,7 +69,8 @@ struct ConversationControlsView: View {
     }
     
     var controls: some View {
-        VStack {
+        @Bindable var promptController = self.promptController
+        return VStack {
             if promptController.hasResources && !self.promptController.prompt.isEmpty {
                 resources
                     .matchedGeometryEffect(
@@ -128,8 +128,9 @@ struct ConversationControlsView: View {
     }
     
     var resources: some View {
-        TemporaryResourcesView(
-            tempResources: self.$promptController.tempResources
+        @Bindable var promptController = self.promptController
+        return TemporaryResourcesView(
+            tempResources: $promptController.tempResources
         )
         .transition(
             .opacity

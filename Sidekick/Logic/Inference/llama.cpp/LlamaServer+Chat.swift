@@ -135,7 +135,7 @@ extension LlamaServer {
             resolvedFunctions = functions
         } else if useFunctions {
             resolvedFunctions = await MainActor.run {
-                FunctionSelectionManager.shared.getEnabledFunctions()
+                FunctionSelection.getEnabledFunctions()
             }
         } else {
             resolvedFunctions = []
@@ -519,7 +519,7 @@ extension LlamaServer {
             outputTokens: stopResponse?.usage.completion_tokens ?? (usage?.completion_tokens ?? 0),
             tokensPerSecond: tokensPerSecond
         )
-        await InferenceRecords.shared.add(record)
+        await MainActor.run { InferenceRecords.record(record) }
         // Return response
         return CompleteResponse(
             text: cleanText,
@@ -609,7 +609,7 @@ extension LlamaServer {
             outputTokens: response.usage.completion_tokens ?? 0,
             tokensPerSecond: tokensPerSecond
         )
-        await InferenceRecords.shared.add(record)
+        await MainActor.run { InferenceRecords.record(record) }
         // Extract and return
         let content = response.choices.first?.logprobs.content
         return content

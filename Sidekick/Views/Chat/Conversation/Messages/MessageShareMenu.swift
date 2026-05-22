@@ -14,9 +14,8 @@ struct MessageShareMenu: View {
     @Environment(\.colorScheme) var colorScheme
     
     @EnvironmentObject private var model: Model
-    @EnvironmentObject private var conversationManager: ConversationManager
-    @EnvironmentObject private var expertManager: ExpertManager
-    @EnvironmentObject private var conversationState: ConversationState
+    @Environment(ConversationManager.self) private var conversationManager
+        @Environment(ConversationState.self) private var conversationState
     
     var messages: [Message] {
         return self.selectedConversation?.messages ?? []
@@ -30,7 +29,7 @@ struct MessageShareMenu: View {
         guard let selectedExpertId = conversationState.selectedExpertId else {
             return nil
         }
-        return expertManager.getExpert(id: selectedExpertId)
+        return ExpertManager.getExpert(id: selectedExpertId)
     }
     
     var toolbarTextColor: Color {
@@ -223,9 +222,8 @@ struct MessageShareMenu: View {
         // Create a renderable view of all messages
         let renderView = ConversationRenderView(messages: self.messages, colorScheme: colorScheme)
             .environmentObject(model)
-            .environmentObject(conversationManager)
-            .environmentObject(expertManager)
-            .environmentObject(conversationState)
+            .environment(conversationManager)
+            .environment(conversationState)
             .environment(\.colorScheme, colorScheme) // Apply current color scheme
             .frame(width: 800) // Fixed width for rendering
             .padding()
@@ -286,19 +284,18 @@ private struct ConversationRenderView: View {
     let colorScheme: ColorScheme
     
     @EnvironmentObject private var model: Model
-    @EnvironmentObject private var conversationManager: ConversationManager
-    @EnvironmentObject private var expertManager: ExpertManager
-    @EnvironmentObject private var conversationState: ConversationState
+    @Environment(ConversationManager.self) private var conversationManager
+        @Environment(ConversationState.self) private var conversationState
     
     var body: some View {
         VStack(alignment: .leading, spacing: 13) {
             ForEach(messages) { message in
                 MessageView(message: message)
                     .environmentObject(model)
-                    .environmentObject(conversationManager)
-                    .environmentObject(conversationState)
-                    .environmentObject(PromptController())
-                    .environmentObject(Memories.shared)
+                    .environment(conversationManager)
+                    .environment(conversationState)
+                    .environment(PromptController())
+                    .environment(MemoryIndex.shared)
                     .environment(\.colorScheme, colorScheme)
             }
         }

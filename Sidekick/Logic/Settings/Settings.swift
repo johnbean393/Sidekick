@@ -425,7 +425,7 @@ public class Settings {
 			// Set and signal success
 			Self.selectMainLocalModel(modelUrl)
 			// Add to model list
-			ModelManager.shared.add(modelUrl)
+			ModelManager.add(modelUrl)
 			return true
 		} else {
 			// Signal failure

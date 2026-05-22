@@ -22,8 +22,8 @@ struct MessageContentView: View {
         self.deprioritizeStreamingUpdates = deprioritizeStreamingUpdates
     }
     
-    @EnvironmentObject private var conversationManager: ConversationManager
-    @EnvironmentObject private var conversationState: ConversationState
+    @Environment(ConversationManager.self) private var conversationManager
+    @Environment(ConversationState.self) private var conversationState
     
     @Binding private var isEditing: Bool
     @State private var messageText: String

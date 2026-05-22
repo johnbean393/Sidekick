@@ -10,18 +10,18 @@ import ImagePlayground
 
 struct ConversationView: View {
 	
-	@StateObject private var promptController: PromptController = .init()
+	@State private var promptController: PromptController = .init()
 	
-	@EnvironmentObject private var conversationManager: ConversationManager
-	@EnvironmentObject private var expertManager: ExpertManager
-	@EnvironmentObject private var conversationState: ConversationState
+	@Environment(ConversationManager.self) private var conversationManager
+		@Environment(ConversationState.self) private var conversationState
 	
 	var body: some View {
+		@Bindable var promptController = self.promptController
 		Group {
 			if #available(macOS 15.2, *) {
 				messages
 					.imagePlaygroundSheet(
-						isPresented: self.$promptController.isGeneratingImage,
+						isPresented: $promptController.isGeneratingImage,
 						// Image playground concepts
 						concepts: [
 							ImagePlaygroundConcept.extracted(
@@ -39,7 +39,7 @@ struct ConversationView: View {
 				messages
 			}
 		}
-		.environmentObject(promptController)
+		.environment(promptController)
 	}
 	
 	var messages: some View {

@@ -5,19 +5,19 @@
 //  Created by John Bean on 11/5/25.
 //
 
+import SwiftData
 import SwiftUI
 
 struct ModelSelectorDropdown: View {
-    
+
     @Environment(\.colorScheme) private var colorScheme
-    
-    @EnvironmentObject private var expertManager: ExpertManager
-    @EnvironmentObject private var conversationState: ConversationState
-    
+
+        @Environment(ConversationState.self) private var conversationState
+
     @AppStorage("endpoint") private var serverEndpoint: String = InferenceSettings.endpoint
     @Binding var serverModelName: String
     @AppStorage("serverModelHasVision") private var serverModelHasVision: Bool = InferenceSettings.serverModelHasVision
-    
+
     @State private var remoteModelNames: [String] = []
     @State private var customModelNames: [String] = InferenceSettings.customModelNames
     @State private var isManagingCustomModel: Bool = false
@@ -25,9 +25,13 @@ struct ModelSelectorDropdown: View {
     @State private var searchText: String = ""
     @State private var localModelsListId: UUID = UUID()
     @State private var remoteServerReachable: Bool = false
-    
-    @StateObject private var modelManager: ModelManager = .shared
+
+    @Query private var modelRows: [LocalModelFileEntity]
     @EnvironmentObject private var model: Model
+
+    private var localModels: [ModelManager.ModelFile] {
+        modelRows.compactMap(\.modelFile)
+    }
     
     // Scroll to active model
     @State private var scrollToLocal: Bool = false
@@ -37,7 +41,7 @@ struct ModelSelectorDropdown: View {
         guard let selectedExpertId = conversationState.selectedExpertId else {
             return nil
         }
-        return expertManager.getExpert(id: selectedExpertId)
+        return ExpertManager.getExpert(id: selectedExpertId)
     }
     
     var toolbarTextColor: Color {
@@ -258,9 +262,10 @@ struct ModelSelectorDropdown: View {
     
     // Filter models based on fuzzy search
     var filteredLocalModels: [ModelManager.ModelFile] {
+        let allModels = self.localModels
         let filtered = searchText.isEmpty
-        ? modelManager.models
-        : modelManager.models.filter { model in fuzzyMatch(model.name, query: searchText) }
+        ? allModels
+        : allModels.filter { model in fuzzyMatch(model.name, query: searchText) }
         
         // Sort by parameter count (largest first)
         return filtered.sorted { model1, model2 in

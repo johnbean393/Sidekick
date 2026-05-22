@@ -21,10 +21,14 @@ struct CapsuleChecklistMenuButton: View {
     }
     
     @Binding var isActivated: Bool
-    @ObservedObject var functionSelectionManager: FunctionSelectionManager
-    
+    /// Snapshot of currently enabled categories, supplied by the
+    /// parent view through a SwiftData `@Query`. Passed down by raw
+    /// value (instead of the full `FunctionCategory` enum) so the
+    /// caller doesn't have to teach the menu about its identity.
+    var enabledCategoryRawValues: Set<String>
+
     @State private var anchorView: NSView?
-    
+
     var onToggle: (Bool) -> Void
     
     var textColor: Color {
@@ -79,7 +83,7 @@ struct CapsuleChecklistMenuButton: View {
         ChecklistMenuIcon(
             iconName: "chevron.down",
             color: self.menuLabelColor,
-            functionSelectionManager: functionSelectionManager,
+            enabledCategoryRawValues: enabledCategoryRawValues,
             anchorViewProvider: {
                 self.anchorView
             }
@@ -115,10 +119,10 @@ struct CapsuleChecklistMenuButton: View {
 
 /// Custom menu icon that presents a checklist menu
 struct ChecklistMenuIcon: NSViewRepresentable {
-    
+
     let iconName: String
     let color: NSColor
-    let functionSelectionManager: FunctionSelectionManager
+    let enabledCategoryRawValues: Set<String>
     let anchorViewProvider: () -> NSView?
     
     func makeNSView(
@@ -145,31 +149,33 @@ struct ChecklistMenuIcon: NSViewRepresentable {
     }
     
     func updateNSView(_ nsView: NSButton, context: Context) {
-        // Set image and color
         nsView.image = NSImage(
             systemSymbolName: self.iconName,
             accessibilityDescription: nil
         )
         nsView.contentTintColor = color
+        // Keep the coordinator's category snapshot in sync so the
+        // menu it constructs lazily reflects the latest @Query state.
+        context.coordinator.enabledCategoryRawValues = enabledCategoryRawValues
     }
-    
+
     func makeCoordinator() -> Coordinator {
         Coordinator(
-            functionSelectionManager: functionSelectionManager,
+            enabledCategoryRawValues: enabledCategoryRawValues,
             anchorViewProvider: anchorViewProvider
         )
     }
-    
+
     class Coordinator: NSObject {
-        
-        let functionSelectionManager: FunctionSelectionManager
+
+        var enabledCategoryRawValues: Set<String>
         let anchorViewProvider: () -> NSView?
-        
+
         init(
-            functionSelectionManager: FunctionSelectionManager,
+            enabledCategoryRawValues: Set<String>,
             anchorViewProvider: @escaping () -> NSView?
         ) {
-            self.functionSelectionManager = functionSelectionManager
+            self.enabledCategoryRawValues = enabledCategoryRawValues
             self.anchorViewProvider = anchorViewProvider
         }
         
@@ -199,7 +205,7 @@ struct ChecklistMenuIcon: NSViewRepresentable {
         
         @MainActor private func createChecklistMenu() -> NSMenu {
             let menu = NSMenu()
-            
+
             // Add menu items for each function category
             for category in FunctionCategory.allCases {
                 let item = NSMenuItem(
@@ -209,11 +215,11 @@ struct ChecklistMenuIcon: NSViewRepresentable {
                 )
                 item.target = self
                 item.representedObject = category
-                
-                // Set checkmark state
-                let isEnabled = functionSelectionManager.isEnabled(category)
+
+                // Use the SwiftData-backed snapshot for checkmark state.
+                let isEnabled = enabledCategoryRawValues.contains(category.rawValue)
                 item.state = isEnabled ? .on : .off
-                
+
                 menu.addItem(item)
             }
             
@@ -245,21 +251,20 @@ struct ChecklistMenuIcon: NSViewRepresentable {
             guard let category = sender.representedObject as? FunctionCategory else {
                 return
             }
-            
             Task { @MainActor in
-                functionSelectionManager.toggleCategory(category)
+                FunctionSelection.toggle(category)
             }
         }
-        
+
         @objc private func handleSelectAll() {
             Task { @MainActor in
-                functionSelectionManager.enableAll()
+                FunctionSelection.enableAll()
             }
         }
-        
+
         @objc private func handleDeselectAll() {
             Task { @MainActor in
-                functionSelectionManager.disableAll()
+                FunctionSelection.disableAll()
             }
         }
     }

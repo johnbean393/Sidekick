@@ -121,7 +121,7 @@ extension LlamaServer {
                 }
             }
             // Remove duplicate arguments
-            let activeArguments: [ServerArgument] = ServerArgumentsManager.shared.activeArguments
+            let activeArguments: [ServerArgument] = await MainActor.run { ServerArgumentsStore.activeArguments() }
             let activeFlags = activeArguments.map(keyPath: \.flag)
             arguments = arguments.filter { !activeFlags.contains($0.key) }
             // Convert dictionary to [String] format with each key and value as separate elements
@@ -133,7 +133,7 @@ extension LlamaServer {
                 }
             }
             // Add custom arguments
-            let allArguments: [String] = ServerArgumentsManager.shared.allArguments
+            let allArguments: [String] = await MainActor.run { ServerArgumentsStore.allArguments() }
             formattedArguments += allArguments
             // Assign arguments
             process.arguments = formattedArguments

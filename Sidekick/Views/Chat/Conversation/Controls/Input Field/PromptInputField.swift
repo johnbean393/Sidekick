@@ -28,10 +28,9 @@ struct PromptInputField: View {
     }
     
     @EnvironmentObject private var model: Model
-    @EnvironmentObject private var conversationManager: ConversationManager
-    @EnvironmentObject private var expertManager: ExpertManager
-    @EnvironmentObject private var conversationState: ConversationState
-    @EnvironmentObject private var promptController: PromptController
+    @Environment(ConversationManager.self) private var conversationManager
+        @Environment(ConversationState.self) private var conversationState
+    @Environment(PromptController.self) private var promptController
     @EnvironmentObject private var canvasController: CanvasController
     
     @FocusState var isFocused: Bool
@@ -54,7 +53,7 @@ struct PromptInputField: View {
         guard let selectedExpertId = conversationState.selectedExpertId else {
             return nil
         }
-        return expertManager.getExpert(id: selectedExpertId)
+        return ExpertManager.getExpert(id: selectedExpertId)
     }
     
     var messages: [Message] {
@@ -143,9 +142,10 @@ struct PromptInputField: View {
     }
     
     var textField: some View {
-        ChatPromptEditor(
+        @Bindable var promptController = self.promptController
+        return ChatPromptEditor(
             isFocused: self._isFocused,
-            isRecording: self.$promptController.isRecording,
+            isRecording: $promptController.isRecording,
             useAttachments: true,
             bottomOptions: true,
             cornerRadius: 22
@@ -166,17 +166,17 @@ struct PromptInputField: View {
                     ReasoningToggleButton(
                         activatedFillColor: self.buttonFillColor,
                         modelIdentifier: self.reasoningToggleModelIdentifier,
-                        useReasoning: self.$promptController.useReasoning
+                        useReasoning: $promptController.useReasoning
                     )
                 }
                 SearchMenuToggleButton(
                     activatedFillColor: self.buttonFillColor,
-                    useWebSearch: self.$promptController.useWebSearch,
-                    selectedSearchState: self.$promptController.selectedSearchState
+                    useWebSearch: $promptController.useWebSearch,
+                    selectedSearchState: $promptController.selectedSearchState
                 )
                 UseFunctionsButton(
                     activatedFillColor: self.buttonFillColor,
-                    useFunctions: self.$promptController.useFunctions
+                    useFunctions: $promptController.useFunctions
                 )
             }
             .padding(.leading, 32)
@@ -656,7 +656,7 @@ struct PromptInputField: View {
            let userMessage: Message = conversation.messages.dropLast(1).last,
            assistantMessage.getSender() == .assistant,
            userMessage.getSender() == .user {
-            await Memories.shared.rememberIfNeeded(
+            await MemoryIndex.shared.rememberIfNeeded(
                 messageId: assistantMessage.id,
                 text: userMessage.text
             )

@@ -4,331 +4,257 @@
 //
 //  Created by John Bean on 5/20/25.
 //
+//  Phase 2 of the SwiftData migration replaces the previous
+//  ``InferenceRecords`` `ObservableObject` singleton with this
+//  much smaller façade. Records now live entirely in SwiftData
+//  (see ``InferenceRecordEntity``); this file exposes:
+//    * `InferenceRecordsState` – an `@Observable` UI state holder
+//      that lives in ``DashboardView``.
+//    * `InferenceRecords.record(_:)` – a static helper used by the
+//      inference path to append a row.
+//    * The aggregation/formatting helpers (`Timeframe`, `ModelUse`,
+//      `IntervalUse`, etc.) that the dashboard view consumes.
+//
 
 import Charts
 import Foundation
-import FSKit_macOS
-import os.log
+import OSLog
+import Observation
+import SwiftData
 import SwiftUI
-import UniformTypeIdentifiers
 
-public class InferenceRecords: ObservableObject {
-    
-    init() {
-        self.patchFileIntegrity()
-        self.load()
-    }
-    
-    /// Static constant for the global ``InferenceRecords`` object
-    static public let shared: InferenceRecords = .init()
-    
-    @Published var records: [InferenceRecord] = [] {
-        didSet {
-            self.save()
+/// UI-only state for the inference dashboard. Holds picker state
+/// (timeframe, type, model) and the row-selection set. The view
+/// owns this directly with `@State`; SwiftData rows are pulled via
+/// `@Query` inside ``DashboardView`` itself.
+@MainActor
+@Observable
+public final class InferenceRecordsState {
+
+    /// The selected record type filter.
+    public var selectedType: InferenceRecord.UsageType = .chatCompletions
+
+    /// Selected row IDs in the dashboard table.
+    public var selections = Set<InferenceRecord.ID>()
+
+    /// The currently selected model filter (`nil` means "all").
+    public var selectedModel: String? = nil
+
+    /// The currently selected timeframe.
+    public var selectedTimeframe: InferenceRecords.Timeframe = .today
+
+    public init() {}
+}
+
+/// Namespace for the legacy `InferenceRecords` API plus the static
+/// helpers used outside ``DashboardView``.
+@MainActor
+public enum InferenceRecords {
+
+    private static let logger: Logger = .init(
+        subsystem: Bundle.main.bundleIdentifier!,
+        category: "InferenceRecords"
+    )
+
+    /// Persists a single inference record into SwiftData. Hops to
+    /// the main actor (where the shared container lives) before
+    /// inserting; the write is local to this single row so the cost
+    /// is negligible.
+    public static func record(_ record: InferenceRecord) {
+        let context = ModelContext(PersistenceController.shared.container)
+        context.insert(
+            InferenceRecordEntity(
+                id: record.id,
+                name: record.name,
+                startTime: record.startTime,
+                endTime: record.endTime,
+                typeRaw: record.type.rawValue,
+                endpointString: record.endpoint?.absoluteString,
+                inputTokens: record.inputTokens,
+                outputTokens: record.outputTokens,
+                tokensPerSecond: record.tokensPerSecond
+            )
+        )
+        do {
+            try context.save()
+        } catch {
+            Self.logger.error(
+                "Failed to persist inference record: \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
-    
-    /// The selected record type
-    @Published public var selectedType: InferenceRecord.UsageType = .chatCompletions
-    /// All records belonging to the selected type
-    var typeRecords: [InferenceRecord] {
-        return records.filter { record in
-            record.type == self.selectedType
+
+    // MARK: - Dashboard aggregation helpers
+
+    /// Returns the subset of `records` matching the picker filters
+    /// in ``InferenceRecordsState``, with timeframe and (optional)
+    /// model restrictions applied. Selections override the broader
+    /// filter when non-empty.
+    public static func filtered(
+        records: [InferenceRecord],
+        state: InferenceRecordsState
+    ) -> [InferenceRecord] {
+        var pool = records.filter { $0.type == state.selectedType }
+        if !state.selections.isEmpty {
+            pool = pool.filter { state.selections.contains($0.id) }
         }
+        let timely = pool.filter {
+            state.selectedTimeframe.range.contains($0.startTime)
+                || state.selectedTimeframe.range.contains($0.endTime)
+        }
+        if let model = state.selectedModel {
+            return timely.filter { $0.name == model }
+        }
+        return timely
     }
-    
-    // Table config
-    @Published public var selections = Set<InferenceRecord.ID>()
-    private var selectedRecords: [InferenceRecord] {
-        return self.typeRecords.filter { record in
-            return self.selections.contains(record.id)
+
+    /// Returns the records that appear in the dashboard table
+    /// (timeframe + model filter, ignoring the selection set).
+    public static func displayed(
+        records: [InferenceRecord],
+        state: InferenceRecordsState
+    ) -> [InferenceRecord] {
+        let typeRecords = records.filter { $0.type == state.selectedType }
+        let timely = typeRecords.filter {
+            state.selectedTimeframe.range.contains($0.startTime)
+                || state.selectedTimeframe.range.contains($0.endTime)
         }
+        if let model = state.selectedModel {
+            return timely.filter { $0.name == model }
+        }
+        return timely
     }
-    
-    /// All records within the timeframe & with the selected model
-    public var displayedRecords: [InferenceRecord] {
-        // Filter and return
-        let timelyRecords = self.typeRecords.filter { record in
-            return self.selectedTimeframe.range.contains(record.startTime) || self.selectedTimeframe.range.contains(record.endTime)
-        }
-        if let selectedModel {
-            return timelyRecords.filter { record in
-                return record.name == selectedModel
-            }
-        } else {
-            return timelyRecords
-        }
+
+    /// All distinct model names present in the type-filtered set.
+    public static func models(
+        records: [InferenceRecord],
+        state: InferenceRecordsState
+    ) -> [String] {
+        Set(records.filter { $0.type == state.selectedType }.map(\.name)).sorted()
     }
-    
-    /// All records within the timeframe & with the selected model
-    public var filteredRecords: [InferenceRecord] {
-        // Return selection if selected
-        var records = self.typeRecords
-        if !self.selectedRecords.isEmpty {
-            records = self.selectedRecords
-        }
-        // Else, filter
-        let timelyRecords = records.filter { record in
-            return self.selectedTimeframe.range.contains(record.startTime) || self.selectedTimeframe.range.contains(record.endTime)
-        }
-        if let selectedModel {
-            return timelyRecords.filter { record in
-                return record.name == selectedModel
-            }
-        } else {
-            return timelyRecords
-        }
-    }
-    
-    /// The currently selected model
-    @Published public var selectedModel: String? = nil
-    /// The currently selected timeframe
-    @Published public var selectedTimeframe: Timeframe = .today
-    
-    public var intervalUsage: [IntervalUse] {
+
+    /// Grouped token/usage stats keyed by the bucket granularity of
+    /// the currently selected timeframe.
+    public static func intervalUsage(
+        records: [InferenceRecord],
+        state: InferenceRecordsState
+    ) -> [IntervalUse] {
         let calendar = Calendar.current
-        let timeframe: Timeframe = self.selectedTimeframe
-        // Filter records based on whether the start or end time is within the timeframe's range.
-        let timelyRecords = self.filteredRecords.filter { record in
-            timeframe.range.contains(record.startTime) || timeframe.range.contains(record.endTime)
-        }
-        // Determine the grouping based on the timeframe.
+        let timeframe = state.selectedTimeframe
+        let pool = filtered(records: records, state: state)
         let grouping: (Date) -> Date = { date in
             switch timeframe {
                 case .today:
-                    // Group by hour.
                     return calendar.dateInterval(of: .hour, for: date)!.start
                 case .thisWeek, .thisMonth:
-                    // Group by day.
                     return calendar.startOfDay(for: date)
                 case .thisYear:
-                    // Group by month.
                     let components = calendar.dateComponents([.year, .month], from: date)
                     return calendar.date(from: components)!
                 case .allTime:
-                    // Group by year.
                     let components = calendar.dateComponents([.year], from: date)
                     return calendar.date(from: components)!
             }
         }
-        // Group records based on the computed grouping date from the record's startTime.
-        let groupedRecords = Dictionary(grouping: timelyRecords) { record in
-            grouping(record.startTime)
-        }
-        // Prepare a date formatter for generating a description.
+        let grouped = Dictionary(grouping: pool) { grouping($0.startTime) }
         let formatter = DateFormatter()
-        // Set the date format based on the timeframe.
         switch timeframe {
             case .today:
-                // e.g., "2 PM"
                 formatter.dateFormat = "ha"
             case .thisWeek, .thisMonth:
-                // e.g., "May 21"
                 formatter.dateFormat = "MMM d"
             case .thisYear:
-                // e.g., "May", "June"
                 formatter.dateFormat = "MMMM"
             case .allTime:
-                // e.g., "2025"
                 formatter.dateFormat = "yyyy"
         }
-        // Map each group to a single IntervalUse object.
-        let usageData = groupedRecords.map { (groupDate, records) -> [IntervalUse] in
-            let requests = records.count
-            let inputTokens = records.reduce(0) { $0 + $1.inputTokens }
-            let outputTokens = records.reduce(0) { $0 + $1.outputTokens }
+        let usageData = grouped.map { (groupDate, rows) -> [IntervalUse] in
+            let uses = rows.count
+            let inputTokens = rows.reduce(0) { $0 + $1.inputTokens }
+            let outputTokens = rows.reduce(0) { $0 + $1.outputTokens }
             let description = formatter.string(from: groupDate)
             return [
                 IntervalUse(
                     date: groupDate,
                     description: description,
-                    uses: requests,
+                    uses: uses,
                     tokens: inputTokens,
                     type: .input
                 ),
                 IntervalUse(
                     date: groupDate,
                     description: description,
-                    uses: requests,
+                    uses: uses,
                     tokens: outputTokens,
                     type: .output
                 )
             ]
         }
-        // Return the IntervalUse objects sorted by date in ascending order.
         return usageData
-            .flatMap({ $0 })
-            .sorted { data0, data1 in
-                let calendar: Calendar = .current
-                let data0Value: Int = calendar.component(
-                    timeframe.calendarComponent,
-                    from: data0.date
-                )
-                let data1Value: Int = calendar.component(
-                    timeframe.calendarComponent,
-                    from: data1.date
-                )
-                return data0Value < data1Value
+            .flatMap { $0 }
+            .sorted { lhs, rhs in
+                let cal = Calendar.current
+                let lhsValue = cal.component(timeframe.calendarComponent, from: lhs.date)
+                let rhsValue = cal.component(timeframe.calendarComponent, from: rhs.date)
+                return lhsValue < rhsValue
             }
     }
-    
-    public var modelUsage: [ModelUse] {
-        let modelUses: [
-            (totalTokens: Int, uses: [ModelUse])
-        ] = self.models.map { model in
-            let records: [InferenceRecord] = self.filteredRecords.filter { record in
-                return record.name == model
-            }
-            let totalInputTokens: Int = records.map(keyPath: \.inputTokens).reduce(0, +)
-            let totalOutputTokens: Int = records.map(keyPath: \.outputTokens).reduce(0, +)
+
+    /// Per-model totals used by the dashboard's stacked bar chart.
+    public static func modelUsage(
+        records: [InferenceRecord],
+        state: InferenceRecordsState
+    ) -> [ModelUse] {
+        let availableModels = models(records: records, state: state)
+        let pool = filtered(records: records, state: state)
+        let perModel: [(totalTokens: Int, uses: [ModelUse])] = availableModels.map { model in
+            let rows = pool.filter { $0.name == model }
+            let inputs = rows.map(\.inputTokens).reduce(0, +)
+            let outputs = rows.map(\.outputTokens).reduce(0, +)
             return (
-                totalInputTokens + totalOutputTokens,
+                inputs + outputs,
                 [
-                    ModelUse(
-                        model: model,
-                        tokens: totalInputTokens,
-                        type: .input
-                    ),
-                    ModelUse(
-                        model: model,
-                        tokens: totalOutputTokens,
-                        type: .output
-                    )
+                    ModelUse(model: model, tokens: inputs, type: .input),
+                    ModelUse(model: model, tokens: outputs, type: .output)
                 ]
             )
         }
-        return modelUses
+        return perModel
             .sorted(by: \.totalTokens)
-            .flatMap({ $0.uses })
-            .filter({ $0.tokens > 0 })
+            .flatMap { $0.uses }
+            .filter { $0.tokens > 0 }
     }
-    
-    /// An array of `String` containing all models used
-    public var models: [String] {
-        return Set(self.typeRecords.map(\.name)).sorted()
-    }
-    
-    /// Function to save records to disk
-    public func save() {
+
+    /// Removes the given record from the SwiftData store. Logs and
+    /// swallows failures.
+    public static func delete(_ record: InferenceRecord) {
+        let targetId = record.id
+        let context = ModelContext(PersistenceController.shared.container)
         do {
-            // Save data
-            let rawData: Data = try JSONEncoder().encode(
-                self.records
+            let descriptor = FetchDescriptor<InferenceRecordEntity>(
+                predicate: #Predicate { $0.id == targetId }
             )
-            try rawData.write(
-                to: self.datastoreUrl,
-                options: .atomic
-            )
-        } catch {
-            os_log("error = %@", error.localizedDescription)
-        }
-    }
-    
-    /// Function to load records from disk
-    public func load() {
-        do {
-            // Load data
-            let rawData: Data = try Data(
-                contentsOf: self.datastoreUrl
-            )
-            let decoder: JSONDecoder = JSONDecoder()
-            self.records = try decoder.decode(
-                [InferenceRecord].self,
-                from: rawData
-            )
-        } catch {
-            // Indicate error
-            print("Failed to load records: \(error)")
-            // Make new datastore
-            self.newDatastore()
-        }
-    }
-    
-    /// Function to delete a record
-    public func delete(
-        _ record: Binding<InferenceRecord>
-    ) {
-        withAnimation(.spring()) {
-            self.records = self.records.filter {
-                $0.id != record.wrappedValue.id
+            if let row = try context.fetch(descriptor).first {
+                context.delete(row)
+                try context.save()
             }
-        }
-    }
-    
-    /// Function to delete a record
-    public func delete(
-        _ record: InferenceRecord
-    ) {
-        withAnimation(.spring()) {
-            self.records = self.records.filter {
-                $0.id != record.id
-            }
-        }
-    }
-    
-    /// Function to add a record
-    @MainActor
-    public func add(
-        _ record: InferenceRecord
-    ) {
-        // Add to records
-        withAnimation(.linear) {
-            self.records.append(record)
-            self.records.sort(by: { $0.startTime > $1.startTime })
-        }
-    }
-    
-    /// Function to make new datastore
-    public func newDatastore() {
-        // Setup directory
-        self.patchFileIntegrity()
-        self.records = []
-        self.save()
-    }
-    
-    /// Function to patch file integrity
-    public func patchFileIntegrity() {
-        // Setup directory if needed
-        if !self.datastoreDirExists {
-            try! FileManager.default.createDirectory(
-                at: datastoreDirUrl,
-                withIntermediateDirectories: true
+        } catch {
+            Self.logger.error(
+                "Failed to delete inference record: \(error.localizedDescription, privacy: .public)"
             )
         }
     }
-    
-    /// Computed property returning the datastore's directory's url
-    public var datastoreDirUrl: URL {
-        return Settings.containerUrl.appendingPathComponent(
-            "Inference Records"
-        )
-    }
-    
-    /// Computed property returning if datastore directory exists
-    private var datastoreDirExists: Bool {
-        return self.datastoreDirUrl.fileExists
-    }
-    
-    /// Computed property returning the datastore's url
-    public var datastoreUrl: URL {
-        return self.datastoreDirUrl.appendingPathComponent(
-            "records.json"
-        )
-    }
-    
-    /// Computed property returning if datastore exists
-    private var datastoreExists: Bool {
-        return self.datastoreUrl.fileExists
-    }
-    
+
+    // MARK: - Public sub-types
+
     public enum Timeframe: CaseIterable {
-        
+
         case today
         case thisWeek
         case thisMonth
         case thisYear
         case allTime
-        
+
         var description: String {
             switch self {
                 case .today:
@@ -343,7 +269,7 @@ public class InferenceRecords: ObservableObject {
                     return String(localized: "All Time")
             }
         }
-        
+
         var calendarComponent: Calendar.Component {
             switch self {
                 case .today:
@@ -356,7 +282,7 @@ public class InferenceRecords: ObservableObject {
                     return .year
             }
         }
-        
+
         private var startDate: Date {
             switch self {
                 case .today:
@@ -371,44 +297,53 @@ public class InferenceRecords: ObservableObject {
                     return Date.distantPast
             }
         }
-        
+
         var range: ClosedRange<Date> {
             return self.startDate...Date.now
         }
-        
     }
-    
+
     public struct IntervalUse: Identifiable {
-        
-        public var id: String {
-            return self.date.ISO8601Format()
-        }
-        
+
+        public var id: String { date.ISO8601Format() + "-" + type.rawValue }
+
         public var date: Date
         public var description: String
-        
+
         public var uses: Int
-        
         public var tokens: Int
         public var type: TokenType
-        
     }
-    
+
     public struct ModelUse: Identifiable {
-        
-        public var id: String {
-            return self.model
-        }
-        
+
+        public var id: String { model + "-" + type.rawValue }
+
         public var model: String
-        
         public var tokens: Int
         public var type: TokenType
-        
     }
-    
+
     public enum TokenType: String, CaseIterable, Plottable {
         case input, output
     }
-    
+}
+
+// MARK: - Bridging `InferenceRecordEntity` <-> `InferenceRecord`
+
+extension InferenceRecord {
+    /// Hydrate a value-type ``InferenceRecord`` from a SwiftData row.
+    init(entity: InferenceRecordEntity) {
+        self.init(
+            id: entity.id,
+            name: entity.name,
+            startTime: entity.startTime,
+            endTime: entity.endTime,
+            type: InferenceRecord.UsageType(rawValue: entity.typeRaw) ?? .chatCompletions,
+            endpoint: entity.endpointString.flatMap(URL.init(string:)),
+            inputTokens: entity.inputTokens,
+            outputTokens: entity.outputTokens,
+            tokensPerSecond: entity.tokensPerSecond
+        )
+    }
 }

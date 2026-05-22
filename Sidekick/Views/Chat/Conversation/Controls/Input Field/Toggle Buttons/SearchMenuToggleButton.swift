@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SearchMenuToggleButton: View {
     
-    @EnvironmentObject private var promptController: PromptController
+    @Environment(PromptController.self) private var promptController
     
     var activatedFillColor: Color
     

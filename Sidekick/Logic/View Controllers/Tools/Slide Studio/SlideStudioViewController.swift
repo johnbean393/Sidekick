@@ -28,7 +28,7 @@ public class SlideStudioViewController: ObservableObject, DropDelegate {
 	/// The current selected expert, of type `Expert`
 	public var selectedExpert: Expert? {
 		guard let id = self.selectedExpertId else { return nil }
-		return ExpertManager.shared.getExpert(id: id)
+		return ExpertManager.getExpert(id: id)
 	}
 	
 	/// The prompt given by the user, of type `String`

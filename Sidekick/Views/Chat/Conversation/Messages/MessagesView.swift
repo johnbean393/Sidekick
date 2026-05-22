@@ -14,9 +14,9 @@ struct MessagesView: View {
     @Environment(\.colorScheme) var colorScheme
     
     @EnvironmentObject private var model: Model
-    @EnvironmentObject private var promptController: PromptController
-    @EnvironmentObject private var conversationManager: ConversationManager
-    @EnvironmentObject private var conversationState: ConversationState
+    @Environment(PromptController.self) private var promptController
+    @Environment(ConversationManager.self) private var conversationManager
+    @Environment(ConversationState.self) private var conversationState
     
     @State private var scrollViewProxy: NSScrollView?
     @State private var savedScrollPosition: CGPoint?

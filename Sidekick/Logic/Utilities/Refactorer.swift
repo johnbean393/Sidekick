@@ -9,6 +9,7 @@ import AppKit
 import Foundation
 import FSKit_macOS
 import OSLog
+import SwiftData
 
 public class Refactorer {
     
@@ -19,7 +20,11 @@ public class Refactorer {
     )
     
     private static let migrationDefaultsKey: String = "Refactorer.migrationVersion"
-    private static let currentMigrationVersion: Int = 1
+    /// Latest schema-migration version. Bumped to `2` for the
+    /// JSON → SwiftData migration. Once a user is on v2, the
+    /// JSON files are still archived (not deleted) for rollback
+    /// safety.
+    private static let currentMigrationVersion: Int = 2
     
     /// Function
     @MainActor
@@ -30,20 +35,46 @@ public class Refactorer {
             Self.logger.debug("Skipping refactor; migration already completed.")
             return
         }
-        // Init check for refactor
+        // Filesystem relocations (idempotent — they no-op once the
+        // destination already exists).
         var didRefactor: [Bool] = []
         didRefactor.append(Self.relocateOutOfSandbox())
         didRefactor.append(Self.relocateIntoContainer())
-        // Present dialog if needed
-        if didRefactor.contains(true) {
-            defaults.set(Self.currentMigrationVersion, forKey: Self.migrationDefaultsKey)
+
+        // One-time JSON → SwiftData import. Each manager is also
+        // wired to do a lazy fall-back import on first read, so this
+        // serves primarily as a belt-and-braces step that archives
+        // the legacy JSON files after a clean transition.
+        let didImportFromJSON: Bool = Self.runSwiftDataImport()
+
+        // Persist the bumped migration version regardless of whether
+        // we actually moved files; otherwise we'd keep re-running
+        // on every launch.
+        defaults.set(Self.currentMigrationVersion, forKey: Self.migrationDefaultsKey)
+
+        if didRefactor.contains(true) || didImportFromJSON {
             Dialogs.showAlert(
                 title: String(localized: "Restart Sidekick"),
                 message: String(localized: "To properly load your content, please restart Sidekick.")
             )
             NSApplication.shared.terminate(nil)
-        } else {
-            defaults.set(Self.currentMigrationVersion, forKey: Self.migrationDefaultsKey)
+        }
+    }
+
+    /// Runs the JSON → SwiftData importer the first time the user
+    /// is upgraded to migration version 2. Returns `true` if any
+    /// legacy JSON file was detected and successfully imported.
+    @MainActor
+    private static func runSwiftDataImport() -> Bool {
+        let hadLegacyData = JSONImporter.legacyJSONExists
+        guard hadLegacyData else { return false }
+        do {
+            try JSONImporter.importAll(into: PersistenceController.shared.container)
+            JSONImporter.archiveLegacyJSON()
+            return true
+        } catch {
+            Self.logger.error("JSON → SwiftData import failed: \(error.localizedDescription, privacy: .public)")
+            return false
         }
     }
     

@@ -422,6 +422,7 @@
       }
     },
     "Are you sure you want to delete all commands?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -442,6 +443,7 @@
       }
     },
     "Are you sure you want to delete all experts?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1426,6 +1428,7 @@
       }
     },
     "Delete All Commands" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3003,6 +3006,9 @@
         }
       }
     },
+    "Legacy JSON content was successfully re-imported into the SwiftData store. Restart Sidekick to see the latest data." : {
+
+    },
     "Less" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3670,6 +3676,9 @@
         }
       }
     },
+    "Persistence" : {
+
+    },
     "Pie Chart" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3902,6 +3911,15 @@
           }
         }
       }
+    },
+    "Re-import Complete" : {
+
+    },
+    "Re-import Failed" : {
+
+    },
+    "Re-import From Legacy JSON" : {
+
     },
     "Re-index all resources with graph extraction. This may take several minutes." : {
       "localizations" : {
@@ -4679,6 +4697,9 @@
           }
         }
       }
+    },
+    "Show Legacy JSON in Finder" : {
+
     },
     "Show less" : {
       "localizations" : {

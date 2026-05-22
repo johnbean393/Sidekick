@@ -9,8 +9,8 @@ import SwiftUI
 
 struct MemoriesManagerView: View {
     
-    @EnvironmentObject private var memories: Memories
-    
+    @Environment(MemoryIndex.self) private var memories
+
     @State private var query: String = ""
     
     var filteredMemories: [Memory] {
@@ -68,9 +68,9 @@ struct MemoriesManagerView: View {
     }
     
     struct MemoryRowView: View {
-        
-        @EnvironmentObject private var memories: Memories
-    
+
+        @Environment(MemoryIndex.self) private var memories
+
         var memory: Memory
         
         var body: some View {

@@ -9,13 +9,14 @@ import SwiftUI
 
 struct ConversationNavigationListView: View {
 	
-	@EnvironmentObject private var conversationManager: ConversationManager
-	@EnvironmentObject private var expertManager: ExpertManager
-	@EnvironmentObject private var conversationState: ConversationState
+	@Environment(ConversationManager.self) private var conversationManager
+		@Environment(ConversationState.self) private var conversationState
 	
 	var body: some View {
+		@Bindable var conversationState = self.conversationState
+		@Bindable var conversationManager = self.conversationManager
 		List(
-			self.$conversationManager.conversations,
+			$conversationManager.conversations,
 			editActions: .move,
 			selection: $conversationState.selectedConversationId
 		) { conversation in

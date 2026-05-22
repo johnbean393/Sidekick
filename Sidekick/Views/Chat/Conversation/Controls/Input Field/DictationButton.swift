@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DictationButton: View {
 	
-	@EnvironmentObject private var promptController: PromptController
+	@Environment(PromptController.self) private var promptController
 	
 	var microphoneIcon: String {
 		if #unavailable(macOS 15) {

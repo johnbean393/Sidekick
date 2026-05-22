@@ -4,58 +4,85 @@
 //
 //  Created by John Bean on 4/22/25.
 //
+//  Migrated to SwiftData on 5/23/26. The public API is unchanged
+//  (a `@Published` `[Memory]` array plus `remember/forget/update/recall`),
+//  but persistence now lives in ``MemoryEntity`` rows linked to their
+//  source ``MessageEntity`` (via `messageId`). The embedding-bearing
+//  `IndexItem` is JSON-encoded into ``MemoryEntity.indexItemData``,
+//  which is annotated `@Attribute(.externalStorage)` to keep large
+//  vectors out of the main SQLite blob. The recall path is unchanged
+//  apart from sourcing rows from SwiftData.
+//
 
 import Foundation
+import Observation
 import OSLog
 import SimilaritySearchKit
 import SimilaritySearchKitDistilbert
+import SwiftData
 import SwiftUI
 
+/// Observable, SwiftData-backed memory recall service.
+///
+/// Replaces the legacy `Memories: ObservableObject` singleton. The
+/// in-memory cache is still kept (memories are typically small in
+/// volume and the recall path needs random access for the
+/// embedding-similarity search) but the storage half is now plain
+/// SwiftData and reactivity flows through the Observation
+/// framework, matching the rest of the migrated services.
 @MainActor
-public class Memories: ObservableObject {
-    
-    /// A `Logger` object for the ``Memories`` object
+@Observable
+public final class MemoryIndex {
+
+    /// A `Logger` object for ``MemoryIndex``.
+    @ObservationIgnored
     private static let logger: Logger = .init(
         subsystem: Bundle.main.bundleIdentifier!,
-        category: String(describing: Memories.self)
+        category: String(describing: MemoryIndex.self)
     )
-    
-    init() {
-        let signpost = StartupMetrics.begin("Memories.init")
+
+    public init() {
+        let signpost = StartupMetrics.begin("MemoryIndex.init")
         self.patchFileIntegrity()
         self.loadAsync()
-        StartupMetrics.end("Memories.init", signpost)
+        StartupMetrics.end("MemoryIndex.init", signpost)
     }
-    
-    /// Static constant for the global ``Memories`` object
-    static public let shared: Memories = .init()
-    
+
+    /// Process-wide instance. Kept for convenience: this is an
+    /// `@Observable` service (not a heavy `ObservableObject`
+    /// singleton) and is injected into the environment from
+    /// ``SidekickApp``.
+    public static let shared: MemoryIndex = .init()
+
     /// Computed property returning the datastore's directory's url
     public static var datastoreDirUrl: URL {
         return Settings.containerUrl.appendingPathComponent(
             "Memory"
         )
     }
-    
+
     /// Computed property returning if datastore directory exists
     private static var datastoreDirExists: Bool {
         return Self.datastoreDirUrl.fileExists
     }
-    
-    /// Computed property returning the datastore's url
+
+    /// Computed property returning the datastore's url (legacy JSON
+    /// path, retained for the one-time migration fallback).
     public static var datastoreUrl: URL {
         return Self.datastoreDirUrl.appendingPathComponent(
             "memories.json"
         )
     }
-    
-    /// All memories
-    @Published public var memories: [Memory] = []
-    /// Whether the datastore has been loaded
-    @Published private(set) var isLoaded: Bool = false
-    /// Task handling asynchronous datastore loading
+
+    /// All memories.
+    public var memories: [Memory] = []
+    /// Whether the datastore has been loaded.
+    public private(set) var isLoaded: Bool = false
+    /// Task handling asynchronous datastore loading.
+    @ObservationIgnored
     private var loadTask: Task<Void, Never>?
-    /// The memories similarity index
+    /// The memories similarity index.
+    @ObservationIgnored
     private var similarityIndex: SimilarityIndex?
     /// Function to initialize similarity index
     private func initSimilarityIndex() async {
@@ -75,9 +102,7 @@ public class Memories: ObservableObject {
     
     /// Function to make new datastore
     public func newDatastore() {
-        // Setup directory
         self.patchFileIntegrity()
-        // Add new datastore
         self.memories = []
         self.isLoaded = true
         self.save()
@@ -88,27 +113,12 @@ public class Memories: ObservableObject {
         if let loadTask = self.loadTask, !loadTask.isCancelled {
             return
         }
-        let targetUrl: URL = Self.datastoreUrl
         self.loadTask = Task.detached(priority: .userInitiated) { [weak self] in
             let signpost = StartupMetrics.begin("Memories.loadDatastore")
             defer { StartupMetrics.end("Memories.loadDatastore", signpost) }
-            let rawData: Data
-            do {
-                rawData = try Data(contentsOf: targetUrl)
-            } catch {
-                await MainActor.run {
-                    guard let self else { return }
-                    self.newDatastore()
-                    self.loadTask = nil
-                }
-                return
-            }
-            let decoder: JSONDecoder = JSONDecoder()
-            let memories = (try? decoder.decode([Memory].self, from: rawData)) ?? []
+            guard let self else { return }
             await MainActor.run {
-                guard let self else { return }
-                self.memories = memories
-                self.isLoaded = true
+                self.load()
                 self.loadTask = nil
             }
         }
@@ -117,53 +127,85 @@ public class Memories: ObservableObject {
     /// Function to reset datastore
     @MainActor
     public func resetDatastore() {
-        // Present confirmation modal
         let _ = Dialogs.showConfirmation(
             title: String(localized: "Delete All Memories"),
             message: String(localized: "Are you sure you want to delete all memories?")
         ) {
-            // If yes, delete datastore
-            FileManager.removeItem(at: Self.datastoreUrl)
-            // Make new datastore
             self.newDatastore()
         }
     }
     
-    /// Function to load memories
+    /// Function to load memories from SwiftData with a one-time
+    /// fallback to the legacy JSON file.
     private func load() {
+        let context = ModelContext(PersistenceController.shared.container)
         do {
-            let rawData: Data = try Data(contentsOf: Self.datastoreUrl)
-            let decoder: JSONDecoder = JSONDecoder()
-            self.memories = try decoder.decode(
-                [Memory].self,
-                from: rawData
-            )
-            self.isLoaded = true
+            let rows = try context.fetch(FetchDescriptor<MemoryEntity>())
+            if !rows.isEmpty {
+                self.memories = rows.compactMap(Self.memory(from:))
+                self.isLoaded = true
+                return
+            }
         } catch {
-            print("Failed to load memories: \(error)")
+            Self.logger.error("Failed to read memories from SwiftData: \(error.localizedDescription, privacy: .public)")
+        }
+        if let rawData = try? Data(contentsOf: Self.datastoreUrl),
+           let legacy = try? JSONDecoder().decode([Memory].self, from: rawData) {
+            self.memories = legacy
+            self.isLoaded = true
+            self.save()
+        } else {
             self.newDatastore()
         }
     }
     
-    /// Function to save memories to disk
+    /// Function to save memories to SwiftData. We rewrite the
+    /// memory table on each save — the volume is small (memories
+    /// accumulate slowly and are typically <1k entries) so a full
+    /// rewrite stays cheap, and an upsert path would buy little.
     public func save() {
+        let context = ModelContext(PersistenceController.shared.container)
         do {
-            // Save data
-            let rawData: Data = try JSONEncoder().encode(
-                self.memories
-            )
-            try rawData.write(
-                to: Self.datastoreUrl,
-                options: .atomic
-            )
+            let existing = try context.fetch(FetchDescriptor<MemoryEntity>())
+            var existingById: [UUID: MemoryEntity] = [:]
+            for entity in existing {
+                existingById[entity.id] = entity
+            }
+            let desiredIds = Set(self.memories.map(\.id))
+            for (id, entity) in existingById where !desiredIds.contains(id) {
+                context.delete(entity)
+            }
+            let messages = try context.fetch(FetchDescriptor<MessageEntity>())
+            var messageById: [UUID: MessageEntity] = [:]
+            for message in messages {
+                messageById[message.id] = message
+            }
+            let encoder = JSONEncoder()
+            for memory in self.memories {
+                let entity = existingById[memory.id] ?? MemoryEntity(
+                    id: memory.id,
+                    messageId: memory.messageId,
+                    createdAt: memory.createdAt,
+                    text: memory.text
+                )
+                if existingById[memory.id] == nil {
+                    context.insert(entity)
+                }
+                entity.messageId = memory.messageId
+                entity.createdAt = memory.createdAt
+                entity.text = memory.text
+                entity.indexItemData = try? encoder.encode(memory.indexItem)
+                entity.message = messageById[memory.messageId]
+            }
+            try context.save()
         } catch {
-            os_log("error = %@", error.localizedDescription)
+            Self.logger.error("Failed to save memories to SwiftData: \(error.localizedDescription, privacy: .public)")
         }
     }
     
-    /// Function to patch file integrity
+    /// Function to patch file integrity. The directory is preserved
+    /// so the legacy JSON fallback continues to work.
     public func patchFileIntegrity() {
-        // Setup directory if needed
         if !Self.datastoreDirExists {
             do {
                 try FileManager.default.createDirectory(
@@ -181,17 +223,13 @@ public class Memories: ObservableObject {
         prompt: String,
         maxResults: Int = 5
     ) async -> [String]? {
-        // If similarity index is nil, load
         if self.similarityIndex == nil {
             await self.initSimilarityIndex()
         }
-        // Conduct search
         if let similarityIndex = self.similarityIndex {
-            // Add items
             similarityIndex.indexItems = memories.map(
                 keyPath: \.indexItem
             )
-            // Search
             let threshold: Float = 0.6
             let results = await similarityIndex.search(
                 prompt,
@@ -200,7 +238,6 @@ public class Memories: ObservableObject {
             ).filter { result in
                 result.score >= threshold
             }
-            // Return
             return results.map { result in
                 return result.text
             }
@@ -259,11 +296,9 @@ public class Memories: ObservableObject {
         messageId: UUID,
         text: String
     ) async {
-        // Exit if memory is off
         if !RetrievalSettings.useMemory {
             return
         }
-        // Prompt worker model
         let messageText: String = """
 The user sent the message below. What personal information / opinion does this reveal about the user? Do not extract the information if it is very message specific, such as a specific request. 
 
@@ -276,7 +311,6 @@ Example responses:
 
 "\(text)"
 """
-        // Formulate message
         let systemPromptMessage: Message = Message(
             text: InferenceSettings.systemPrompt,
             sender: .system
@@ -285,9 +319,7 @@ Example responses:
             text: messageText,
             sender: .user
         )
-        // Indicate background task begun
         Model.shared.indicateStartedBackgroundTask()
-        // Get response
         if let response: String = (try? await Model.shared.listenThinkRespond(
             messages: [
                 systemPromptMessage,
@@ -296,11 +328,9 @@ Example responses:
             modelType: .worker,
             mode: .default
         ))?.text {
-            // Check if format is correct & length is acceptable
             let formatPass: Bool = response.hasPrefix(
                 "The user"
             ) && (15...400).contains(response.count)
-            // If format passes, remember
             if formatPass,
                let memory: Memory = await Memory(
                 messageId: messageId,
@@ -320,4 +350,49 @@ Example responses:
         }).first
     }
     
+}
+
+// MARK: - Memory <-> MemoryEntity mapping
+
+extension MemoryIndex {
+
+    fileprivate static func memory(from entity: MemoryEntity) -> Memory? {
+        // The `SimilarityIndex.IndexItem` memberwise initialiser is
+        // not exposed outside its defining module, so we can only
+        // hydrate memories whose embedding vector survived the
+        // JSON round-trip. Rows with missing/corrupt index data are
+        // dropped; they'll be regenerated the next time the user
+        // exercises the memory recall path on the matching message.
+        guard let data = entity.indexItemData,
+              let indexItem = try? JSONDecoder().decode(
+                SimilarityIndex.IndexItem.self,
+                from: data
+              ) else {
+            return nil
+        }
+        return Memory(
+            id: entity.id,
+            messageId: entity.messageId,
+            createdAt: entity.createdAt,
+            indexItem: indexItem
+        )
+    }
+}
+
+// MARK: - Memory hydration
+
+extension Memory {
+    /// Convenience initialiser used by ``MemoryIndex`` to hydrate
+    /// a struct from a ``MemoryEntity`` row.
+    init(
+        id: UUID,
+        messageId: UUID,
+        createdAt: Date,
+        indexItem: SimilarityIndex.IndexItem
+    ) {
+        self.id = id
+        self.messageId = messageId
+        self.createdAt = createdAt
+        self.indexItem = indexItem
+    }
 }

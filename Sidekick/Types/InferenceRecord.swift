@@ -61,3 +61,4 @@ public struct InferenceRecord: Identifiable, Codable {
     }
     
 }
+

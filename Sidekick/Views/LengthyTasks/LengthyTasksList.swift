@@ -9,7 +9,7 @@ import SwiftUI
 
 struct LengthyTasksList: View {
 	
-	@EnvironmentObject private var lengthyTasksController: LengthyTasksController
+	@Environment(LengthyTasksController.self) private var lengthyTasksController
 	
     var body: some View {
 		Group {

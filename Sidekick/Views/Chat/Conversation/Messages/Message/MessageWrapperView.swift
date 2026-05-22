@@ -11,9 +11,9 @@ import SwiftUI
 struct MessageWrapperView<Content: View>: View {
     
     @EnvironmentObject private var model: Model
-    @EnvironmentObject private var conversationManager: ConversationManager
-    @EnvironmentObject private var conversationState: ConversationState
-    @EnvironmentObject private var promptController: PromptController
+    @Environment(ConversationManager.self) private var conversationManager
+    @Environment(ConversationState.self) private var conversationState
+    @Environment(PromptController.self) private var promptController
     
     var selectedConversation: Conversation? {
         guard let selectedConversationId = conversationState.selectedConversationId else {

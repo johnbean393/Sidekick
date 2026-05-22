@@ -46,13 +46,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             await Refactorer.updateEndpoint()
         }
         // Make sure `Resources` are not indexing
-        for expert in ExpertManager.shared.experts {
+        for expert in ExpertManager.experts() {
             var modExpert = expert
             if modExpert.resources.graphStatus != .ready {
                 modExpert.resources.graphStatus = nil
                 modExpert.resources.graphProgress = nil
             }
-            ExpertManager.shared.update(modExpert)
+            ExpertManager.update(modExpert)
         }
     }
     
@@ -65,9 +65,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             await Model.shared.stopServers()
         }
         // Remove stale sources
-        SourcesManager.shared.removeStaleSources()
+        SourcesStore.removeStaleSources()
         // Remove non-persisted resources
-        ExpertManager.shared.removeUnpersistedResources()
+        ExpertManager.removeUnpersistedResources()
         return .terminateNow
     }
     

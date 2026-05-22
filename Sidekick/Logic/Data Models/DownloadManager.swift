@@ -7,32 +7,40 @@
 
 import DefaultModels
 import Foundation
+import Observation
 import OSLog
 import SwiftUI
 
 @MainActor
-/// Controls the download of LLMs
-public class DownloadManager: NSObject, ObservableObject {
-	
+@Observable
+/// Controls the download of LLMs. ``@Observable`` thin service —
+/// the plan kept managers like this one (inference, downloads)
+/// rather than turning them into static enums because their state
+/// is genuinely transient and view-bindable.
+public final class DownloadManager: NSObject {
+
     /// A `Logger` object for the `PromptInputField` object
+    @ObservationIgnored
     private static let logger: Logger = .init(
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: DownloadManager.self)
     )
-    
+
 	/// Global instance of `DownloadManager`
 	static var shared: DownloadManager = DownloadManager()
-	
+
 	/// Property for currently downloading URL session
+	@ObservationIgnored
 	private var urlSession: URLSession!
 	/// A `Bool` representing whether the model should be added to the model manager
+	@ObservationIgnored
 	private var shouldAddModel: Bool = true
-	/// Published property for download progress
-	@Published var tasks: [URLSessionTask] = []
-	/// Published property for last update
-	@Published var lastUpdatedAt = Date()
-	/// Published property for whether the model was downloaded
-	@Published var didFinishDownloadingModel: Bool = false
+	/// Observable property for download progress
+	var tasks: [URLSessionTask] = []
+	/// Observable property for last update
+	var lastUpdatedAt = Date()
+	/// Observable property for whether the model was downloaded
+	var didFinishDownloadingModel: Bool = false
 	
 	override private init() {
 		super.init()
@@ -216,7 +224,7 @@ extension DownloadManager: URLSessionDelegate, URLSessionDownloadDelegate {
 					if Settings.modelUrl == nil {
 						Settings.selectMainLocalModel(destinationURL)
 					}
-					ModelManager.shared.add(destinationURL)
+					ModelManager.add(destinationURL)
 				}
 				self.didFinishDownloadingModel = true
 			}
@@ -225,8 +233,10 @@ extension DownloadManager: URLSessionDelegate, URLSessionDownloadDelegate {
 			return
 		}
 		// Remove lengthy task
-		LengthyTasksController.shared.tasks = LengthyTasksController.shared.tasks.filter {
-			$0.name != "Downloading model \(fileName)"
+		Task { @MainActor in
+			LengthyTasksController.shared.tasks = LengthyTasksController.shared.tasks.filter {
+				$0.name != "Downloading model \(fileName)"
+			}
 		}
 	}
 	

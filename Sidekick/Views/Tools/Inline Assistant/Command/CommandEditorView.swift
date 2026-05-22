@@ -8,16 +8,16 @@
 import SwiftUI
 
 struct CommandEditorView: View {
-	
-	@EnvironmentObject private var commandManager: CommandManager
-	
+
 	@Binding var command: Command
 	@Binding var isEditingCommand: Bool
-	
+
 	var body: some View {
 		VStack {
 			HStack {
 				ExitButton {
+					// Persist any in-flight edits before dismissing.
+					CommandManager.update(self.command)
 					self.isEditingCommand.toggle()
 				}
 				Spacer()
@@ -58,7 +58,7 @@ struct CommandEditorView: View {
 			}
 		}
 		.onChange(of: command.name) {
-			self.commandManager.commands = self.commandManager.commands.sorted(by: \.name)
+			CommandManager.update(self.command)
 		}
 	}
 	

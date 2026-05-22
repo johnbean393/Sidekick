@@ -29,7 +29,7 @@
 		200619B22D6768F6001949EF /* SwiftfulLoadingIndicators in Frameworks */ = {isa = PBXBuildFile; productRef = 200619B12D6768F6001949EF /* SwiftfulLoadingIndicators */; };
 		200619B42D676DCE001949EF /* DiagrammerPreviewEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200619B32D676DCE001949EF /* DiagrammerPreviewEditorView.swift */; };
 		200AACBD2EC1CE7A000995B7 /* FunctionCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200AACBC2EC1CE7A000995B7 /* FunctionCategory.swift */; };
-		200AACBF2EC1CEAE000995B7 /* FunctionSelectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200AACBE2EC1CEAE000995B7 /* FunctionSelectionManager.swift */; };
+		200AACBF2EC1CEAE000995B7 /* FunctionSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200AACBE2EC1CEAE000995B7 /* FunctionSelection.swift */; };
 		200AACC12EC1CF23000995B7 /* CapsuleChecklistMenuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200AACC02EC1CF23000995B7 /* CapsuleChecklistMenuButton.swift */; };
 		200AADB22EC28395000995B7 /* demoExpertUse.png in Resources */ = {isa = PBXBuildFile; fileRef = 200AAD702EC28395000995B7 /* demoExpertUse.png */; };
 		200AADB32EC28395000995B7 /* slideStudioExport.png in Resources */ = {isa = PBXBuildFile; fileRef = 200AAD9D2EC28395000995B7 /* slideStudioExport.png */; };
@@ -454,6 +454,14 @@
 		20FDE2A22DAE726E000A16F8 /* OpenAIFunction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FDE2A12DAE726E000A16F8 /* OpenAIFunction.swift */; };
 		20FDE2A42DAE73BF000A16F8 /* AnyFunctionBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FDE2A32DAE73BF000A16F8 /* AnyFunctionBox.swift */; };
 		20FE94DA2CB96DE8006E9F06 /* ExitButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FE94D92CB96DE8006E9F06 /* ExitButton.swift */; };
+		20BEEF010000000000000001 /* SidekickSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000001 /* SidekickSchema.swift */; };
+		20BEEF010000000000000002 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000002 /* PersistenceController.swift */; };
+		20BEEF010000000000000003 /* JSONImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000003 /* JSONImporter.swift */; };
+		20BEEF010000000000000004 /* MessageStreamCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000004 /* MessageStreamCoordinator.swift */; };
+		20BEEF050000000000000003 /* ModelContextActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF050000000000000004 /* ModelContextActor.swift */; };
+		20BEEF050000000000000001 /* RAGIndexingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF050000000000000002 /* RAGIndexingService.swift */; };
+		20BEEF010000000000000005 /* MessageViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000005 /* MessageViewHelpers.swift */; };
+		20BEEF010000000000000006 /* ExpertViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000006 /* ExpertViewHelpers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -558,7 +566,7 @@
 		200619AE2D6766B1001949EF /* DiagrammerGeneratingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagrammerGeneratingView.swift; sourceTree = "<group>"; };
 		200619B32D676DCE001949EF /* DiagrammerPreviewEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagrammerPreviewEditorView.swift; sourceTree = "<group>"; };
 		200AACBC2EC1CE7A000995B7 /* FunctionCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionCategory.swift; sourceTree = "<group>"; };
-		200AACBE2EC1CEAE000995B7 /* FunctionSelectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionSelectionManager.swift; sourceTree = "<group>"; };
+		200AACBE2EC1CEAE000995B7 /* FunctionSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionSelection.swift; sourceTree = "<group>"; };
 		200AACC02EC1CF23000995B7 /* CapsuleChecklistMenuButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleChecklistMenuButton.swift; sourceTree = "<group>"; };
 		200AAD5C2EC28395000995B7 /* canvasDataVisualization.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = canvasDataVisualization.png; sourceTree = "<group>"; };
 		200AAD5D2EC28395000995B7 /* canvasExport.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = canvasExport.png; sourceTree = "<group>"; };
@@ -944,6 +952,15 @@
 		20FDE2A32DAE73BF000A16F8 /* AnyFunctionBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyFunctionBox.swift; sourceTree = "<group>"; };
 		20FE94D92CB96DE8006E9F06 /* ExitButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExitButton.swift; sourceTree = "<group>"; };
 		20FE94DB2CB96FCD006E9F06 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		20BEEF020000000000000001 /* SidekickSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidekickSchema.swift; sourceTree = "<group>"; };
+		20BEEF020000000000000002 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		20BEEF020000000000000003 /* JSONImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONImporter.swift; sourceTree = "<group>"; };
+		20BEEF020000000000000004 /* MessageStreamCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageStreamCoordinator.swift; sourceTree = "<group>"; };
+		20BEEF050000000000000004 /* ModelContextActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelContextActor.swift; sourceTree = "<group>"; };
+		20BEEF050000000000000002 /* RAGIndexingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RAGIndexingService.swift; sourceTree = "<group>"; };
+		20BEEF040000000000000001 /* Services */ = {isa = PBXGroup; children = (20BEEF050000000000000002 /* RAGIndexingService.swift */); path = Services; sourceTree = "<group>"; };
+		20BEEF020000000000000005 /* MessageViewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageViewHelpers.swift; sourceTree = "<group>"; };
+		20BEEF020000000000000006 /* ExpertViewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpertViewHelpers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1489,6 +1506,7 @@
 			isa = PBXGroup;
 			children = (
 				20B97CE22CB00585009A0A5D /* Expert.swift */,
+				20BEEF020000000000000006 /* ExpertViewHelpers.swift */,
 				20B97CE82CB007DF009A0A5D /* Resource.swift */,
 				20A8B65A2CB2709100B756FD /* Resources.swift */,
 				200AAE022EC2B249000995B7 /* Community.swift */,
@@ -1759,6 +1777,7 @@
 			isa = PBXGroup;
 			children = (
 				20B97CDC2CAFFE06009A0A5D /* Message.swift */,
+				20BEEF020000000000000005 /* MessageViewHelpers.swift */,
 				20B97CDE2CAFFE6A009A0A5D /* Sender.swift */,
 				20C221012CC4A9E800A99796 /* Source.swift */,
 				202E3EDC2CBB8F7B00AF86C8 /* ReferencedURL.swift */,
@@ -1858,7 +1877,7 @@
 				20B97CCD2CAFEC37009A0A5D /* Settings.swift */,
 				208388E42CBF526E00C2A9F8 /* RetrievalSettings.swift */,
 				20573F312CB53172004C19FE /* InferenceSettings.swift */,
-				200AACBE2EC1CEAE000995B7 /* FunctionSelectionManager.swift */,
+				200AACBE2EC1CEAE000995B7 /* FunctionSelection.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -2059,9 +2078,23 @@
 				208388E32CBF525A00C2A9F8 /* Settings */,
 				20571F822CBD6A95004F3344 /* Utilities */,
 				20B9E6152CB1465900BA0AD2 /* Data Models */,
+				20BEEF030000000000000001 /* Persistence */,
+				20BEEF040000000000000001 /* Services */,
 				20B9E60F2CB1429E00BA0AD2 /* Commands */,
 			);
 			path = Logic;
+			sourceTree = "<group>";
+		};
+		20BEEF030000000000000001 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				20BEEF020000000000000001 /* SidekickSchema.swift */,
+				20BEEF020000000000000002 /* PersistenceController.swift */,
+				20BEEF020000000000000003 /* JSONImporter.swift */,
+				20BEEF020000000000000004 /* MessageStreamCoordinator.swift */,
+				20BEEF050000000000000004 /* ModelContextActor.swift */,
+			);
+			path = Persistence;
 			sourceTree = "<group>";
 		};
 		20B97CD22CAFEC90009A0A5D /* Extensions */ = {
@@ -2724,7 +2757,7 @@
 				20AC3CE52CDA700700947FDA /* AppState.swift in Sources */,
 				206AB9672DB09BB800385510 /* Location.swift in Sources */,
 				2099BD9F2CB7E9CE00E02732 /* QuickPrompt.swift in Sources */,
-				200AACBF2EC1CEAE000995B7 /* FunctionSelectionManager.swift in Sources */,
+				200AACBF2EC1CEAE000995B7 /* FunctionSelection.swift in Sources */,
 				20AF0A0A2CDC6339007780FE /* MarkdownCodeBlockView.swift in Sources */,
 				204AE3C02CEB57330086B42D /* CommandButton.swift in Sources */,
 				200AAE112EC4F06C000995B7 /* StartupMetrics.swift in Sources */,
@@ -2939,6 +2972,14 @@
 				200FBFF32CB66B8300A92A74 /* ServerHealth.swift in Sources */,
 				201BB9C72D8BDCA800890EE6 /* SnapshotTextEditor.swift in Sources */,
 				2099BDB22CB828A500E02732 /* PopoverButton.swift in Sources */,
+				20BEEF010000000000000001 /* SidekickSchema.swift in Sources */,
+				20BEEF010000000000000002 /* PersistenceController.swift in Sources */,
+				20BEEF010000000000000003 /* JSONImporter.swift in Sources */,
+				20BEEF010000000000000004 /* MessageStreamCoordinator.swift in Sources */,
+				20BEEF050000000000000003 /* ModelContextActor.swift in Sources */,
+				20BEEF050000000000000001 /* RAGIndexingService.swift in Sources */,
+				20BEEF010000000000000005 /* MessageViewHelpers.swift in Sources */,
+				20BEEF010000000000000006 /* ExpertViewHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

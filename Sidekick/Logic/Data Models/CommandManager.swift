@@ -4,243 +4,161 @@
 //
 //  Created by Bean John on 11/18/24.
 //
+//  Replaced in Phase 2 of the SwiftData migration. The legacy
+//  ``CommandManager`` `ObservableObject` is gone; commands live in
+//  ``CommandEntity`` rows and views read them via SwiftData's
+//  `@Query`. The static helpers below provide the small slice of
+//  API that non-view call sites still need.
+//
 
 import Foundation
-import os.log
+import OSLog
+import SwiftData
 import SwiftUI
 
-public class CommandManager: ObservableObject {
-    
-    init() {
-        let signpost = StartupMetrics.begin("CommandManager.init")
-        self.patchFileIntegrity()
-        self.loadAsync()
-        StartupMetrics.end("CommandManager.init", signpost)
-    }
-    
-    /// Static constant for the global ``CommandManager`` object
-    static public let shared: CommandManager = .init()
-    
-    /// Published property for all commands
-    @Published public var commands: [Command] = [] {
-        didSet {
-            self.save()
-        }
-    }
-    
-    /// Published state tracking whether the datastore has been loaded
-    @Published private(set) var isLoaded: Bool = false
-    
-    /// Task handling asynchronous datastore loading
-    private var loadTask: Task<Void, Never>?
-    
-    /// Computed property returning the first command
-    var firstCommand: Command? {
-        if self.commands.first == nil {
-            self.newDatastore()
-        }
-        return self.commands.first
-    }
-    
-    /// Computed property returning the last command
-    var lastCommand: Command? {
-        if self.commands.last == nil {
-            self.newDatastore()
-        }
-        return self.commands.last
-    }
-    
-    /// Function to create a new command
-    public func addCommand(
-        command: Command
-    ) {
-        // Add to commands
-        self.commands.append(command)
-    }
-    
-    /// Function returning a command with the given ID
-    public func getCommand(
-        id commandId: UUID
-    ) -> Command? {
-        return self.commands.filter({ $0.id == commandId }).first
-    }
-    
-    /// Function to save commands to disk
-    public func save() {
+@MainActor
+public enum CommandManager {
+
+    private static let logger: Logger = .init(
+        subsystem: Bundle.main.bundleIdentifier!,
+        category: "CommandManager"
+    )
+
+    /// Returns every command, alphabetised, lazily seeding the
+    /// store with the defaults if needed.
+    public static func commands() -> [Command] {
+        let context = ModelContext(PersistenceController.shared.container)
         do {
-            // Save data
-            let rawData: Data = try JSONEncoder().encode(
-                self.commands
-            )
-            try rawData.write(
-                to: self.datastoreUrl,
-                options: .atomic
-            )
+            let rows = try context.fetch(FetchDescriptor<CommandEntity>())
+            if rows.isEmpty {
+                replace(with: Command.defaults)
+                return Command.defaults.sorted(by: \.name)
+            }
+            return rows
+                .map { Command(id: $0.id, name: $0.name, prompt: $0.prompt) }
+                .sorted(by: { $0.name < $1.name })
         } catch {
-            os_log("error = %@", error.localizedDescription)
+            Self.logger.error(
+                "Failed to read commands: \(error.localizedDescription, privacy: .public)"
+            )
+            return []
         }
     }
-    
-    /// Loads commands in the background to avoid blocking startup
-    private func loadAsync() {
-        if let loadTask = self.loadTask, !loadTask.isCancelled {
-            return
-        }
-        let targetUrl: URL = self.datastoreUrl
-        self.loadTask = Task.detached(priority: .userInitiated) { [weak self] in
-            let signpost = StartupMetrics.begin("CommandManager.loadDatastore")
-            defer { StartupMetrics.end("CommandManager.loadDatastore", signpost) }
-            let rawData: Data
-            do {
-                rawData = try Data(contentsOf: targetUrl)
-            } catch {
-                await MainActor.run {
-                    guard let self else { return }
-                    self.newDatastore()
-                    self.isLoaded = true
-                    self.loadTask = nil
-                }
-                return
-            }
-            let decoder: JSONDecoder = JSONDecoder()
-            let commands = (try? decoder.decode([Command].self, from: rawData)) ?? []
-            await MainActor.run {
-                guard let self else { return }
-                self.commands = commands
-                self.isLoaded = true
-                self.loadTask = nil
-            }
-        }
-    }
-    
-    /// Function to load commands from disk
-    public func load() {
+
+    /// Wholesale replace the persisted command list.
+    public static func replace(with commands: [Command]) {
+        let context = ModelContext(PersistenceController.shared.container)
         do {
-            let rawData: Data = try Data(
-                contentsOf: self.datastoreUrl
-            )
-            let decoder: JSONDecoder = JSONDecoder()
-            self.commands = try decoder.decode(
-                [Command].self,
-                from: rawData
-            )
-            self.isLoaded = true
+            let existing = try context.fetch(FetchDescriptor<CommandEntity>())
+            for row in existing {
+                context.delete(row)
+            }
+            for command in commands {
+                context.insert(
+                    CommandEntity(
+                        id: command.id,
+                        name: command.name,
+                        prompt: command.prompt
+                    )
+                )
+            }
+            try context.save()
         } catch {
-            print("Failed to load commands: \(error)")
-            self.newDatastore()
-        }
-    }
-    
-    /// Function to delete a command
-    public func delete(_ command: Binding<Command>) {
-        withAnimation(.spring()) {
-            self.commands = self.commands.filter {
-                $0.id != command.wrappedValue.id
-            }
-        }
-    }
-    
-    /// Function to delete a command
-    public func delete(_ command: Command) {
-        withAnimation(.spring()) {
-            self.commands = self.commands.filter {
-                $0.id != command.id
-            }
-        }
-    }
-    
-    /// Function to add a command
-    public func add(_ command: Command) {
-        withAnimation(.linear) {
-            self.commands.append(command)
-            self.commands = self.commands.sorted(by: \.name)
-        }
-    }
-    
-    /// Function to update a command
-    public func update(_ command: Command) {
-        withAnimation(.spring()) {
-            for commandIndex in self.commands.indices {
-                if command.id == self.commands[commandIndex].id {
-                    self.commands[commandIndex] = command
-                    break
-                }
-            }
-        }
-    }
-    
-    /// Function to update a command
-    public func update(_ command: Binding<Command>) {
-        withAnimation(.spring()) {
-            let targetId: UUID = command.wrappedValue.id
-            for index in self.commands.indices {
-                if targetId == self.commands[index].id {
-                    self.commands[index] = command.wrappedValue
-                    break
-                }
-            }
-        }
-    }
-    
-    /// Function to make new datastore
-    public func newDatastore() {
-        // Setup directory
-        self.patchFileIntegrity()
-        // Add new datastore
-        self.commands = Command.defaults
-        self.isLoaded = true
-        self.save()
-    }
-    
-    /// Function to reset datastore
-    @MainActor
-    public func resetDatastore() {
-        // Present confirmation modal
-        let _ = Dialogs.showConfirmation(
-            title: String(localized: "Delete All Commands"),
-            message: String(localized: "Are you sure you want to delete all commands?")
-        ) {
-            // If yes, delete datastore
-            FileManager.removeItem(at: self.datastoreUrl)
-            // Make new datastore
-            self.newDatastore()
-        }
-    }
-    
-    /// Function to patch file integrity
-    public func patchFileIntegrity() {
-        // Setup directory if needed
-        if !self.datastoreDirExists {
-            try! FileManager.default.createDirectory(
-                at: datastoreDirUrl,
-                withIntermediateDirectories: true
+            Self.logger.error(
+                "Failed to save commands: \(error.localizedDescription, privacy: .public)"
             )
         }
     }
-    
-    /// Computed property returning the datastore's directory's url
-    public var datastoreDirUrl: URL {
-        return Settings.containerUrl.appendingPathComponent(
-            "Commands"
+
+    /// Returns the command identified by `id`, if any.
+    public static func getCommand(id: UUID) -> Command? {
+        let context = ModelContext(PersistenceController.shared.container)
+        do {
+            let descriptor = FetchDescriptor<CommandEntity>(
+                predicate: #Predicate { $0.id == id }
+            )
+            if let row = try context.fetch(descriptor).first {
+                return Command(id: row.id, name: row.name, prompt: row.prompt)
+            }
+        } catch {
+            Self.logger.error(
+                "Failed to fetch command: \(error.localizedDescription, privacy: .public)"
+            )
+        }
+        return nil
+    }
+
+    /// Insert a new command row.
+    public static func add(_ command: Command) {
+        let context = ModelContext(PersistenceController.shared.container)
+        context.insert(
+            CommandEntity(
+                id: command.id,
+                name: command.name,
+                prompt: command.prompt
+            )
         )
+        try? context.save()
     }
-    
-    /// Computed property returning if datastore directory exists
-    private var datastoreDirExists: Bool {
-        return self.datastoreDirUrl.fileExists
+
+    /// Delete a command by id.
+    public static func delete(id: UUID) {
+        let context = ModelContext(PersistenceController.shared.container)
+        do {
+            let descriptor = FetchDescriptor<CommandEntity>(
+                predicate: #Predicate { $0.id == id }
+            )
+            if let row = try context.fetch(descriptor).first {
+                context.delete(row)
+                try context.save()
+            }
+        } catch {
+            Self.logger.error(
+                "Failed to delete command: \(error.localizedDescription, privacy: .public)"
+            )
+        }
     }
-    
-    /// Computed property returning the datastore's url
-    public var datastoreUrl: URL {
-        return self.datastoreDirUrl.appendingPathComponent(
-            "commands.json"
-        )
+
+    /// Update the mutable fields of a command row.
+    public static func update(_ command: Command) {
+        let id = command.id
+        let context = ModelContext(PersistenceController.shared.container)
+        do {
+            let descriptor = FetchDescriptor<CommandEntity>(
+                predicate: #Predicate { $0.id == id }
+            )
+            if let row = try context.fetch(descriptor).first {
+                row.name = command.name
+                row.prompt = command.prompt
+                try context.save()
+            }
+        } catch {
+            Self.logger.error(
+                "Failed to update command: \(error.localizedDescription, privacy: .public)"
+            )
+        }
     }
-    
-    /// Computed property returning if datastore exists
-    private var datastoreExists: Bool {
-        return self.datastoreUrl.fileExists
+
+    /// Restore the default command set.
+    public static func resetToDefaults() {
+        replace(with: Command.defaults)
     }
-    
+
+    /// First command after a fresh seed (used by the inline
+    /// assistant's initial selection).
+    public static var firstCommand: Command? {
+        return commands().first
+    }
+
+    /// Last command after a fresh seed.
+    public static var lastCommand: Command? {
+        return commands().last
+    }
 }
 
+extension CommandEntity {
+    /// Hydrate a value-type ``Command`` from a SwiftData row.
+    public var command: Command {
+        Command(id: id, name: name, prompt: prompt)
+    }
+}

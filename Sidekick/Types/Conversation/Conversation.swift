@@ -15,16 +15,20 @@ public struct Conversation: Identifiable, Codable, Hashable {
 	/// Stored property for conversation title
 	public var title: String
 	
-	/// Stored property for the selected expert's ID
-	public var expertId: UUID? = ExpertManager.shared.firstExpert?.id
-	
+	/// Stored property for the selected expert's ID. Defaults are
+	/// applied lazily on the main actor when a conversation is
+	/// instantiated outside a SwiftData-aware context.
+	public var expertId: UUID? = nil
+
 	/// Computed property returning the selected expert
+	@MainActor
 	public var expert: Expert? {
 		guard let expertId else { return nil }
-		return ExpertManager.shared.getExpert(id: expertId)
+		return ExpertManager.getExpert(id: expertId)
 	}
 	
 	/// Computed property returning the system prompt used
+	@MainActor
 	public var systemPrompt: String? {
 		return expert?.systemPrompt
 	}

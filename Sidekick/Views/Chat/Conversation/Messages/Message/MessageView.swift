@@ -13,10 +13,10 @@ struct MessageView: View {
     @Environment(\.openWindow) var openWindow
     
     @EnvironmentObject private var model: Model
-	@EnvironmentObject private var conversationManager: ConversationManager
-	@EnvironmentObject private var conversationState: ConversationState
-	@EnvironmentObject private var promptController: PromptController
-    @EnvironmentObject private var memories: Memories
+	@Environment(ConversationManager.self) private var conversationManager
+	@Environment(ConversationState.self) private var conversationState
+	@Environment(PromptController.self) private var promptController
+    @Environment(MemoryIndex.self) private var memories
     
     @State private var isEditing: Bool = false
 	@State private var isShowingSources: Bool = false
@@ -39,9 +39,7 @@ struct MessageView: View {
     }
     
 	var sources: Sources? {
-		SourcesManager.shared.getSources(
-			id: message.id
-		)
+		SourcesStore.getSources(id: message.id)
 	}
 	
 	var showSources: Bool {

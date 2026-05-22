@@ -5,16 +5,21 @@
 //  Created by Bean John on 11/18/24.
 //
 
+import SwiftData
 import SwiftUI
 
 struct InlineAssistantView: View {
-	
+
 	var selectedText: String
-	
+
 	@StateObject private var model: Model = .shared
-	
-	@StateObject private var commandManager: CommandManager = .shared
+
+	@Query private var commandRows: [CommandEntity]
 	@StateObject private var inlineAssistantController: InlineAssistantController = .shared
+
+	private var commands: [Command] {
+		commandRows.map(\.command).sorted(by: \.name)
+	}
 	
 	@State private var didSelectCommand: Bool = false
 	@State private var isAddingCommand: Bool = false
@@ -33,7 +38,7 @@ struct InlineAssistantView: View {
 				}
 			}
 			.padding(.bottom, 8)
-			self.commands
+			self.commandsView
 			Group {
 				if self.didSelectCommand {
 					self.progressIndicator
@@ -57,22 +62,17 @@ struct InlineAssistantView: View {
 			NewCommandView(isAddingCommand: $isAddingCommand)
 				.frame(minWidth: 350, minHeight: 300)
 		}
-		.environmentObject(commandManager)
 		.environmentObject(model)
 	}
-	
-	var commands: some View {
+
+	var commandsView: some View {
 		WrappingHStack(
 			alignment: .leading,
 			horizontalSpacing: 20
 		) {
-			ForEach(
-				$commandManager.commands
-			) { command in
-				CommandButton(
-					command: command
-				) {
-					self.executeCommand(command: command.wrappedValue)
+			ForEach(self.commands) { command in
+				CommandButton(command: command) {
+					self.executeCommand(command: command)
 				}
 				.disabled(didSelectCommand)
 			}

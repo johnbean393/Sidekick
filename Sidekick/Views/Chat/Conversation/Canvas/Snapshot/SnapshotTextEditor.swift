@@ -12,8 +12,8 @@ import SwiftUI
 struct SnapshotTextEditor: View {
 	
 	@EnvironmentObject private var canvasController: CanvasController
-	@EnvironmentObject private var conversationState: ConversationState
-	@EnvironmentObject private var conversationManager: ConversationManager
+	@Environment(ConversationState.self) private var conversationState
+	@Environment(ConversationManager.self) private var conversationManager
 	
 	@Environment(\.colorScheme) private var colorScheme: ColorScheme
 	@State private var messages: Set<TextLocated<LanguageSupport.Message>> = Set()

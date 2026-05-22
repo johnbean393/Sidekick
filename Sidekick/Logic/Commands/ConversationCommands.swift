@@ -28,7 +28,7 @@ public class ConversationCommands {
 		CommandGroup(after: .newItem) {
 			Menu {
 				ForEach(
-					ExpertManager.shared.experts
+					ExpertManager.experts()
 				) { expert in
 					ExpertSelectionButton(
 						expert: expert
@@ -48,7 +48,7 @@ public class ConversationCommands {
 		
 		/// The index of the expert, of type `Int`
 		private var index: Int {
-			return ExpertManager.shared.getExpertIndex(
+			return ExpertManager.getExpertIndex(
 				expert: expert
 			) + 1
 		}

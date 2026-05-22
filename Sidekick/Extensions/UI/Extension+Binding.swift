@@ -27,13 +27,13 @@ extension Binding where Value == Expert {
         await MainActor.run {
             expert.resources.addResource(resource)
             self.wrappedValue = expert
-            ExpertManager.shared.update(expert)
+            ExpertManager.update(expert)
         }
         
         // Write back the modified expert
         await MainActor.run {
             self.wrappedValue = expert
-            ExpertManager.shared.update(expert)
+            ExpertManager.update(expert)
         }
     }
     
@@ -44,7 +44,7 @@ extension Binding where Value == Expert {
         await MainActor.run {
             expert.resources.addResources(resources)
             self.wrappedValue = expert
-            ExpertManager.shared.update(expert)
+            ExpertManager.update(expert)
         }
     }
     
@@ -56,7 +56,7 @@ extension Binding where Value == Expert {
         await MainActor.run {
             expert.resources.removeResource(resource)
             self.wrappedValue = expert
-            ExpertManager.shared.update(expert)
+            ExpertManager.update(expert)
         }
     }
     
@@ -78,18 +78,18 @@ extension Binding where Value == Expert {
         // Write back the modified expert
         await MainActor.run {
             self.wrappedValue = expert
-            ExpertManager.shared.update(expert)
+            ExpertManager.update(expert)
         }
     }
     
     private func updateExpertProgress(expertId: UUID, progress: Resources.GraphProgress) {
         Task { @MainActor in
-            guard var current = ExpertManager.shared.getExpert(id: expertId) else {
+            guard var current = ExpertManager.getExpert(id: expertId) else {
                 return
             }
             current.resources.graphStatus = .building
             current.resources.graphProgress = progress
-            ExpertManager.shared.update(current)
+            ExpertManager.update(current)
         }
     }
     

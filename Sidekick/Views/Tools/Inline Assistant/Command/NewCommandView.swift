@@ -8,9 +8,7 @@
 import SwiftUI
 
 struct NewCommandView: View {
-	
-	@EnvironmentObject private var commandManager: CommandManager
-	
+
 	@State private var name: String = ""
 	@State private var prompt: String = ""
 	@Binding var isAddingCommand: Bool
@@ -89,7 +87,7 @@ struct NewCommandView: View {
 					name: name,
 					prompt: prompt
 				)
-				self.commandManager.add(newCommand)
+				CommandManager.add(newCommand)
 				self.isAddingCommand.toggle()
 			} label: {
 				Text("Add")

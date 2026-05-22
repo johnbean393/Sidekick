@@ -9,9 +9,7 @@ import SwiftUI
 
 struct ExpertNavigationRowView: View {
 	
-	@EnvironmentObject private var expertManager: ExpertManager
-	
-	@State private var isEditing: Bool = false
+		@State private var isEditing: Bool = false
 	@State private var isDeleting: Bool = false
 	
 	@State private var isHovering: Bool = false
@@ -19,7 +17,7 @@ struct ExpertNavigationRowView: View {
 	@Binding var expert: Expert
 	
 	var isDefault: Bool {
-		return expert.id == expertManager.default?.id
+		return expert.id == ExpertManager.default?.id
 	}
 	
 	var body: some View {
@@ -52,9 +50,7 @@ struct ExpertNavigationRowView: View {
 			isPresented: $isDeleting
 		) {
 			Button {
-				self.expertManager.delete(
-					self.expert
-				)
+				ExpertManager.delete(id: self.expert.id)
 				withAnimation(.linear) {
 					self.isDeleting = false
 				}

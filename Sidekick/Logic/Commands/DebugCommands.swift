@@ -17,8 +17,9 @@ public class DebugCommands {
 			Menu("Debug") {
 				Self.debugSettings
 				Self.debugConversations
+				Self.debugPersistence
 				Button(
-					action: ExpertManager.shared.resetDatastore
+					action: ExpertManager.resetToDefaults
 				) {
 					Text("Delete All Experts")
 				}
@@ -30,6 +31,46 @@ public class DebugCommands {
 					Text("Show Container in Finder")
 				}
 			}
+		}
+	}
+
+	private static var debugPersistence: some View {
+		Menu("Persistence") {
+			Button {
+				Task { @MainActor in
+					Self.reimportFromLegacyJSON()
+				}
+			} label: {
+				Text("Re-import From Legacy JSON")
+			}
+			Button {
+				FileManager.showItemInFinder(
+					url: Settings.containerUrl.appendingPathComponent("Legacy")
+				)
+			} label: {
+				Text("Show Legacy JSON in Finder")
+			}
+		}
+	}
+
+	/// Runs the SwiftData importer against whatever legacy JSON
+	/// files are still present (either in their original locations
+	/// or under `…/Legacy/<file>.legacy`). Used by the Debug menu
+	/// for diagnosing migration issues; new rows are skipped if the
+	/// matching id already exists in SwiftData.
+	@MainActor
+	private static func reimportFromLegacyJSON() {
+		do {
+			try JSONImporter.importAll(into: PersistenceController.shared.container)
+			Dialogs.showAlert(
+				title: String(localized: "Re-import Complete"),
+				message: String(localized: "Legacy JSON content was successfully re-imported into the SwiftData store. Restart Sidekick to see the latest data.")
+			)
+		} catch {
+			Dialogs.showAlert(
+				title: String(localized: "Re-import Failed"),
+				message: error.localizedDescription
+			)
 		}
 	}
 	

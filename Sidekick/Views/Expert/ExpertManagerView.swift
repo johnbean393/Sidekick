@@ -9,17 +9,16 @@ import SwiftUI
 
 struct ExpertManagerView: View {
 	
-	@EnvironmentObject private var expertManager: ExpertManager
-	@EnvironmentObject private var conversationState: ConversationState
-	
-	@State private var selectedExpertId: UUID? = ExpertManager.shared.firstExpert?.id
-	
+		@Environment(ConversationState.self) private var conversationState
+
+	@State private var selectedExpertId: UUID? = ExpertManager.experts().first?.id
+
 	var selectedExpert: Expert? {
 		guard let selectedExpertId = selectedExpertId else { return nil }
-		return expertManager.getExpert(id: selectedExpertId)
+		return ExpertManager.getExpert(id: selectedExpertId)
 	}
-	
-	@State private var editingExpert: Expert = ExpertManager.shared.firstExpert!
+
+	@State private var editingExpert: Expert = ExpertManager.experts().first ?? Expert.default
 	
 	var body: some View {
 		VStack {
@@ -52,7 +51,7 @@ struct ExpertManagerView: View {
 			symbolName: "questionmark.circle.fill",
 			color: Color.white
 		)
-		self.expertManager.add(newExpert)
+		ExpertManager.add(newExpert)
 	}
 	
 }

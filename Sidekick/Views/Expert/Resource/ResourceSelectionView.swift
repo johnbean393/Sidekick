@@ -13,7 +13,7 @@ struct ResourceSelectionView: View {
     @State private var timer: Timer? = nil
     
 	@Binding var expert: Expert
-	@EnvironmentObject private var lengthyTasksController: LengthyTasksController
+	@Environment(LengthyTasksController.self) private var lengthyTasksController
 	
 	var hasResources: Bool {
         return !self.expert.resources.resources.isEmpty
@@ -57,7 +57,7 @@ struct ResourceSelectionView: View {
         
         @Binding var expert: Expert
         
-        @EnvironmentObject private var lengthyTasksController: LengthyTasksController
+        @Environment(LengthyTasksController.self) private var lengthyTasksController
         
         var isUpdating: Bool {
             let taskName: String = String(

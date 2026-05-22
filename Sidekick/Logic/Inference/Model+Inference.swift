@@ -796,10 +796,16 @@ Please try rephrasing your request or contact support if the issue persists.
         existingRecords: [FunctionCallRecord]
     ) async -> FunctionExecutionOutput {
         var functionCallRecords = existingRecords
+        let existingRecordsCount = existingRecords.count
         let plannedCalls: [PlannedFunctionCall] = functionCalls.enumerated().map { index, functionCall in
             let callJsonSchema = functionCall.getJsonSchema()
             Self.logger.info("Executing function call: \(callJsonSchema, privacy: .public)")
-            let recordIndex = functionCallRecords.count + index
+            // Anchor against the pre-append count so we don't
+            // double-count the slot we're about to add. The previous
+            // formulation (`functionCallRecords.count + index`)
+            // grew by 2 per iteration and produced out-of-range
+            // writes whenever ≥2 calls executed in parallel.
+            let recordIndex = existingRecordsCount + index
             let functionCallRecord = FunctionCallRecord(name: functionCall.name)
             functionCallRecords.append(functionCallRecord)
             return PlannedFunctionCall(

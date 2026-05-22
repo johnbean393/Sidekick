@@ -16,8 +16,7 @@ struct ResourceSectionView: View {
     @State private var isAddingWebsite: Bool = false
     @State private var isAddingEmail: Bool = false
     
-    @EnvironmentObject private var expertManager: ExpertManager
-    @EnvironmentObject private var lengthyTasksController: LengthyTasksController
+        @Environment(LengthyTasksController.self) private var lengthyTasksController
     
     var isTutorial: Bool = false
     var fileUrl: URL? = nil
@@ -264,7 +263,7 @@ struct ResourceSectionView: View {
             let expertName = expert.name
             await MainActor.run {
                 expert.resources.graphStatus = .building
-                expertManager.update(expert)
+                ExpertManager.update(expert)
             }
             var updatedExpert = expert
             await updatedExpert.resources.migrateToGraphRAG(expertName: expertName) { progress in
@@ -272,7 +271,7 @@ struct ResourceSectionView: View {
             }
             await MainActor.run {
                 expert = updatedExpert
-                expertManager.update(updatedExpert)
+                ExpertManager.update(updatedExpert)
             }
         }
     }
@@ -317,7 +316,7 @@ struct ResourceSectionView: View {
             var current = expert
             current.resources.addResources(resources)
             expert = current
-            expertManager.update(current)
+            ExpertManager.update(current)
         }
     }
     
@@ -336,18 +335,18 @@ struct ResourceSectionView: View {
         )
         await MainActor.run {
             expert = updatedExpert
-            expertManager.update(updatedExpert)
+            ExpertManager.update(updatedExpert)
         }
     }
     
     private func updateExpertProgress(expertId: UUID, progress: Resources.GraphProgress) {
         Task { @MainActor in
-            guard var current = ExpertManager.shared.getExpert(id: expertId) else {
+            guard var current = ExpertManager.getExpert(id: expertId) else {
                 return
             }
             current.resources.graphStatus = .building
             current.resources.graphProgress = progress
-            ExpertManager.shared.update(current)
+            ExpertManager.update(current)
         }
     }
     

@@ -5,17 +5,21 @@
 //  Created by John Bean on 4/29/25.
 //
 
+import SwiftData
 import SwiftUI
 
 struct ServerArgumentsEditor: View {
-    
+
     @Binding var isPresented: Bool
-    
+
     @State private var tableId: UUID = UUID()
-    
-    @StateObject private var serverArgumentsManager: ServerArgumentsManager = .shared
-    @State private var selections = Set<ServerArgument.ID>()
-    
+
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \ServerArgumentEntity.sortIndex)
+    private var argumentRows: [ServerArgumentEntity]
+
+    @State private var selections = Set<UUID>()
+
     var body: some View {
         VStack {
             table
@@ -26,7 +30,7 @@ struct ServerArgumentsEditor: View {
         }
         .padding(.vertical, 12)
     }
-    
+
     var bottomBar: some View {
         HStack {
             Link(
@@ -43,38 +47,39 @@ struct ServerArgumentsEditor: View {
         .controlSize(.large)
         .padding(.horizontal, 12)
     }
-    
+
     var resetButton: some View {
         Button {
-            withAnimation(.linear) {
-                self.serverArgumentsManager.resetDatastore()
-                self.tableId = UUID()
+            let _ = Dialogs.showConfirmation(
+                title: String(localized: "Delete All Server Arguments"),
+                message: String(localized: "Are you sure you want to delete all server arguments?")
+            ) {
+                withAnimation(.linear) {
+                    ServerArgumentsStore.resetToDefaults()
+                    self.tableId = UUID()
+                }
             }
         } label: {
             Text("Use Defaults")
         }
     }
-    
+
     var addButton: some View {
         Button {
-            // Add
             withAnimation(.linear) {
-                let blankArgument = ServerArgument(flag: "", value: "")
-                self.serverArgumentsManager.add(blankArgument)
+                ServerArgumentsStore.add(ServerArgument(flag: "", value: ""))
             }
         } label: {
             Text("Add")
         }
     }
-    
+
     var doneButton: some View {
         Button {
-            // Send notification to reload model
             NotificationCenter.default.post(
                 name: Notifications.changedInferenceConfig.name,
                 object: nil
             )
-            // Exit
             withAnimation(.linear) {
                 self.isPresented.toggle()
             }
@@ -82,49 +87,38 @@ struct ServerArgumentsEditor: View {
             Text("Done")
         }
     }
-    
+
     var table: some View {
-        Table(
-            of: Binding<ServerArgument>.self,
-            selection: self.$selections
-        ) {
-            // Field for toggling status of argument
-            TableColumn("Active") { argument in
-                Toggle(isOn: argument.isActive, label: {})
+        Table(of: ServerArgumentEntity.self, selection: $selections) {
+            TableColumn("Active") { row in
+                @Bindable var row = row
+                Toggle(isOn: $row.isActive, label: {})
                     .toggleStyle(.checkbox)
             }
             .width(max: 37.5)
-            // Field for value
-            TableColumn("Flag") { argument in
-                if let commonArgument = ServerArgument.CommonArgument(
-                    flag: argument.wrappedValue.flag
-                ) {
+            TableColumn("Flag") { row in
+                @Bindable var row = row
+                if let commonArgument = ServerArgument.CommonArgument(flag: row.flag) {
                     commonArgument.label
                 } else {
-                    TextField(text: argument.flag, label: {})
+                    TextField(text: $row.flag, label: {})
                 }
             }
-            // Field for value
-            TableColumn("Value") { argument in
-                if let commonArgument = ServerArgument.CommonArgument(
-                    flag: argument.wrappedValue.flag
-                ) {
-                    commonArgument.getEditor(
-                        stringValue: argument.value
-                    )
+            TableColumn("Value") { row in
+                @Bindable var row = row
+                if let commonArgument = ServerArgument.CommonArgument(flag: row.flag) {
+                    commonArgument.getEditor(stringValue: $row.value)
                 } else {
-                    TextField(text: argument.value, label: {})
+                    TextField(text: $row.value, label: {})
                 }
             }
             .width(min: 250)
         } rows: {
-            ForEach(
-                self.$serverArgumentsManager.serverArguments
-            ) { argument in
-                TableRow(argument)
+            ForEach(argumentRows) { row in
+                TableRow(row)
                     .contextMenu {
                         Button {
-                            self.serverArgumentsManager.delete(argument)
+                            ServerArgumentsStore.delete(id: row.id)
                         } label: {
                             Text("Delete")
                         }
@@ -132,5 +126,4 @@ struct ServerArgumentsEditor: View {
             }
         }
     }
-    
 }

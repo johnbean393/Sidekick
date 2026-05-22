@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SetupView: View {
 	
-	@EnvironmentObject private var conversationState: ConversationState
+	@Environment(ConversationState.self) private var conversationState
 	
 	@State private var selectedModel: Bool = Settings.hasModel
 	

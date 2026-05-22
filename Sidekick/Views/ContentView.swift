@@ -10,15 +10,15 @@ import SwiftUI
 
 struct ContentView: View {
 	
-	@EnvironmentObject private var downloadManager: DownloadManager
-	@EnvironmentObject private var expertManager: ExpertManager
-	@EnvironmentObject private var conversationManager: ConversationManager
+	@Environment(DownloadManager.self) private var downloadManager
+		@Environment(ConversationManager.self) private var conversationManager
 	
-	@StateObject private var conversationState: ConversationState = ConversationState()
+	@State private var conversationState: ConversationState = ConversationState()
 	
 	@State private var showSetup: Bool = Settings.showSetup
 	
     var body: some View {
+		@Bindable var conversationState = self.conversationState
 		Group {
 			if !showSetup {
 				ConversationManagerView()
@@ -44,7 +44,7 @@ struct ContentView: View {
 					maxHeight: 700
 				)
 		}
-		.environmentObject(conversationState)
+		.environment(conversationState)
     }
 }
 

@@ -5,31 +5,36 @@
 //  Created by John Bean on 3/21/25.
 //
 
+import SwiftData
 import SwiftUI
 
 struct ModelNameMenu: View {
-    
+
     var modelType: Sidekick.ModelType = .regular
     var modelTypes: [ModelNameMenu.ModelType]
-    
+
     @AppStorage("endpoint") private var serverEndpoint: String = InferenceSettings.endpoint
-    
+
     @Binding var serverModelName: String
     @AppStorage("serverModelHasVision") private var serverModelHasVision: Bool = InferenceSettings.serverModelHasVision
-    
+
     @State private var remoteModelNames: [String] = []
     @State private var customModelNames: [String] = InferenceSettings.customModelNames
     @State private var isManagingCustomModel: Bool = false
-    
+
     @State private var localModelsListId: UUID = UUID()
-    @StateObject private var modelManager: ModelManager = .shared
-    
-    var showLocal: Bool {
-        return modelTypes.contains(.local) && !modelManager.models.isEmpty
+    @Query private var modelRows: [LocalModelFileEntity]
+
+    private var localModels: [ModelManager.ModelFile] {
+        modelRows.compactMap(\.modelFile)
     }
-    
+
+    var showLocal: Bool {
+        return modelTypes.contains(.local) && !localModels.isEmpty
+    }
+
     var showSpeculative: Bool {
-        return modelTypes.contains(.localSpeculative) && !modelManager.models.isEmpty
+        return modelTypes.contains(.localSpeculative) && !localModels.isEmpty
     }
     
     var showRemote: Bool {
@@ -119,7 +124,7 @@ struct ModelNameMenu: View {
     }
     
     var sortedLocalModels: [ModelManager.ModelFile] {
-        modelManager.models.sorted { model1, model2 in
+        localModels.sorted { model1, model2 in
             let params1 = model1.name.modelParameterCount
             let params2 = model2.name.modelParameterCount
             

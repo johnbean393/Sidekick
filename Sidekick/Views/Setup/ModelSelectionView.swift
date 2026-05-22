@@ -10,7 +10,7 @@ import SwiftUI
 
 struct ModelSelectionView: View {
 	
-	@EnvironmentObject private var downloadManager: DownloadManager
+	@Environment(DownloadManager.self) private var downloadManager
 	@Binding var selectedModel: Bool
 	
 	@State private var showServerModelSetup: Bool = false

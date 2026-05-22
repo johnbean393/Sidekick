@@ -5,6 +5,7 @@
 //  Created by Bean John on 10/4/24.
 //
 
+import AppKit
 import Foundation
 import SimilaritySearchKit
 import SwiftUI
@@ -184,7 +185,7 @@ public struct Message: Identifiable, Codable, Hashable {
 			messageId: self.id,
 			sources: results
 		)
-		SourcesManager.shared.add(sources)
+		await MainActor.run { SourcesStore.add(sources) }
 		// Skip if no results
 		if results.isEmpty {
 			return (self.text, 0)
@@ -234,56 +235,6 @@ DO NOT reference sources outside of those provided below. If you did not referen
 	
 	/// A `URL` for an image generated, if any
 	public var imageUrl: URL?
-	/// An `Image` loaded from the `imageUrl`, if any
-	public var image: some View {
-		Group {
-			if let url = imageUrl {
-				AsyncImage(
-					url: url,
-					content: { image in
-						image
-							.resizable()
-							.aspectRatio(contentMode: .fit)
-							.frame(
-								maxWidth: 350,
-								maxHeight: 350
-							)
-							.clipShape(
-								UnevenRoundedRectangle(
-									topLeadingRadius: 0,
-									bottomLeadingRadius: 13,
-									bottomTrailingRadius: 13,
-									topTrailingRadius: 13
-								)
-							)
-							.draggable(
-								Image(
-									nsImage: NSImage(
-										contentsOf: url
-									)!
-								)
-							)
-							.onTapGesture(count: 2) {
-								NSWorkspace.shared.open(url)
-							}
-							.contextMenu {
-								Button {
-									NSWorkspace.shared.open(url)
-								} label: {
-									Text("Open")
-								}
-							}
-					},
-					placeholder: {
-						ProgressView()
-							.padding(11)
-					}
-				)
-			} else {
-				EmptyView()
-			}
-		}
-	}
     
     /// An array of ``FunctionCallRecord`` used in the response
     public var functionCallRecords: [FunctionCallRecord]? = nil
@@ -299,19 +250,6 @@ DO NOT reference sources outside of those provided below. If you did not referen
 	/// Function to get the sender
 	public func getSender() -> Sender {
 		return self.sender
-	}
-	
-	/// A `View` for the sender's icon
-	var icon: some View {
-		Group {
-			if let expertId = self.expertId,
-			   let expert = ExpertManager.shared.getExpert(id: expertId)
-			{
-				expert.icon
-			} else {
-				sender.icon
-			}
-		}
 	}
 	
 	/// Stored property for the start time of interaction
@@ -709,4 +647,43 @@ Output the full text again with the changes applied. Keep as much of the previou
 		case image
 	}
 	
+}
+
+// MARK: - SwiftData hydration
+
+extension Message {
+    /// Convenience initialiser used when restoring a ``Message``
+    /// from a ``MessageEntity`` row. All fields are explicit so the
+    /// memberwise/auto-generated initialisers remain untouched.
+    init(
+        id: UUID,
+        text: String,
+        sender: Sender,
+        model: String,
+        expertId: UUID?,
+        imageUrl: URL?,
+        startTime: Date,
+        lastUpdated: Date,
+        responseStartSeconds: Double?,
+        tokensPerSecond: Double?,
+        outputEnded: Bool,
+        functionCallRecords: [FunctionCallRecord]?,
+        referencedURLs: [ReferencedURL],
+        snapshot: Snapshot?
+    ) {
+        self.id = id
+        self.text = text
+        self.sender = sender
+        self.model = model
+        self.expertId = expertId
+        self.imageUrl = imageUrl
+        self.startTime = startTime
+        self.lastUpdated = lastUpdated
+        self.responseStartSeconds = responseStartSeconds
+        self.tokensPerSecond = tokensPerSecond
+        self.outputEnded = outputEnded
+        self.functionCallRecords = functionCallRecords
+        self.referencedURLs = referencedURLs
+        self.snapshot = snapshot
+    }
 }

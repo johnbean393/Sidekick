@@ -18,9 +18,12 @@ public class ExpertFunctions {
     static let queryVectorDatabase = Function<QueryVectorDatabaseParams, String>(
         name: "query_database",
         description: {
-            let expertNames: String = ExpertManager.shared.experts.map { expert in
-                return expert.name
-            }.joined(separator: "\n")
+            // Pull expert names from the SwiftData-backed store via
+            // a synchronous main-actor hop. Falls back to an empty
+            // string if the call is made before the container is up.
+            let expertNames: String = MainActor.assumeIsolated {
+                ExpertManager.experts().map(\.name).joined(separator: "\n")
+            }
             return """
 "Query a vector database. The databases available are listed below:"
 
@@ -58,7 +61,7 @@ RAG query: "the average apple weighs 100 grams"
         ],
         run: { params in
             // Get expert
-            let experts: [Expert] = ExpertManager.shared.experts
+            let experts: [Expert] = await MainActor.run { ExpertManager.experts() }
             guard let expert: Expert = experts.filter(
                 { $0.name.lowercased() == params.database.lowercased()
                 }).first else {

@@ -9,8 +9,8 @@ import SwiftUI
 
 struct ConversationNameEditor: View {
 	
-	@EnvironmentObject private var conversationManager: ConversationManager
-	@EnvironmentObject private var conversationState: ConversationState
+	@Environment(ConversationManager.self) private var conversationManager
+	@Environment(ConversationState.self) private var conversationState
 	
 	@State private var isEditing: Bool = false
 	@Binding var conversation: Conversation

@@ -10,7 +10,7 @@ import SwiftUI
 struct ChatPromptEditor: View {
     
     @Environment(\.colorScheme) var colorScheme
-    @EnvironmentObject private var promptController: PromptController
+    @Environment(PromptController.self) private var promptController
     
     @AppStorage("useCommandReturn") private var useCommandReturn: Bool = Settings.useCommandReturn
     var sendDescription: String {
@@ -44,9 +44,10 @@ struct ChatPromptEditor: View {
     }
     
     var body: some View {
+        @Bindable var promptController = self.promptController
         MultilineTextField(
-            text: self.$promptController.prompt,
-            insertionPoint: self.$promptController.insertionPoint,
+            text: $promptController.prompt,
+            insertionPoint: $promptController.insertionPoint,
             prompt: sendDescription,
             onImageDrop: { url in
                 Task {
