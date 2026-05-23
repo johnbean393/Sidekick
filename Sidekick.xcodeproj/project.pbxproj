@@ -332,6 +332,7 @@
 		208E34AC2EC1C644009B75C9 /* LlamaServer+ServerLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208E34AB2EC1C644009B75C9 /* LlamaServer+ServerLifecycle.swift */; };
 		208E34AE2EC1C70B009B75C9 /* Model+Status.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208E34AD2EC1C70B009B75C9 /* Model+Status.swift */; };
 		208E34B02EC1C716009B75C9 /* Model+Lifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208E34AF2EC1C716009B75C9 /* Model+Lifecycle.swift */; };
+		20FA1C0B2F00000100AA0001 /* InferenceLifecycleCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FA1C0A2F00000100AA0001 /* InferenceLifecycleCoordinator.swift */; };
 		208E34B22EC1C720009B75C9 /* Model+Inference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208E34B12EC1C720009B75C9 /* Model+Inference.swift */; };
 		2090A8A62D8995FA0060DC63 /* ModelType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2090A8A52D8995FA0060DC63 /* ModelType.swift */; };
 		209370762D6AB36900E1AF73 /* Refactorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209370752D6AB36900E1AF73 /* Refactorer.swift */; };
@@ -835,6 +836,7 @@
 		208E34AB2EC1C644009B75C9 /* LlamaServer+ServerLifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LlamaServer+ServerLifecycle.swift"; sourceTree = "<group>"; };
 		208E34AD2EC1C70B009B75C9 /* Model+Status.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Model+Status.swift"; sourceTree = "<group>"; };
 		208E34AF2EC1C716009B75C9 /* Model+Lifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Model+Lifecycle.swift"; sourceTree = "<group>"; };
+		20FA1C0A2F00000100AA0001 /* InferenceLifecycleCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InferenceLifecycleCoordinator.swift; sourceTree = "<group>"; };
 		208E34B12EC1C720009B75C9 /* Model+Inference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Model+Inference.swift"; sourceTree = "<group>"; };
 		2090A8A52D8995FA0060DC63 /* ModelType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelType.swift; sourceTree = "<group>"; };
 		209370752D6AB36900E1AF73 /* Refactorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Refactorer.swift; sourceTree = "<group>"; };
@@ -2206,6 +2208,7 @@
 				208E34AD2EC1C70B009B75C9 /* Model+Status.swift */,
 				208E34AF2EC1C716009B75C9 /* Model+Lifecycle.swift */,
 				208E34B12EC1C720009B75C9 /* Model+Inference.swift */,
+				20FA1C0A2F00000100AA0001 /* InferenceLifecycleCoordinator.swift */,
 				202D4E732EBC5E80005D6F74 /* Router */,
 				200FBFD62CB627B100A92A74 /* llama.cpp */,
 			);
@@ -2772,6 +2775,7 @@
 				20B53D0C2D5B053E00D1AE79 /* CheckForUpdatesView.swift in Sources */,
 				208E34AE2EC1C70B009B75C9 /* Model+Status.swift in Sources */,
 				208E34B02EC1C716009B75C9 /* Model+Lifecycle.swift in Sources */,
+				20FA1C0B2F00000100AA0001 /* InferenceLifecycleCoordinator.swift in Sources */,
 				20573F322CB53172004C19FE /* InferenceSettings.swift in Sources */,
 				2031B9902CEAE33900627D53 /* InlineAssistantController.swift in Sources */,
 				2031B9982CEAE78F00627D53 /* ShortcutController.swift in Sources */,

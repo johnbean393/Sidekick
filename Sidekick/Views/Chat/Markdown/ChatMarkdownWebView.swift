@@ -24,6 +24,16 @@ import WebKit
 /// `.frame(height: height)` so the bubble grows with its content.
 struct ChatMarkdownWebView: NSViewRepresentable {
 
+    /// Visual style used by the renderer.
+    ///
+    /// - ``default``: standard assistant-message styling.
+    /// - ``reasoning``: smaller, muted variant used to show an assistant
+    ///   model's "thinking" / reasoning stream.
+    enum Mode: String {
+        case `default`
+        case reasoning
+    }
+
     /// The Markdown source to render. May grow over time (streaming).
     var text: String
 
@@ -38,18 +48,47 @@ struct ChatMarkdownWebView: NSViewRepresentable {
     /// Base font size for the rendered Markdown, in points.
     var fontSize: CGFloat
 
+    /// Renderer mode (see ``Mode``).
+    var mode: Mode = .default
+
+    /// Optional stable identity used to cache the most recently observed
+    /// intrinsic content height. When two ``ChatMarkdownWebView`` instances
+    /// share the same `cacheKey`, the second one initialises its
+    /// ``contentHeight`` from the cached value so the layout does not
+    /// briefly collapse while `chat.html` finishes loading. Typically the
+    /// underlying message id is used.
+    var cacheKey: String? = nil
+
     /// Reported intrinsic content height of the rendered Markdown.
     @Binding var contentHeight: CGFloat
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(
+        let cacheKey = self.cacheKey
+        // Seed the binding from the height cache so the initial layout is
+        // already correct (avoids the post-stream scroll jump described in
+        // the design notes).
+        if let cacheKey, let cached = ChatMarkdownHeightCache.shared.height(for: cacheKey) {
+            DispatchQueue.main.async { [contentHeight = self._contentHeight] in
+                if contentHeight.wrappedValue < cached - 0.5 {
+                    contentHeight.wrappedValue = cached
+                }
+            }
+        }
+        return Coordinator(
             colorScheme: self.colorScheme,
             fontSize: self.fontSize,
             isStreaming: self.isStreaming,
+            mode: self.mode,
             initialText: self.text
         ) { [contentHeight = self._contentHeight] newHeight in
             if abs(contentHeight.wrappedValue - newHeight) > 0.5 {
                 contentHeight.wrappedValue = newHeight
+            }
+            if let cacheKey {
+                ChatMarkdownHeightCache.shared.store(
+                    height: newHeight,
+                    for: cacheKey
+                )
             }
         }
     }
@@ -65,12 +104,50 @@ struct ChatMarkdownWebView: NSViewRepresentable {
             text: self.text,
             isStreaming: self.isStreaming,
             colorScheme: self.colorScheme,
-            fontSize: self.fontSize
+            fontSize: self.fontSize,
+            mode: self.mode
         )
     }
 
     static func dismantleNSView(_ host: ChatMarkdownWebViewHost, coordinator: Coordinator) {
         host.tearDown()
+    }
+}
+
+// MARK: - Height cache
+
+/// Process-wide cache that remembers the most recently observed
+/// intrinsic content height for each ``ChatMarkdownWebView/cacheKey``.
+/// Used to prevent the scroll position from snapping when a streaming
+/// message's host (PendingMessageHost) is swapped for the persisted
+/// message in the conversation list: the freshly-mounted WKWebView
+/// initialises its layout from this cache so it does not briefly report
+/// `height = 0`.
+final class ChatMarkdownHeightCache {
+
+    static let shared = ChatMarkdownHeightCache()
+
+    private let cache: NSCache<NSString, NSNumber> = {
+        let c = NSCache<NSString, NSNumber>()
+        c.countLimit = 512
+        return c
+    }()
+
+    private init() { }
+
+    func height(for key: String) -> CGFloat? {
+        guard let value = self.cache.object(forKey: key as NSString) else {
+            return nil
+        }
+        return CGFloat(value.doubleValue)
+    }
+
+    func store(height: CGFloat, for key: String) {
+        guard height > 0 else { return }
+        self.cache.setObject(
+            NSNumber(value: Double(height)),
+            forKey: key as NSString
+        )
     }
 }
 
@@ -100,12 +177,14 @@ extension ChatMarkdownWebView {
         private(set) var lastIsStreaming: Bool = false
         private(set) var lastColorScheme: ColorScheme
         private(set) var lastFontSize: CGFloat
+        private(set) var lastMode: ChatMarkdownWebView.Mode
 
         /// Pending state to flush when the page becomes ready.
         private var pendingText: String?
         private var pendingIsStreaming: Bool?
         private var pendingColorScheme: ColorScheme?
         private var pendingFontSize: CGFloat?
+        private var pendingMode: ChatMarkdownWebView.Mode?
 
         /// Whether the guest reported ready (chat.js finished loading).
         private var ready: Bool = false
@@ -114,18 +193,21 @@ extension ChatMarkdownWebView {
             colorScheme: ColorScheme,
             fontSize: CGFloat,
             isStreaming: Bool,
+            mode: ChatMarkdownWebView.Mode,
             initialText: String,
             onHeightChanged: @escaping (CGFloat) -> Void
         ) {
             self.lastColorScheme = colorScheme
             self.lastFontSize = fontSize
             self.lastIsStreaming = isStreaming
+            self.lastMode = mode
             self.lastText = initialText
             self.onHeightChanged = onHeightChanged
             self.pendingText = initialText
             self.pendingIsStreaming = isStreaming
             self.pendingColorScheme = colorScheme
             self.pendingFontSize = fontSize
+            self.pendingMode = mode
             super.init()
         }
 
@@ -136,7 +218,8 @@ extension ChatMarkdownWebView {
             text: String,
             isStreaming: Bool,
             colorScheme: ColorScheme,
-            fontSize: CGFloat
+            fontSize: CGFloat,
+            mode: ChatMarkdownWebView.Mode
         ) {
             // Color scheme.
             if colorScheme != self.lastColorScheme {
@@ -155,6 +238,16 @@ extension ChatMarkdownWebView {
                     self.callJS("window.sk && sk.setFontSize(\(fontSize))")
                 } else {
                     self.pendingFontSize = fontSize
+                }
+            }
+
+            // Mode.
+            if mode != self.lastMode {
+                self.lastMode = mode
+                if self.ready {
+                    self.callJS("window.sk && sk.setMode(\(quote(mode.rawValue)))")
+                } else {
+                    self.pendingMode = mode
                 }
             }
 
@@ -204,6 +297,10 @@ extension ChatMarkdownWebView {
                     if let body = message.body as? [String: Any], let href = body["href"] as? String {
                         self.openLink(href: href)
                     }
+                case "copyCode":
+                    if let body = message.body as? [String: Any], let text = body["text"] as? String {
+                        self.copyToClipboard(text)
+                    }
                 default:
                     break
             }
@@ -241,8 +338,9 @@ extension ChatMarkdownWebView {
 
         private func handleReady() {
             self.ready = true
-            // Drain pending state in the right order: theme + font, then text,
-            // then streaming flag so the trailing-block decoration is correct.
+            // Drain pending state in the right order: theme + font + mode,
+            // then text, then streaming flag so the trailing-block
+            // decoration is correct.
             if let scheme = self.pendingColorScheme {
                 self.callJS("window.sk && sk.setColorScheme(\(quote(scheme == .dark ? "dark" : "light")))")
                 self.pendingColorScheme = nil
@@ -250,6 +348,10 @@ extension ChatMarkdownWebView {
             if let size = self.pendingFontSize {
                 self.callJS("window.sk && sk.setFontSize(\(size))")
                 self.pendingFontSize = nil
+            }
+            if let mode = self.pendingMode {
+                self.callJS("window.sk && sk.setMode(\(quote(mode.rawValue)))")
+                self.pendingMode = nil
             }
             if let text = self.pendingText {
                 self.callJS("window.sk && sk.setMarkdown(\(quote(text)))")
@@ -277,6 +379,14 @@ extension ChatMarkdownWebView {
             guard let url = URL(string: href) else { return }
             DispatchQueue.main.async {
                 NSWorkspace.shared.open(url)
+            }
+        }
+
+        private func copyToClipboard(_ text: String) {
+            DispatchQueue.main.async {
+                let pasteboard = NSPasteboard.general
+                pasteboard.clearContents()
+                pasteboard.setString(text, forType: .string)
             }
         }
 
@@ -362,6 +472,7 @@ final class ChatMarkdownWebViewHost: NSView {
         userController.add(coordinator, name: "ready")
         userController.add(coordinator, name: "heightChanged")
         userController.add(coordinator, name: "openLink")
+        userController.add(coordinator, name: "copyCode")
         config.userContentController = userController
 
         // Serve image assets referenced by the rendered Markdown — file://
@@ -425,6 +536,7 @@ final class ChatMarkdownWebViewHost: NSView {
         ucc.removeScriptMessageHandler(forName: "ready")
         ucc.removeScriptMessageHandler(forName: "heightChanged")
         ucc.removeScriptMessageHandler(forName: "openLink")
+        ucc.removeScriptMessageHandler(forName: "copyCode")
         self.webView.navigationDelegate = nil
         self.webView.stopLoading()
     }

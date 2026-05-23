@@ -8,27 +8,36 @@
 import SwiftUI
 
 struct CollapsibleUserMessageView: View {
-    
+
     var text: String
-    
+    /// Stable identity for the underlying user message. Used to key the
+    /// per-message intrinsic-height cache the WKWebView renderer relies
+    /// on. Optional — when nil, caching is skipped.
+    var messageIdentity: String? = nil
+
     @State private var isExpanded: Bool?
-    
+
     private let collapsedLineCount: Int = 15
-    
+
     private var effectiveIsExpanded: Bool {
-        // If isExpanded is nil (first load), determine based on line count
-        // Short messages (15 lines or less) start expanded
+        // If isExpanded is nil (first load), determine based on line count.
+        // Short messages (15 lines or less) start expanded.
         return isExpanded ?? (totalLineCount <= collapsedLineCount)
     }
-    
+
     var totalLineCount: Int {
         return text.components(separatedBy: .newlines).count
     }
-    
+
     var shouldShowExpandButton: Bool {
         return totalLineCount > collapsedLineCount
     }
-    
+
+    /// Source text to render through the Markdown view. When the message
+    /// is long and the user hasn't expanded it, we feed the renderer
+    /// only the leading slice — this keeps the rendered snippet
+    /// proportional to the visual collapsed area and avoids the cost of
+    /// rendering huge messages twice.
     var displayedContent: String {
         if effectiveIsExpanded || !shouldShowExpandButton {
             return text
@@ -36,23 +45,28 @@ struct CollapsibleUserMessageView: View {
         let lines = text.components(separatedBy: .newlines)
         return lines.prefix(collapsedLineCount).joined(separator: "\n")
     }
-    
+
+    /// Cache key shared with ``MessageTextContentView``. We salt with the
+    /// expansion state so the cached intrinsic height matches the slice
+    /// of text we're actually rendering at the moment.
+    private var renderIdentity: String? {
+        guard let messageIdentity else { return nil }
+        let suffix = self.effectiveIsExpanded ? "expanded" : "collapsed"
+        return "user:\(messageIdentity):\(suffix)"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if !self.effectiveIsExpanded && self.shouldShowExpandButton {
-                // Collapsed state with overlay
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(self.displayedContent)
-                        .font(.system(size: NSFont.systemFontSize + 1.0))
-                        .lineSpacing(4)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                MessageTextContentView(
+                    text: self.displayedContent,
+                    isStreaming: false,
+                    messageIdentity: self.renderIdentity
+                )
                 .frame(maxHeight: self.calculateCollapsedHeight(), alignment: .top)
                 .clipped()
                 .overlay(alignment: .bottom) {
-                    // Gradient and button overlay
                     VStack(spacing: 0) {
-                        // Gradient fade
                         LinearGradient(
                             gradient: Gradient(stops: [
                                 .init(color: Color(nsColor: .textBackgroundColor).opacity(0), location: 0),
@@ -63,8 +77,6 @@ struct CollapsibleUserMessageView: View {
                             endPoint: .bottom
                         )
                         .frame(height: 50)
-                        
-                        // Button area
                         Button {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 self.isExpanded = true
@@ -93,14 +105,13 @@ struct CollapsibleUserMessageView: View {
                     }
                 }
             } else {
-                // Expanded state or short message
-                Text(displayedContent)
-                    .font(.system(size: NSFont.systemFontSize + 1.0))
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
+                MessageTextContentView(
+                    text: self.displayedContent,
+                    isStreaming: false,
+                    messageIdentity: self.renderIdentity
+                )
             }
-            
-            // Collapse button at bottom when expanded
+
             if self.effectiveIsExpanded && self.shouldShowExpandButton {
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) {
@@ -130,13 +141,15 @@ struct CollapsibleUserMessageView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .textSelection(.enabled)
     }
-    
+
+    /// Visual height budget for the collapsed snippet. Sized off the
+    /// rendered Markdown line metrics so a 15-line plain-text snippet
+    /// shows ~all of its content under the gradient.
     private func calculateCollapsedHeight() -> CGFloat {
         let fontSize = NSFont.systemFontSize + 1.0
-        let lineSpacing: CGFloat = 4
-        let lineHeight = fontSize + lineSpacing
+        // Match chat.css `--md-line-height: 1.55`.
+        let lineHeight = fontSize * 1.55
         return CGFloat(self.collapsedLineCount) * lineHeight
     }
 }

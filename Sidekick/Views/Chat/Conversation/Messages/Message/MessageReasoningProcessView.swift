@@ -5,24 +5,34 @@
 //  Created by John Bean on 2/6/25.
 //
 
+import AppKit
 import SwiftUI
 
 struct MessageReasoningProcessView: View {
 
-	init(
-		message: Message
-	) {
-		let outputDidEnd: Bool = message.outputEnded
-		let reasoningOutputDidEnd: Bool = message.reasoningText != nil && !message.responseText.isEmpty
-		self._showReasoning = State(
-			initialValue: !(outputDidEnd || reasoningOutputDidEnd)
-		)
-		self.message = message
-	}
-	
-	@State var showReasoning: Bool
+    @Environment(\.colorScheme) private var colorScheme
 
-	var message: Message
+    init(
+        message: Message
+    ) {
+        let outputDidEnd: Bool = message.outputEnded
+        let reasoningOutputDidEnd: Bool = message.reasoningText != nil && !message.responseText.isEmpty
+        self._showReasoning = State(
+            initialValue: !(outputDidEnd || reasoningOutputDidEnd)
+        )
+        self.message = message
+        // Seed the cached reasoning height for the same reason the main
+        // assistant message does — avoid a layout collapse when the
+        // streaming host hands off to the persisted message view.
+        let cacheKey = "reasoning:\(message.id.uuidString)"
+        let seed: CGFloat = ChatMarkdownHeightCache.shared.height(for: cacheKey) ?? 1
+        self._contentHeight = State(initialValue: seed)
+    }
+
+    @State var showReasoning: Bool
+    @State private var contentHeight: CGFloat
+
+    var message: Message
 
     private var reasoningText: String {
         return self.message.reasoningText ?? ""
@@ -50,7 +60,18 @@ struct MessageReasoningProcessView: View {
         return String(format: "%.0f seconds", duration)
     }
 
-	var body: some View {
+    /// Max height of the reasoning scroll viewport.
+    private var viewportMaxHeight: CGFloat {
+        self.isThinking ? 110 : 150
+    }
+
+    private var fontSize: CGFloat {
+        // ~callout for the rendered Markdown so it stays visually
+        // subordinate to the assistant's primary response.
+        NSFont.systemFontSize - 1
+    }
+
+    var body: some View {
         VStack(
             alignment: .leading,
             spacing: 0
@@ -66,14 +87,14 @@ struct MessageReasoningProcessView: View {
             RoundedRectangle(cornerRadius: 7)
                 .fill(Color.purple.opacity(0.2))
         }
-	}
+    }
 
-	var toggleReasoningButton: some View {
-		Button {
+    var toggleReasoningButton: some View {
+        Button {
             withAnimation(.easeInOut(duration: 0.18)) {
-				self.showReasoning.toggle()
-			}
-		} label: {
+                self.showReasoning.toggle()
+            }
+        } label: {
             HStack(spacing: 8) {
                 Circle()
                     .frame(width: 10, height: 10)
@@ -100,32 +121,51 @@ struct MessageReasoningProcessView: View {
             }
             .padding(.horizontal, 7)
             .contentShape(Rectangle())
-		}
-		.buttonStyle(.plain)
+        }
+        .buttonStyle(.plain)
         .accessibilityLabel("Reasoning Process")
-	}
+    }
 
+    /// Inner viewport: a SwiftUI `ScrollView` containing the WKWebView so
+    /// long reasoning traces can scroll inside the fixed-height window.
+    /// The WKWebView itself doesn't scroll (its scroll-pass-through
+    /// override forwards events to the enclosing scroll view).
     private var reasoningPreview: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(self.reasoningText)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                        .lineSpacing(2)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    ChatMarkdownWebView(
+                        text: self.reasoningText,
+                        isStreaming: self.isThinking,
+                        colorScheme: self.colorScheme,
+                        fontSize: self.fontSize,
+                        mode: .reasoning,
+                        cacheKey: "reasoning:\(self.message.id.uuidString)",
+                        contentHeight: self.$contentHeight
+                    )
+                    .frame(
+                        maxWidth: .infinity,
+                        minHeight: max(self.contentHeight, 1),
+                        alignment: .leading
+                    )
+                    .frame(height: max(self.contentHeight, 1))
                     Color.clear
                         .frame(height: 1)
                         .id("reasoning-bottom")
                 }
                 .padding(10)
             }
-            .frame(minHeight: 48, maxHeight: self.isThinking ? 110 : 150)
+            .frame(
+                minHeight: min(48, max(self.contentHeight + 20, 1)),
+                maxHeight: self.viewportMaxHeight
+            )
             .onAppear {
                 self.scrollToBottom(proxy)
             }
             .onChange(of: self.reasoningText) { _, _ in
+                self.scrollToBottom(proxy)
+            }
+            .onChange(of: self.contentHeight) { _, _ in
                 self.scrollToBottom(proxy)
             }
         }

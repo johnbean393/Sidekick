@@ -209,3 +209,122 @@ body[data-streaming="true"] .md-block.md-trailing.md-fence > pre > code::after {
     from { opacity: 0; transform: translateY(2px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+/* Reasoning mode: a quieter, smaller variant for the assistant's
+   internal "thinking" stream. Used by MessageReasoningProcessView. */
+body[data-mode="reasoning"] {
+    color: var(--md-fg-muted);
+    font-size: calc(var(--md-font-size) * 0.95);
+    line-height: 1.45;
+}
+body[data-mode="reasoning"] .markdown-body > .md-block {
+    margin-bottom: 6px;
+}
+body[data-mode="reasoning"] .markdown-body p,
+body[data-mode="reasoning"] .markdown-body ul,
+body[data-mode="reasoning"] .markdown-body ol {
+    margin-bottom: 6px;
+}
+body[data-mode="reasoning"] .markdown-body h1,
+body[data-mode="reasoning"] .markdown-body h2,
+body[data-mode="reasoning"] .markdown-body h3,
+body[data-mode="reasoning"] .markdown-body h4,
+body[data-mode="reasoning"] .markdown-body h5,
+body[data-mode="reasoning"] .markdown-body h6 {
+    color: var(--md-fg-muted);
+    border-bottom: none;
+    margin: 10px 0 4px 0;
+}
+body[data-mode="reasoning"] .markdown-body pre {
+    padding: 8px 10px;
+}
+body[data-mode="reasoning"] .md-block.md-new {
+    /* Streaming thinking tokens look better without the fade-in
+       since the user expects a continuous flow. */
+    animation: none;
+}
+
+/* ---- Code block chrome (language label, copy, expand/collapse) ---- */
+.markdown-body .sk-codeblock {
+    margin: 0 0 12px 0;
+    border-radius: 8px;
+    background: var(--md-code-block-bg);
+    border: 1px solid var(--md-border);
+    overflow: hidden;
+}
+.markdown-body .sk-codeblock-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 6px 4px 12px;
+    border-bottom: 1px solid var(--md-border);
+    color: var(--md-fg-muted);
+    font-size: 0.82em;
+    line-height: 1.4;
+}
+.markdown-body .sk-codeblock-lang {
+    font-weight: 500;
+    user-select: none;
+    letter-spacing: 0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+.markdown-body .sk-codeblock-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+.markdown-body .sk-codeblock-actions button {
+    appearance: none;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    padding: 2px 8px;
+    color: var(--md-fg-muted);
+    font: inherit;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 100ms ease, color 100ms ease;
+}
+.markdown-body .sk-codeblock-actions button:hover {
+    background: var(--md-code-bg);
+    color: var(--md-fg);
+}
+.markdown-body .sk-codeblock-actions button:active {
+    transform: translateY(0.5px);
+}
+.markdown-body .sk-codeblock-actions button.sk-copied {
+    color: var(--md-link);
+}
+.markdown-body .sk-codeblock-body {
+    position: relative;
+    overflow: hidden;
+}
+.markdown-body .sk-codeblock-body pre {
+    /* The wrapper owns the chrome — strip what we set on bare <pre>. */
+    margin: 0;
+    border-radius: 0;
+    background: transparent;
+    border: none;
+}
+.markdown-body .sk-codeblock[data-collapsed="true"] .sk-codeblock-body {
+    max-height: 19em;
+}
+.markdown-body .sk-codeblock[data-collapsed="true"] .sk-codeblock-body::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 60px;
+    pointer-events: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        var(--md-code-block-bg) 92%
+    );
+}

@@ -36,6 +36,13 @@ public actor LlamaServer {
     var isStartingServer: Bool = false
     var monitor: Process = Process()
     var process: Process = Process()
+    /// Timer responsible for writing heartbeat bytes to the watchdog.
+    /// Held so it can be cancelled on shutdown — otherwise it keeps firing
+    /// (and leaks the pipe) after the monitor process has been terminated.
+    var heartbeatTimer: DispatchSourceTimer?
+    /// Backing pipe for the watchdog heartbeat. Retained for the lifetime of
+    /// the monitor process so the file descriptor can be closed deterministically.
+    var heartbeatPipe: Pipe?
     
     /// Tracks request-scoped streaming resources so multiple in-flight calls can run concurrently.
     var activeRequests: [UUID: ActiveRequestContext] = [:]

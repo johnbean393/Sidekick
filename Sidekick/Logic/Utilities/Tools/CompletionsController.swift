@@ -78,23 +78,39 @@ public class CompletionsController: ObservableObject {
 	
 	/// Function to stop completions
 	public func stop() {
-		// Remove NSEvent monitors
+		self.tearDownObservers()
+		Task { [weak self] in
+			guard let self = self else { return }
+			await self.server?.stopServer()
+		}
+	}
+	
+	/// Awaitable shutdown used during coordinated app termination.
+	///
+	/// Mirrors ``stop()`` but waits for the underlying ``LlamaServer`` to
+	/// fully release its child process before returning so callers (e.g.
+	/// ``AppDelegate.applicationShouldTerminate``) can guarantee that no
+	/// completions `llama-server` is left running once the app exits.
+	public func stopAsync() async {
+		self.tearDownObservers()
+		await self.server?.stopServer()
+		self.server = nil
+	}
+	
+	/// Tear down all event observers and taps. Synchronous and safe to call
+	/// from either ``stop()`` or the async shutdown path.
+	private func tearDownObservers() {
 		for monitor in self.monitors {
 			NSEvent.removeMonitor(monitor)
 		}
 		self.monitors.removeAll()
 		NSWorkspace.shared.notificationCenter.removeObserver(self)
-		// Disable and remove the key event tap
 		if let keyEventTap = self.keyEventTap {
 			CFMachPortInvalidate(keyEventTap)
 			CFRunLoopRemoveSource(CFRunLoopGetCurrent(),
 								  CFMachPortCreateRunLoopSource(kCFAllocatorDefault, keyEventTap, 0),
 								  .commonModes)
 			self.keyEventTap = nil
-		}
-		Task { [weak self] in
-			guard let self = self else { return }
-			await self.server?.stopServer()
 		}
 	}
 	

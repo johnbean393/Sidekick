@@ -96,10 +96,14 @@ struct MessageContentView: View {
                             MessageTextContentView(
                                 text: self.message.responseText,
                                 isStreaming: !self.message.outputEnded,
-                                deprioritizeStreamingUpdates: self.deprioritizeStreamingUpdates
+                                deprioritizeStreamingUpdates: self.deprioritizeStreamingUpdates,
+                                messageIdentity: self.message.id.uuidString
                             )
                         } else {
-                            CollapsibleUserMessageView(text: self.message.responseText)
+                            CollapsibleUserMessageView(
+                                text: self.message.responseText,
+                                messageIdentity: self.message.id.uuidString
+                            )
                         }
                     }
                     .if(shimmer) { view in

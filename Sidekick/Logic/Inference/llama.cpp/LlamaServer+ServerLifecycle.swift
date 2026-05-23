@@ -5,6 +5,7 @@
 //  Created by Bean John on 10/9/24.
 //
 
+import Darwin
 import Foundation
 import FSKit_macOS
 import OSLog
@@ -24,17 +25,29 @@ extension LlamaServer {
         ]
         // Send main app's heartbeat to show that the main app is still running
         let heartbeat = Pipe()
+        self.heartbeatPipe = heartbeat
         let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.global())
         timer.schedule(deadline: .now(), repeating: 15.0)
         timer.setEventHandler { [weak heartbeat] in
             guard let heartbeat = heartbeat else { return }
             let data = ".".data(using: .utf8) ?? Data()
-            heartbeat.fileHandleForWriting.write(data)
+            // Writing to a closed pipe raises SIGPIPE; guard so a dead
+            // watchdog never crashes the host app.
+            do {
+                try heartbeat.fileHandleForWriting.write(contentsOf: data)
+            } catch {
+                // Pipe was closed (watchdog exited); silently stop heartbeating.
+            }
         }
         timer.resume()
+        self.heartbeatTimer = timer
         monitor.standardInput = heartbeat
         // Start monitor
         try monitor.run()
+        // Register both children so a coordinated shutdown can clean them up
+        // regardless of which path the app exits through.
+        InferenceLifecycleCoordinator.shared.register(pid: serverPID)
+        InferenceLifecycleCoordinator.shared.register(pid: monitor.processIdentifier)
         Self.logger.notice(
             "Started monitor for server with PID \(serverPID)"
         )
@@ -174,17 +187,89 @@ extension LlamaServer {
         self.isStartingServer = false
     }
     
-    /// Function to stop the `llama-server` process
-    public func stopServer() async {
-        // Terminate processes
+    /// Function to stop the `llama-server` process.
+    ///
+    /// Performs a graceful `SIGTERM`, waits up to ``gracePeriodSeconds`` for
+    /// the process to exit, then escalates to `SIGKILL` to guarantee that
+    /// memory-intensive inference children are released before this call
+    /// returns. Any active streaming requests are cancelled first so their
+    /// callbacks unblock before the server disappears.
+    public func stopServer(
+        gracePeriodSeconds: TimeInterval = 1.5
+    ) async {
+        // Cancel any in-flight streaming requests so their continuations
+        // don't outlive the underlying process.
+        self.pendingCancellationForAllRequests = true
+        for context in self.activeRequests.values {
+            context.cancel()
+        }
+        self.activeRequests.removeAll()
+        // Stop heartbeat first so the watchdog doesn't keep firing while
+        // we tear the server down ourselves.
+        self.heartbeatTimer?.cancel()
+        self.heartbeatTimer = nil
+        try? self.heartbeatPipe?.fileHandleForWriting.close()
+        self.heartbeatPipe = nil
+        let serverPID: pid_t = self.process.isRunning ? self.process.processIdentifier : 0
+        let monitorPID: pid_t = self.monitor.isRunning ? self.monitor.processIdentifier : 0
+        // SIGTERM both children.
         if self.process.isRunning {
             self.process.terminate()
         }
         if self.monitor.isRunning {
             self.monitor.terminate()
         }
+        // Wait for them to actually exit. Never blocks forever — falls back
+        // to SIGKILL if the grace period elapses without exit.
+        await self.awaitChildExit(
+            process: self.process,
+            fallbackPID: serverPID,
+            timeoutSeconds: gracePeriodSeconds
+        )
+        await self.awaitChildExit(
+            process: self.monitor,
+            fallbackPID: monitorPID,
+            timeoutSeconds: gracePeriodSeconds
+        )
+        // Make sure neither PID is still tracked.
+        InferenceLifecycleCoordinator.shared.unregister(pid: serverPID)
+        InferenceLifecycleCoordinator.shared.unregister(pid: monitorPID)
         self.process = Process()
         self.monitor = Process()
+        self.pendingCancellationForAllRequests = false
+    }
+    
+    /// Wait for ``process`` to exit, escalating from `SIGTERM` to `SIGKILL`
+    /// if ``timeoutSeconds`` expires. Uses `kill(pid, 0)` as the authoritative
+    /// liveness check because `Process.isRunning` lags behind kernel state.
+    private func awaitChildExit(
+        process: Process,
+        fallbackPID: pid_t,
+        timeoutSeconds: TimeInterval
+    ) async {
+        let pid: pid_t = process.processIdentifier > 0 ? process.processIdentifier : fallbackPID
+        guard pid > 0 || process.isRunning else { return }
+        let deadline: Date = Date().addingTimeInterval(timeoutSeconds)
+        while Date() < deadline {
+            if !process.isRunning && (pid <= 0 || kill(pid, 0) != 0) {
+                return
+            }
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+        if process.isRunning || (pid > 0 && kill(pid, 0) == 0) {
+            Self.logger.warning(
+                "llama child PID \(pid, privacy: .public) did not exit within \(timeoutSeconds, privacy: .public)s; sending SIGKILL"
+            )
+            if pid > 0 {
+                _ = kill(pid, SIGKILL)
+            }
+            for _ in 0..<10 {
+                if !process.isRunning && (pid <= 0 || kill(pid, 0) != 0) {
+                    break
+                }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
     }
     
     /// Function showing if connection was interrupted

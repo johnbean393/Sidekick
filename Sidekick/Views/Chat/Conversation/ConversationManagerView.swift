@@ -178,16 +178,6 @@ struct ConversationManagerView: View {
                 }
             }
         }
-        .onReceive(
-            NotificationCenter.default.publisher(
-                for: NSApplication.willTerminateNotification
-            )
-        ) { output in
-            /// Stop server before app is quit
-            Task {
-                await self.model.stopServers()
-            }
-        }
         .environmentObject(model)
         .environmentObject(canvasController)
     }

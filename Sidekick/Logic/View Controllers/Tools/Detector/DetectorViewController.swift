@@ -131,6 +131,11 @@ public class DetectorViewController: ObservableObject {
 		// Run process
 		do {
 			try self.perplexityProcess.run()
+			// Register so the coordinator can terminate it if the app quits
+			// or is killed before evaluation finishes.
+			InferenceLifecycleCoordinator.shared.register(
+				pid: self.perplexityProcess.processIdentifier
+			)
 		} catch {
 			self.error(
 				message: String(
@@ -268,8 +273,20 @@ public class DetectorViewController: ObservableObject {
 			self.burstiness = nil
 			// Terminate process if running
 			if self.perplexityProcess.isRunning {
+				let pid = self.perplexityProcess.processIdentifier
 				self.perplexityProcess.terminate()
+				InferenceLifecycleCoordinator.shared.unregister(pid: pid)
 			}
+		}
+	}
+	
+	deinit {
+		// Last-line defence: if the controller is torn down while a
+		// perplexity child is still running, make sure it dies with us.
+		if self.perplexityProcess.isRunning {
+			let pid = self.perplexityProcess.processIdentifier
+			self.perplexityProcess.terminate()
+			InferenceLifecycleCoordinator.shared.unregister(pid: pid)
 		}
 	}
 	
