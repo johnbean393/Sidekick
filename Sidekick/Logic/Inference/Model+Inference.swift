@@ -332,12 +332,6 @@ extension Model {
             }
             return ToolRegistry(functions: [])
         }()
-        var useStructuredToolMessages: Bool = InferenceSettings.supportsNativeToolCalling(
-            modelType: .regular,
-            usingRemoteModel: initialResponse.usedServer
-        ) &&
-        !(initialResponse.blockFunctionCalls?.isEmpty ?? true) &&
-        (initialResponse.malformedToolCalls?.isEmpty ?? true)
         // Execute functions on a loop
         var maxIterations: Int = 30 // Max 30 tool calls
         var response: LlamaServer.CompleteResponse? = initialResponse
@@ -425,23 +419,11 @@ extension Model {
                 functionCallRecords = executionOutput.functionCallRecords
                 results += executionOutput.results
 
-                if useStructuredToolMessages {
-                    let assistantToolCallMessage = Message.MessageSubset.assistantToolCalls(
-                        functionCalls: functionCalls
-                    )
-                    messages.append(assistantToolCallMessage)
-                    messages += executionOutput.toolMessages
-                } else {
-                    let responseMessage: Message = Message(
-                        text: response?.text ?? "",
-                        sender: .assistant
-                    )
-                    let responseMessageSubset: Message.MessageSubset = await Message.MessageSubset(
-                        usingRemoteModel: self.wasRemoteServerAccessible,
-                        message: responseMessage
-                    )
-                    messages.append(responseMessageSubset)
-                }
+                let assistantToolCallMessage = Message.MessageSubset.assistantToolCalls(
+                    functionCalls: functionCalls
+                )
+                messages.append(assistantToolCallMessage)
+                messages += executionOutput.toolMessages
             } else {
                 Self.logger.warning("Retrying after malformed-only tool call response")
                 let responseMessage: Message = Message(
@@ -486,13 +468,11 @@ Call another tool to obtain more information or execute more actions. Try breaki
 
             var hasAppendedChangeMessage = false
             var compressionAttempts = 0
-            let toolChoice: ChatParameters.ToolChoice? = useStructuredToolMessages ? (
-                hasMadeSufficientCalls ? ChatParameters.ToolChoice.none : .auto
-            ) : nil
+            let toolChoice: ChatParameters.ToolChoice = hasMadeSufficientCalls ? .none : .auto
 
             retryLoop: while true {
                 do {
-                    var messageStringComponents: [String] = useStructuredToolMessages ? [] : results.map(\.description)
+                    var messageStringComponents: [String] = []
                     if let todoSummary = TodoFunctions.getIncompleteTodoSummary() {
                         messageStringComponents.append(todoSummary)
                     }
@@ -552,8 +532,7 @@ Call another tool to obtain more information or execute more actions. Try breaki
                 } catch let error as LlamaServerError {
                     if case .contextWindowExceeded = error,
                        InferenceSettings.enableContextCompression,
-                       compressionAttempts < 3,
-                       !useStructuredToolMessages {
+                       compressionAttempts < 3 {
                         compressionAttempts += 1
                         Self.logger.warning("Context window exceeded (attempt \(compressionAttempts)). Compressing tool results.")
                         results = try await ContextCompressor.compressFunctionResults(
@@ -567,12 +546,6 @@ Call another tool to obtain more information or execute more actions. Try breaki
                 }
             }
             response?.functionCallRecords = functionCallRecords
-            useStructuredToolMessages = InferenceSettings.supportsNativeToolCalling(
-                modelType: .regular,
-                usingRemoteModel: response?.usedServer ?? canReachRemoteServer
-            ) &&
-            !(response?.blockFunctionCalls?.isEmpty ?? true) &&
-            (response?.malformedToolCalls?.isEmpty ?? true)
 
             if let malformedCalls = response?.malformedToolCalls, !malformedCalls.isEmpty {
                 Self.logger.warning("Response contains \(malformedCalls.count) malformed tool call(s)")
@@ -772,7 +745,7 @@ Please try rephrasing your request or contact support if the issue persists.
     private struct PlannedFunctionCall {
         let originalIndex: Int
         let recordIndex: Int
-        let callJsonSchema: String
+        let callDescription: String
         let call: any DecodableFunctionCall
     }
 
@@ -798,8 +771,8 @@ Please try rephrasing your request or contact support if the issue persists.
         var functionCallRecords = existingRecords
         let existingRecordsCount = existingRecords.count
         let plannedCalls: [PlannedFunctionCall] = functionCalls.enumerated().map { index, functionCall in
-            let callJsonSchema = functionCall.getJsonSchema()
-            Self.logger.info("Executing function call: \(callJsonSchema, privacy: .public)")
+            let callDescription = "\(functionCall.name)(\(functionCall.getArgumentsJSONString()))"
+            Self.logger.info("Executing function call: \(callDescription, privacy: .public)")
             // Anchor against the pre-append count so we don't
             // double-count the slot we're about to add. The previous
             // formulation (`functionCallRecords.count + index`)
@@ -811,7 +784,7 @@ Please try rephrasing your request or contact support if the issue persists.
             return PlannedFunctionCall(
                 originalIndex: index,
                 recordIndex: recordIndex,
-                callJsonSchema: callJsonSchema,
+                callDescription: callDescription,
                 call: functionCall
             )
         }
@@ -901,7 +874,7 @@ Please try rephrasing your request or contact support if the issue persists.
                 result: result
             )
             let functionResult = FunctionCallResult(
-                call: plannedCall.callJsonSchema,
+                call: plannedCall.callDescription,
                 result: result,
                 type: .result
             )
@@ -925,7 +898,7 @@ Please try rephrasing your request or contact support if the issue persists.
                 result: errorDescription
             )
             let functionResult = FunctionCallResult(
-                call: plannedCall.callJsonSchema,
+                call: plannedCall.callDescription,
                 result: errorDescription,
                 type: .error
             )

@@ -110,6 +110,80 @@ public struct Conversation: Identifiable, Codable, Hashable {
 		self.messages.removeLast()
 	}
 	
+	/// Removes the message with the given `id` from the conversation,
+	/// preserving the relative order of every other message.
+	public mutating func removeMessage(id: UUID) {
+		self.messages.removeAll { $0.id == id }
+	}
+	
+	/// Drops every message that appears after the message with the
+	/// supplied `id`. When `inclusive` is `true`, the anchor message
+	/// itself is also removed.
+	public mutating func truncateAfter(
+		id: UUID,
+		inclusive: Bool
+	) {
+		guard let index = self.messages.firstIndex(where: { $0.id == id }) else {
+			return
+		}
+		// Keep messages up to and including the anchor when not inclusive
+		let upperBound: Int = inclusive ? index : index + 1
+		self.messages = Array(self.messages.prefix(upperBound))
+	}
+	
+	/// Removes the assistant reply that immediately follows the user
+	/// message identified by `userMessageId`, if any. Returns `true`
+	/// when something was deleted.
+	@discardableResult
+	public mutating func deleteAssistantResponse(
+		pairedWith userMessageId: UUID
+	) -> Bool {
+		guard let userIndex = self.messages.firstIndex(where: { $0.id == userMessageId }) else {
+			return false
+		}
+		let nextIndex: Int = userIndex + 1
+		guard nextIndex < self.messages.count,
+			  self.messages[nextIndex].getSender() == .assistant else {
+			return false
+		}
+		self.messages.remove(at: nextIndex)
+		return true
+	}
+	
+	/// Returns a brand-new conversation containing every message up
+	/// to and including the message identified by `messageId`. Each
+	/// copied message receives a fresh `UUID` so the SwiftData upsert
+	/// in ``ConversationManager`` doesn't collide with the source
+	/// rows. Returns `nil` when the anchor message cannot be found.
+	public func fork(
+		at messageId: UUID,
+		newTitle: String? = nil
+	) -> Conversation? {
+		guard let anchorIndex = self.messages.firstIndex(where: { $0.id == messageId }) else {
+			return nil
+		}
+		let slice: [Message] = Array(self.messages.prefix(anchorIndex + 1))
+		let rebasedMessages: [Message] = slice.map { source in
+			var copy: Message = source
+			copy.id = UUID()
+			if copy.snapshot != nil {
+				copy.snapshot?.id = UUID()
+				copy.snapshot?.site?.id = UUID()
+			}
+			return copy
+		}
+		let resolvedTitle: String = newTitle ?? self.title
+		var forked: Conversation = Conversation(
+			id: UUID(),
+			title: resolvedTitle,
+			expertId: self.expertId,
+			createdAt: .now,
+			messages: rebasedMessages
+		)
+		forked.tokenCount = nil
+		return forked
+	}
+	
 	/// Static function for equatable conformance
 	public static func == (lhs: Conversation, rhs: Conversation) -> Bool {
 		return lhs.id == rhs.id

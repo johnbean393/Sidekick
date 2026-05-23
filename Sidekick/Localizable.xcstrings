@@ -89,6 +89,16 @@
       },
       "shouldTranslate" : false
     },
+    "%@ %@…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@…"
+          }
+        }
+      }
+    },
     "%lld" : {
       "shouldTranslate" : false
     },
@@ -159,6 +169,7 @@
       }
     },
     "A new endpoint has been selected, which has been identified as capable of native function calling. Would you like to turn on native function calling?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -169,6 +180,7 @@
       }
     },
     "A new endpoint has been selected, which might not be capable of native function calling. Would you like to turn off native function calling?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -504,6 +516,7 @@
       }
     },
     "Arithmetic" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -512,6 +525,9 @@
           }
         }
       }
+    },
+    "Assistant" : {
+
     },
     "Automatically compresses tool call results during agentic loops to prevent context window errors." : {
       "localizations" : {
@@ -633,6 +649,9 @@
           }
         }
       }
+    },
+    "Capturing" : {
+
     },
     "Causes of the Renaissance" : {
       "localizations" : {
@@ -1078,6 +1097,7 @@
       }
     },
     "Controls whether native function calling is available for the remote model. Turn it on only when the inference provider supports native function calling for the selected model." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1156,6 +1176,9 @@
           }
         }
       }
+    },
+    "Copy Message" : {
+
     },
     "Copy Raw Markdown" : {
       "localizations" : {
@@ -1236,6 +1259,15 @@
           }
         }
       }
+    },
+    "Could not write the screenshot to disk: %@" : {
+
+    },
+    "Couldn't Save PDF" : {
+
+    },
+    "Couldn't Save Screenshot" : {
+
     },
     "Create 10 minute presentations in 5 minutes" : {
       "localizations" : {
@@ -1336,6 +1368,12 @@
           }
         }
       }
+    },
+    "Current Message" : {
+
+    },
+    "Current Turn" : {
+
     },
     "Customise" : {
       "localizations" : {
@@ -1487,6 +1525,12 @@
           }
         }
       }
+    },
+    "Delete Message" : {
+
+    },
+    "Delete Response" : {
+
     },
     "Describe a concept you'd like to see illustrated in a diagram" : {
       "localizations" : {
@@ -1991,6 +2035,9 @@
         }
       }
     },
+    "Entire Chat" : {
+
+    },
     "Error" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2132,6 +2179,9 @@
         }
       }
     },
+    "Exporting" : {
+
+    },
     "Exporting..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2191,6 +2241,12 @@
           }
         }
       }
+    },
+    "Failed to encode the screenshot payload: %@" : {
+
+    },
+    "Failed to encode the screenshot payload." : {
+
     },
     "Failed to extract prompt." : {
       "localizations" : {
@@ -3337,6 +3393,7 @@
       }
     },
     "Native Function Calling" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3556,6 +3613,9 @@
         }
       }
     },
+    "Nothing to capture" : {
+
+    },
     "Notifications" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3666,6 +3726,12 @@
         }
       }
     },
+    "PDF" : {
+
+    },
+    "PDF Export Failed" : {
+
+    },
     "Persist Resources" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3729,6 +3795,9 @@
           }
         }
       }
+    },
+    "PNG" : {
+
     },
     "Polish and finalize" : {
       "localizations" : {
@@ -3903,6 +3972,7 @@
       }
     },
     "Provider Changed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3930,6 +4000,9 @@
           }
         }
       }
+    },
+    "Read Aloud" : {
+
     },
     "Reason" : {
       "localizations" : {
@@ -3990,6 +4063,9 @@
           }
         }
       }
+    },
+    "Regenerate" : {
+
     },
     "Reminders" : {
       "localizations" : {
@@ -4297,6 +4373,9 @@
         }
       }
     },
+    "Save as PDF" : {
+
+    },
     "Save as PNG" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4316,6 +4395,12 @@
           }
         }
       }
+    },
+    "Save PDF" : {
+
+    },
+    "Save Screenshot" : {
+
     },
     "Say hi" : {
       "localizations" : {
@@ -4347,6 +4432,12 @@
           }
         }
       }
+    },
+    "Screenshot" : {
+
+    },
+    "Screenshot Failed" : {
+
     },
     "Search" : {
       "localizations" : {
@@ -4577,6 +4668,9 @@
           }
         }
       }
+    },
+    "Send" : {
+
     },
     "Send a message with the selected shortcut." : {
       "localizations" : {
@@ -4867,6 +4961,9 @@
         }
       }
     },
+    "Start a New Chat From Here" : {
+
+    },
     "Start Time" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4896,6 +4993,9 @@
           }
         }
       }
+    },
+    "Stop Reading" : {
+
     },
     "Summarize" : {
       "localizations" : {
@@ -4936,6 +5036,9 @@
           }
         }
       }
+    },
+    "System" : {
+
     },
     "System Prompt" : {
       "localizations" : {
@@ -5141,6 +5244,24 @@
         }
       }
     },
+    "The screenshot renderer failed: %@" : {
+
+    },
+    "The screenshot renderer timed out while preparing the page." : {
+
+    },
+    "The screenshot template could not be found in the app bundle." : {
+
+    },
+    "The screenshot template could not be read: %@" : {
+
+    },
+    "The screenshot template is missing its bootstrap script tag." : {
+
+    },
+    "The screenshot was cancelled." : {
+
+    },
     "The shortcut used to accept the full completion suggestion." : {
       "localizations" : {
         "zh-Hans" : {
@@ -5200,6 +5321,9 @@
           }
         }
       }
+    },
+    "There are no messages to capture in the selected scope." : {
+
     },
     "Thinking..." : {
       "localizations" : {
@@ -5361,6 +5485,12 @@
         }
       }
     },
+    "Thought for %.0f seconds" : {
+
+    },
+    "Thought for %.2f seconds" : {
+
+    },
     "Timetable" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5450,6 +5580,9 @@
           }
         }
       }
+    },
+    "Tool" : {
+
     },
     "Tool call results exceeding this token count will be summarized to save context space." : {
       "localizations" : {
@@ -5941,6 +6074,9 @@
         }
       }
     },
+    "WebKit failed to capture the snapshot: %@" : {
+
+    },
     "Website" : {
       "localizations" : {
         "zh-Hans" : {
@@ -6060,6 +6196,9 @@
           }
         }
       }
+    },
+    "You" : {
+
     },
     "Your " : {
       "extractionState" : "stale",

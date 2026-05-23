@@ -256,7 +256,7 @@ extension LlamaServer {
             var arguments: String = ""
         }
         var toolCalls: [Int: ToolCallAccumulator] = [:] // Dictionary keyed by tool call index
-        var blockFunctionCalls: [(any DecodableFunctionCall)] = []
+        var functionCalls: [(any DecodableFunctionCall)] = []
         var toolCallInProgress: Bool = false
 
         // Init variables for usage
@@ -446,7 +446,7 @@ extension LlamaServer {
                 toolCallID: toolCall.id,
                 toolRegistry: toolRegistry
             ) {
-                blockFunctionCalls.append(function)
+                functionCalls.append(function)
                 Self.logger.info("Successfully decoded tool call #\(index): \(name)")
             } else {
                 // Track malformed tool call with detailed error
@@ -479,6 +479,22 @@ extension LlamaServer {
                 Self.logger.error("Failed to decode tool call #\(index): \(name) - \(errorDescription)")
                 Self.logger.error("Raw args: \(args, privacy: .public)")
             }
+        }
+
+        // Fallback: recover tool calls that leaked into the content stream as
+        // Qwen3-Coder-style XML (<tool_call><function=NAME><parameter=KEY>VALUE</parameter></function></tool_call>).
+        // llama-server's `--jinja` parser is unreliable for this format,
+        // especially after the first batch of calls in a multi-turn agentic
+        // loop. We mirror LM Studio's approach by parsing leaks client-side.
+        let recovered = Self.extractCoderXMLToolCalls(
+            from: pendingMessage,
+            toolRegistry: toolRegistry,
+            existingCalls: functionCalls
+        )
+        if !recovered.calls.isEmpty {
+            Self.logger.info("Recovered \(recovered.calls.count) Coder-XML tool call(s) from content stream")
+            functionCalls.append(contentsOf: recovered.calls)
+            pendingMessage = recovered.strippedText
         }
 
         // Adding a trailing quote or space is a common mistake with the smaller model output
@@ -531,9 +547,147 @@ extension LlamaServer {
             usage: stopResponse?.usage,
             usedServer: rawUrl.usingRemoteServer,
             availableFunctions: resolvedFunctions,
-            blockFunctionCalls: blockFunctionCalls,
+            functionCalls: functionCalls,
             malformedToolCalls: malformedToolCalls.isEmpty ? nil : malformedToolCalls
         )
+    }
+
+    /// Recover tool calls emitted in Qwen3-Coder-style XML that leaked into
+    /// the assistant's content stream.
+    ///
+    /// `llama-server`'s `--jinja` parser does not reliably extract every
+    /// `<tool_call>` block, particularly on the second+ turn of an agentic
+    /// loop. This scanner mirrors what LM Studio's `autoparser` does in C++:
+    /// look for `<tool_call><function=NAME>[<parameter=KEY>VALUE</parameter>]*</function></tool_call>`
+    /// patterns, build a JSON argument blob, and decode via the existing
+    /// `ToolRegistry` path so the agent loop can execute them like native
+    /// tool calls.
+    ///
+    /// - Parameters:
+    ///   - text: The full assistant text accumulated from the stream.
+    ///   - toolRegistry: The registry used to validate decoded function names.
+    ///   - existingCalls: Calls already decoded from the native `tool_calls`
+    ///     deltas. We skip XML matches whose `(name, arguments)` already exist
+    ///     here so we never double-count.
+    /// - Returns: The recovered calls and the input text with successfully
+    ///   recovered XML stripped out (so the UI doesn't render raw XML).
+    static func extractCoderXMLToolCalls(
+        from text: String,
+        toolRegistry: ToolRegistry,
+        existingCalls: [any DecodableFunctionCall]
+    ) -> (calls: [any DecodableFunctionCall], strippedText: String) {
+        guard text.contains("<tool_call>") && text.contains("<function=") else {
+            return ([], text)
+        }
+        // Whitespace-tolerant tag matching. The model frequently substitutes
+        // spaces for the template's newlines, so `\s*` everywhere is intentional.
+        let callPattern = #"<tool_call>\s*<function\s*=\s*([^>\s]+)\s*>([\s\S]*?)</function>\s*</tool_call>"#
+        let paramPattern = #"<parameter\s*=\s*([^>\s]+)\s*>([\s\S]*?)</parameter>"#
+        guard let callRegex = try? NSRegularExpression(pattern: callPattern),
+              let paramRegex = try? NSRegularExpression(pattern: paramPattern) else {
+            return ([], text)
+        }
+        let nsText = text as NSString
+        let matches = callRegex.matches(
+            in: text,
+            range: NSRange(location: 0, length: nsText.length)
+        )
+        guard !matches.isEmpty else {
+            return ([], text)
+        }
+        // Pre-compute canonical (name, argsJSON) signatures for existing calls
+        // so we can dedupe against anything llama.cpp already extracted natively.
+        let existingSignatures: Set<String> = Set(existingCalls.map { call in
+            "\(call.name)|\(call.getArgumentsJSONString())"
+        })
+        var recovered: [any DecodableFunctionCall] = []
+        var rangesToStrip: [NSRange] = []
+        for match in matches {
+            guard match.numberOfRanges >= 3 else { continue }
+            let name = nsText.substring(with: match.range(at: 1))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let body = nsText.substring(with: match.range(at: 2))
+            // Parse each <parameter=KEY>VALUE</parameter> child.
+            var arguments: [String: Any] = [:]
+            let bodyNS = body as NSString
+            let paramMatches = paramRegex.matches(
+                in: body,
+                range: NSRange(location: 0, length: bodyNS.length)
+            )
+            for paramMatch in paramMatches {
+                guard paramMatch.numberOfRanges >= 3 else { continue }
+                let key = bodyNS.substring(with: paramMatch.range(at: 1))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                let rawValue = bodyNS.substring(with: paramMatch.range(at: 2))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                arguments[key] = Self.coerceXMLParameterValue(rawValue)
+            }
+            guard JSONSerialization.isValidJSONObject(arguments),
+                  let argsData = try? JSONSerialization.data(
+                      withJSONObject: arguments,
+                      options: [.sortedKeys]
+                  ),
+                  let argsJSON = String(data: argsData, encoding: .utf8) else {
+                Self.logger.warning("XML fallback: could not serialize args for \(name, privacy: .public)")
+                continue
+            }
+            // Skip if this exact call already arrived natively.
+            if existingSignatures.contains("\(name)|\(argsJSON)") {
+                rangesToStrip.append(match.range)
+                continue
+            }
+            if let call = StreamMessage.OpenAIToolCall.Function.getFunctionCall(
+                name: name,
+                arguments: argsJSON,
+                toolCallID: UUID().uuidString,
+                toolRegistry: toolRegistry
+            ) {
+                recovered.append(call)
+                rangesToStrip.append(match.range)
+            } else {
+                Self.logger.warning("XML fallback: could not decode \(name, privacy: .public) with args \(argsJSON, privacy: .public)")
+            }
+        }
+        // Strip extracted XML so the UI doesn't render it. Iterate in reverse
+        // so earlier ranges stay valid as we mutate the string.
+        var stripped = text
+        for nsRange in rangesToStrip.sorted(by: { $0.location > $1.location }) {
+            if let range = Range(nsRange, in: stripped) {
+                stripped.removeSubrange(range)
+            }
+        }
+        // Collapse the empty gaps left behind by stripped blocks.
+        stripped = stripped.replacingOccurrences(
+            of: #"\n{3,}"#,
+            with: "\n\n",
+            options: .regularExpression
+        ).trimmingCharacters(in: .whitespacesAndNewlines)
+        return (recovered, stripped)
+    }
+
+    /// Best-effort coercion of an XML `<parameter>` value into a JSON-native
+    /// type. Numbers, booleans, null, arrays, and objects are interpreted as
+    /// JSON. Everything else stays a string so it survives `JSONSerialization`.
+    private static func coerceXMLParameterValue(_ raw: String) -> Any {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        if let data = trimmed.data(using: .utf8),
+           let json = try? JSONSerialization.jsonObject(
+               with: data,
+               options: [.fragmentsAllowed]
+           ) {
+            switch json {
+                case is NSNumber, is [Any], is [String: Any]:
+                    return json
+                case let bool as Bool:
+                    return bool
+                case is NSNull:
+                    return NSNull()
+                default:
+                    break
+            }
+        }
+        return trimmed
     }
 
     /// Function to get a completion from the LLM
@@ -963,332 +1117,16 @@ extension LlamaServer {
         var functionCallRecords: [FunctionCallRecord] = []
         /// A `Bool` representing if a function was called
         var containsFunctionCall: Bool {
-            if let functionCalls = self.functionCalls,
-               !functionCalls.isEmpty {
-                return true
-            }
-            return false
+            return !(self.functionCalls?.isEmpty ?? true)
         }
         /// A `Bool` indicating whether this response needs the function handling loop.
         var requiresFunctionHandling: Bool {
             return self.containsFunctionCall || !(self.malformedToolCalls?.isEmpty ?? true)
         }
-        /// Any function call in the response
-        var functionCalls: [(any DecodableFunctionCall)]? {
-            // Try to get block call first
-            if let blockFunctionCalls = self.blockFunctionCalls,
-               !blockFunctionCalls.isEmpty {
-                return blockFunctionCalls
-            }
-            return self.inlineFunctionCalls
-        }
-        /// A function call in the response JSON
-        var blockFunctionCalls: [(any DecodableFunctionCall)]?
+        /// Function calls emitted by the assistant via native tool calling
+        var functionCalls: [(any DecodableFunctionCall)]?
         /// Malformed tool calls that failed to parse
         var malformedToolCalls: [MalformedToolCall]?
-        /// All inline function call found in the text
-        var inlineFunctionCalls: [(any DecodableFunctionCall)]? {
-            let fullInput: String = self.text
-            let strippedInput: String = self.text.reasoningRemoved
-            let decoder = JSONDecoder()
-            if let jsonCalls = Self.decodeAllFunctionCalls(
-                in: strippedInput,
-                decoder: decoder,
-                toolRegistry: ToolRegistry(functions: self.availableFunctions)
-            ) {
-                return jsonCalls
-            }
-            return Self.decodeXMLToolCalls(
-                in: fullInput,
-                toolRegistry: ToolRegistry(functions: self.availableFunctions)
-            )
-        }
-
-        /// Function to decode all function calls
-        private static func decodeAllFunctionCalls(
-            in input: String,
-            decoder: JSONDecoder,
-            toolRegistry: ToolRegistry,
-            searchStartIndex: String.Index? = nil
-        ) -> [(any DecodableFunctionCall)]? {
-            var results: [(any DecodableFunctionCall)] = []
-            let startIdx = searchStartIndex ?? input.startIndex
-            var searchStartIndex = startIdx
-            // Look for every occurrence of '{'
-            while let startIndex = input[searchStartIndex...].firstIndex(of: "{") {
-                var braceCount = 0
-                var currentIndex = startIndex
-                var insideString = false
-                var isEscapingStringCharacter = false
-                var endIndex: String.Index? = nil
-                // Attempt to balance the braces from here
-                while currentIndex < input.endIndex {
-                    let character = input[currentIndex]
-                    if insideString {
-                        if isEscapingStringCharacter {
-                            isEscapingStringCharacter = false
-                        } else if character == "\\" {
-                            isEscapingStringCharacter = true
-                        } else if character == "\"" {
-                            insideString = false
-                        }
-                    } else if character == "\"" {
-                        insideString = true
-                    } else {
-                        if character == "{" {
-                            braceCount += 1
-                        } else if character == "}" {
-                            braceCount -= 1
-                            if braceCount == 0 {
-                                endIndex = currentIndex
-                                break
-                            }
-                        }
-                    }
-                    currentIndex = input.index(after: currentIndex)
-                }
-                // If we found matching braces, attempt to decode
-                if let finalIndex = endIndex {
-                    let jsonSubstring = input[startIndex...finalIndex]
-                    let jsonString = String(jsonSubstring)
-                    if let jsonData = jsonString.data(using: .utf8) {
-                        if let functionName = Self.decodeFunctionName(
-                            from: jsonData,
-                            using: decoder
-                        ),
-                           let function = toolRegistry.function(named: functionName),
-                           let functionCall = function.functionCallType.parse(
-                                from: jsonData,
-                                using: decoder
-                           ) {
-                            results.append(functionCall)
-                        }
-                    }
-                    // Move searchStartIndex past this function call for the next iteration
-                    searchStartIndex = input.index(after: finalIndex)
-                } else {
-                    // If we didn't find a matching '}', break the loop
-                    break
-                }
-            }
-            return results.isEmpty ? nil : results
-        }
-
-        private static func decodeFunctionName(
-            from data: Data,
-            using decoder: JSONDecoder
-        ) -> String? {
-            return try? decoder.decode(
-                FunctionNameEnvelope.self,
-                from: data
-            ).name
-        }
-
-        private struct FunctionNameEnvelope: Decodable {
-            let name: String
-
-            enum CodingKeys: String, CodingKey {
-                case functionCall = "function_call"
-                case function
-            }
-
-            init(from decoder: Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                if let config = try? container.decode(
-                    FunctionNameConfig.self,
-                    forKey: .functionCall
-                ) {
-                    self.name = config.name
-                } else {
-                    self.name = try container.decode(
-                        FunctionNameConfig.self,
-                        forKey: .function
-                    ).name
-                }
-            }
-
-            private struct FunctionNameConfig: Decodable {
-                let name: String
-            }
-        }
-
-        /// Decode XML-style tool calls emitted by some chat templates
-        private static func decodeXMLToolCalls(
-            in input: String,
-            toolRegistry: ToolRegistry
-        ) -> [(any DecodableFunctionCall)]? {
-            guard !input.isEmpty else {
-                return nil
-            }
-
-            let toolCallPattern = #"<tool_call>\s*(.*?)\s*</tool_call>"#
-            guard let toolCallRegex = try? NSRegularExpression(
-                pattern: toolCallPattern,
-                options: [.dotMatchesLineSeparators]
-            ) else {
-                return nil
-            }
-
-            let inputRange = NSRange(input.startIndex..<input.endIndex, in: input)
-            let matches = toolCallRegex.matches(in: input, range: inputRange)
-            guard !matches.isEmpty else {
-                return nil
-            }
-
-            var decodedCalls: [(any DecodableFunctionCall)] = []
-            for match in matches {
-                guard match.numberOfRanges > 1,
-                      let callRange = Range(match.range(at: 1), in: input) else {
-                    continue
-                }
-                let toolCallBody = String(input[callRange])
-                guard let functionCall = Self.decodeSingleXMLToolCall(
-                    toolCallBody,
-                    toolRegistry: toolRegistry
-                ) else {
-                    continue
-                }
-                decodedCalls.append(functionCall)
-            }
-
-            return decodedCalls.isEmpty ? nil : decodedCalls
-        }
-
-        private static func decodeSingleXMLToolCall(
-            _ body: String,
-            toolRegistry: ToolRegistry
-        ) -> (any DecodableFunctionCall)? {
-            let functionPattern = #"<function=([A-Za-z0-9_]+)>\s*(.*?)\s*</function>"#
-            guard let functionRegex = try? NSRegularExpression(
-                pattern: functionPattern,
-                options: [.dotMatchesLineSeparators]
-            ) else {
-                return nil
-            }
-
-            let bodyRange = NSRange(body.startIndex..<body.endIndex, in: body)
-            guard let match = functionRegex.firstMatch(in: body, range: bodyRange),
-                  match.numberOfRanges > 2,
-                  let functionNameRange = Range(match.range(at: 1), in: body),
-                  let functionBodyRange = Range(match.range(at: 2), in: body) else {
-                return nil
-            }
-
-            let functionName = String(body[functionNameRange])
-            let functionBody = String(body[functionBodyRange])
-            guard let function = toolRegistry.function(named: functionName) else {
-                return nil
-            }
-
-            let parameterPattern = #"<parameter=([A-Za-z0-9_]+)>\s*(.*?)\s*</parameter>"#
-            guard let parameterRegex = try? NSRegularExpression(
-                pattern: parameterPattern,
-                options: [.dotMatchesLineSeparators]
-            ) else {
-                return nil
-            }
-
-            let functionBodyRangeNS = NSRange(
-                functionBody.startIndex..<functionBody.endIndex,
-                in: functionBody
-            )
-            let parameterMatches = parameterRegex.matches(
-                in: functionBody,
-                range: functionBodyRangeNS
-            )
-            var rawParameters: [String: [String]] = [:]
-            for parameterMatch in parameterMatches {
-                guard parameterMatch.numberOfRanges > 2,
-                      let parameterNameRange = Range(parameterMatch.range(at: 1), in: functionBody),
-                      let parameterValueRange = Range(parameterMatch.range(at: 2), in: functionBody) else {
-                    continue
-                }
-                let parameterName = String(functionBody[parameterNameRange])
-                let parameterValue = String(functionBody[parameterValueRange])
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                rawParameters[parameterName, default: []].append(parameterValue)
-            }
-
-            guard let argumentObject = Self.makeJSONObject(
-                from: rawParameters,
-                function: function
-            ),
-            let argumentData = try? JSONSerialization.data(
-                withJSONObject: argumentObject
-            ),
-            let params = try? JSONDecoder().decode(
-                function.paramsType.self,
-                from: argumentData
-            ) else {
-                return nil
-            }
-
-            return function.functionCallType.init(
-                name: function.name,
-                params: params,
-                toolCallID: nil
-            )
-        }
-
-        private static func makeJSONObject(
-            from rawParameters: [String: [String]],
-            function: AnyFunctionBox
-        ) -> [String: Any]? {
-            var jsonObject: [String: Any] = [:]
-
-            for parameter in function.params {
-                guard let rawValues = rawParameters[parameter.label], !rawValues.isEmpty else {
-                    continue
-                }
-
-                switch parameter.datatype {
-                    case .string:
-                        jsonObject[parameter.label] = rawValues[0]
-                    case .integer:
-                        guard let value = Int(rawValues[0]) else { return nil }
-                        jsonObject[parameter.label] = value
-                    case .float:
-                        guard let value = Double(rawValues[0]) else { return nil }
-                        jsonObject[parameter.label] = value
-                    case .boolean:
-                        guard let value = Self.parseBoolean(rawValues[0]) else { return nil }
-                        jsonObject[parameter.label] = value
-                    case .stringArray:
-                        jsonObject[parameter.label] = Self.parseArrayValues(rawValues)
-                    case .integerArray:
-                        let values = Self.parseArrayValues(rawValues).compactMap(Int.init)
-                        guard values.count == Self.parseArrayValues(rawValues).count else { return nil }
-                        jsonObject[parameter.label] = values
-                    case .floatArray:
-                        let values = Self.parseArrayValues(rawValues).compactMap(Double.init)
-                        guard values.count == Self.parseArrayValues(rawValues).count else { return nil }
-                        jsonObject[parameter.label] = values
-                }
-            }
-
-            return jsonObject
-        }
-
-        private static func parseArrayValues(_ rawValues: [String]) -> [String] {
-            return rawValues
-                .flatMap { value in
-                    value.split(separator: ",").map {
-                        String($0).trimmingCharacters(in: .whitespacesAndNewlines)
-                    }
-                }
-                .filter { !$0.isEmpty }
-        }
-
-        private static func parseBoolean(_ rawValue: String) -> Bool? {
-            switch rawValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
-                case "true", "1", "yes":
-                    return true
-                case "false", "0", "no":
-                    return false
-                default:
-                    return nil
-            }
-        }
 
     }
 

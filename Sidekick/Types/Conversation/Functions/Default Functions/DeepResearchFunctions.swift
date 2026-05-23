@@ -36,17 +36,17 @@ public class DeepResearchFunctions {
     /// A function to get the content of a website via its url
     static let getWebsiteContent = Function<GetWebsiteContentParams, String>(
         name: "get_website_content",
-        description: "Retrieves the full content of a website via its URL, then returns content relevant to the query.",
+        description: "Fetches a webpage and returns only the parts relevant to your query.",
         params: [
             FunctionParameter(
                 label: "url",
-                description: "The website's URL",
+                description: "Page URL.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "query",
-                description: "A description of the content you want to find within the website content",
+                description: "What to extract from the page.",
                 datatype: .string,
                 isRequired: true
             )

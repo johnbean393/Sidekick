@@ -16,25 +16,20 @@ public struct Provider: Identifiable {
     public var name: String
     /// A `URL` for the provider's OpenAI compatible endpoint
     public var endpointUrl: URL
-    /// A `Bool` for whether the provider supports OpenAI style tool calling
-    public var supportsToolCalling: Bool = false
     
     /// A list of popular providers
     public static let popularProviders: [Provider] = [
         Provider(
             name: "Aliyun Bailian (China)",
-            endpointUrl: URL(string: "https://dashscope.aliyuncs.com/compatible-mode/v1")!,
-            supportsToolCalling: true
+            endpointUrl: URL(string: "https://dashscope.aliyuncs.com/compatible-mode/v1")!
         ),
         Provider(
             name: "Anthropic",
-            endpointUrl: URL(string: "https://api.anthropic.com/v1")!,
-            supportsToolCalling: true
+            endpointUrl: URL(string: "https://api.anthropic.com/v1")!
         ),
         Provider(
             name: "DeepSeek",
-            endpointUrl: URL(string: "https://api.deepseek.com/v1")!,
-            supportsToolCalling: true
+            endpointUrl: URL(string: "https://api.deepseek.com/v1")!
         ),
         Provider(
             name: "Google AI Studio",
@@ -42,18 +37,15 @@ public struct Provider: Identifiable {
         ),
         Provider(
             name: "Groq",
-            endpointUrl: URL(string: "https://api.groq.com/openai/v1")!,
-            supportsToolCalling: true
+            endpointUrl: URL(string: "https://api.groq.com/openai/v1")!
         ),
         Provider(
             name: "LM Studio",
-            endpointUrl: URL(string: "http://localhost:1234/v1")!,
-            supportsToolCalling: true
+            endpointUrl: URL(string: "http://localhost:1234/v1")!
         ),
         Provider(
             name: "MiniMax",
-            endpointUrl: URL(string: "https://api.minimax.io/v1")!,
-            supportsToolCalling: true
+            endpointUrl: URL(string: "https://api.minimax.io/v1")!
         ),
         Provider(
             name: "Mistral",
@@ -61,28 +53,23 @@ public struct Provider: Identifiable {
         ),
         Provider(
             name: "Ollama",
-            endpointUrl: URL(string: "http://localhost:11434/v1")!,
-            supportsToolCalling: true
+            endpointUrl: URL(string: "http://localhost:11434/v1")!
         ),
         Provider(
             name: "OpenAI",
-            endpointUrl: URL(string: "https://api.openai.com/v1")!,
-            supportsToolCalling: true
+            endpointUrl: URL(string: "https://api.openai.com/v1")!
         ),
         Provider(
             name: "OpenRouter",
-            endpointUrl: URL(string: "https://openrouter.ai/api/v1")!,
-            supportsToolCalling: true
+            endpointUrl: URL(string: "https://openrouter.ai/api/v1")!
         ),
         Provider(
             name: "xAI",
-            endpointUrl: URL(string: "https://api.x.ai/v1")!,
-            supportsToolCalling: true
+            endpointUrl: URL(string: "https://api.x.ai/v1")!
         ),
         Provider(
             name: "Zhipu",
-            endpointUrl: URL(string: "https://open.bigmodel.cn/api/paas/v4/")!,
-            supportsToolCalling: true
+            endpointUrl: URL(string: "https://open.bigmodel.cn/api/paas/v4/")!
         ),
     ]
 }

@@ -98,8 +98,15 @@ extension LlamaServer {
         ]
         // Extra options for main model
         if self.modelType == .regular {
-            // Use jinja chat template if tools are used
-            if Settings.useFunctions {
+            // Only enable `--jinja` when the model's GGUF ships a chat template
+            // that knows how to render and parse tool calls. Without that, the
+            // flag either errors out (no template at all) or buys us nothing
+            // and risks the server emitting text-mode tool calls that the
+            // client can't recover.
+            if Settings.useFunctions,
+               GGUFMetadataReader.modelSupportsToolAwareJinja(
+                at: URL(fileURLWithPath: modelPath)
+               ) {
                 arguments["--jinja"] = ""
             }
             // Use speculative decoding

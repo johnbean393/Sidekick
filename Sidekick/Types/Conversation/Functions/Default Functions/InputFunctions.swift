@@ -19,17 +19,17 @@ public class InputFunctions {
     /// A ``Function`` to ask for confirmation
     static let getConfirmation = Function<GetConfirmationParams, String>(
         name: "get_confirmation",
-        description: "Get user confirmation to clarify user intent by presenting a dialog with a title and message, where the user can click `Yes` or `No. ONLY returns `Yes` or `No`.",
+        description: "Shows a Yes/No confirmation dialog and returns `Yes` or `No`.",
         params: [
             FunctionParameter(
                 label: "title",
-                description: "The title displayed in the alert",
+                description: "Dialog title.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "message",
-                description: "The message displayed in the alert. This should end with a yes or no question such as `Do you want to continue?`.",
+                description: "Dialog message, phrased as a yes/no question.",
                 datatype: .string,
                 isRequired: true
             )
@@ -54,23 +54,23 @@ The user responded by clicking \(dialogResult ? "Yes" : "No").
     /// A ``Function`` to ask for user selection
     static let getUserSelection = Function<GetUserSelectionParams, String>(
         name: "get_user_selection",
-        description: "Displays a prompt asking the the user from a list of options. Returns the selected option from the user.",
+        description: "Shows a dialog with a list of options and returns the one the user picked.",
         params: [
             FunctionParameter(
                 label: "title",
-                description: "The title displayed in the prompt.",
+                description: "Dialog title.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "message",
-                description: "The message displayed in the prompt. Use this to ask the user for input.",
+                description: "Dialog message asking the user to choose.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "options",
-                description: "A list of options that the user can choose from.",
+                description: "Options to choose from.",
                 datatype: .stringArray,
                 isRequired: true
             )
@@ -121,17 +121,17 @@ The user responded by clicking \(dialogResult ? "Yes" : "No").
     /// A ``Function`` to ask for text input
     static let getTextInput = Function<GetTextInputParams, String>(
         name: "get_text_input",
-        description: "Displays a prompt asking for text input from the user. Returns the text input from the user.",
+        description: "Shows a dialog asking for free-form text and returns the user's response.",
         params: [
             FunctionParameter(
                 label: "title",
-                description: "The title displayed in the prompt.",
+                description: "Dialog title.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "message",
-                description: "The message displayed in the prompt. Use this to ask the user for input.",
+                description: "Prompt shown to the user.",
                 datatype: .string,
                 isRequired: true
             )

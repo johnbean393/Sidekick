@@ -17,7 +17,6 @@ struct ServerModelSettingsView: View {
 	@AppStorage("remoteModelName") private var serverModelName: String = InferenceSettings.serverModelName
     
     @AppStorage("serverModelHasVision") private var serverModelHasVision: Bool = InferenceSettings.serverModelHasVision
-    @AppStorage("hasNativeToolCalling") private var hasNativeToolCalling: Bool = InferenceSettings.hasNativeToolCalling
     
 	@AppStorage("serverWorkerModelName") private var serverWorkerModelName: String = InferenceSettings.serverWorkerModelName
 	
@@ -43,7 +42,6 @@ struct ServerModelSettingsView: View {
 					modelType: .regular
 				)
                 serverModelHasVisionToggle
-                hasNativeToolCallingToggle
 				ServerModelNameEditor(
 					serverModelName: $serverWorkerModelName,
 					modelType: .worker
@@ -100,10 +98,6 @@ struct ServerModelSettingsView: View {
                         .textContentType(.username)
                         .textFieldStyle(.roundedBorder)
                         .frame(maxWidth: 200)
-                        .onSubmit {
-                            // Run check
-                            self.checkProviderForToolCalling()
-                        }
                     Menu {
                         ForEach(
                             Provider.popularProviders
@@ -134,10 +128,6 @@ struct ServerModelSettingsView: View {
 			}
             .padding(.top, 10)
 		}
-        .onChange(of: self.serverEndpoint) {
-            // Run check
-            self.checkProviderForToolCalling()
-        }
 	}
 	
 	var inferenceApiKeyEditor: some View {
@@ -175,52 +165,6 @@ struct ServerModelSettingsView: View {
                 isOn: $serverModelHasVision.animation(.linear)
             )
             .disabled(serverEndpoint.isEmpty || !endpointUrlIsValid)
-        }
-    }
-    
-    var hasNativeToolCallingToggle: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading) {
-                Text("Native Function Calling")
-                    .font(.title3)
-                    .bold()
-                Text("Controls whether native function calling is available for the remote model. Turn it on only when the inference provider supports native function calling for the selected model.")
-                    .font(.caption)
-            }
-            Spacer()
-            Toggle(
-                "",
-                isOn: $hasNativeToolCalling.animation(.linear)
-            )
-            .disabled(serverEndpoint.isEmpty || !endpointUrlIsValid)
-        }
-    }
-    
-    private func checkProviderForToolCalling() {
-        // Return if invalid or blank
-        if !self.endpointUrlIsValid || self.serverEndpoint.isEmpty {
-            return
-        }
-        // Check provider, defaulting to false
-        let providerSupportsToolCalling = InferenceSettings.providerSupportsToolCalling() ?? false
-        // If no change, exit
-        if providerSupportsToolCalling == self.hasNativeToolCalling {
-            return
-        }
-        // Get message
-        let message: String = providerSupportsToolCalling ? String(localized: "A new endpoint has been selected, which has been identified as capable of native function calling. Would you like to turn on native function calling?") : String(
-            localized: "A new endpoint has been selected, which might not be capable of native function calling. Would you like to turn off native function calling?"
-        )
-        // Confirm with user
-        if Dialogs.dichotomy(
-            title: String(localized: "Provider Changed"),
-            message: message,
-            option1: String(localized: "Yes"),
-            option2: String(localized: "No")
-        ) {
-            withAnimation(.linear) {
-                self.hasNativeToolCalling = providerSupportsToolCalling
-            }
         }
     }
     

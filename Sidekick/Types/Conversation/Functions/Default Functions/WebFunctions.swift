@@ -78,30 +78,30 @@ public class WebFunctions {
     ) -> Function<TavilyWebSearchParams, String> {
         return Function<TavilyWebSearchParams, String>(
             name: "web_search",
-            description: "Retrieves information from the web with the provided query, instead of estimating it.",
+            description: "Searches the web. Use whenever the answer depends on current or external information.",
             allowsParallelExecution: true,
             params: [
                 FunctionParameter(
                     label: "query",
-                    description: "The topic to look up online",
+                    description: "Search query.",
                     datatype: .string,
                     isRequired: true
                 ),
                 FunctionParameter(
                     label: "site",
-                    description: "Search within this specific site (optional, example: wikipedia.org, default: nil)",
+                    description: "Restrict to a single site (e.g. `wikipedia.org`).",
                     datatype: .string,
                     isRequired: false
                 ),
                 FunctionParameter(
                     label: "num_results",
-                    description: "The maximum number of search results (optional, default: 10)",
+                    description: "Maximum results. Defaults to 10.",
                     datatype: .integer,
                     isRequired: false
                 ),
                 FunctionParameter(
                     label: "time_range",
-                    description: "The time range back from the current date to filter results. (optional, options: day, week, month, year, default: nil)",
+                    description: "Filter results to recent timeframe: `day`, `week`, `month`, or `year`.",
                     datatype: .string,
                     isRequired: false
                 )
@@ -150,36 +150,36 @@ The content from each site here is an incomplete except. Use the `get_website_co
     /// A ``Function`` to conduct a web search with DuckDuckGo or Google
     static let standardWebSearch = Function<StandardSearchParams, String>(
         name: "web_search",
-        description: "Retrieves information from the web with the provided query, instead of estimating it.",
+        description: "Searches the web. Use whenever the answer depends on current or external information.",
         allowsParallelExecution: true,
         params: [
             FunctionParameter(
                 label: "query",
-                description: "The topic to look up online",
+                description: "Search query.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "site",
-                description: "Search within this specific site (optional, example: wikipedia.org, default: nil)",
+                description: "Restrict to a single site (e.g. `wikipedia.org`).",
                 datatype: .string,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "num_results",
-                description: "The maximum number of search results (optional, default: 3, maximum: 5)",
+                description: "Maximum results (max 5). Defaults to 3.",
                 datatype: .integer,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "start_date",
-                description: "The start date of search results, in the format `yyyy-MM-dd`. (optional)",
+                description: "Earliest result date in `yyyy-MM-dd`.",
                 datatype: .string,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "end_date",
-                description: "The end date of search results, in the format `yyyy-MM-dd`. (optional)",
+                description: "Latest result date in `yyyy-MM-dd`.",
                 datatype: .string,
                 isRequired: false
             ),
@@ -269,12 +269,12 @@ The content from each site here is an incomplete except. Use the `get_website_co
     /// A function to get the content of a website via its url
     static let getWebsiteContent = Function<GetWebsiteContentParams, String>(
         name: "get_website_content",
-        description: "Retrieves the full content of a website via its URL.",
+        description: "Fetches the full content of a webpage. Use after `web_search` to read a result in full.",
         allowsParallelExecution: true,
         params: [
             FunctionParameter(
                 label: "url",
-                description: "The website's URL",
+                description: "Page URL.",
                 datatype: .string,
                 isRequired: true
             )
@@ -290,35 +290,35 @@ The content from each site here is an incomplete except. Use the `get_website_co
     /// A function to create an email draft
     static let draftEmail = Function<DraftEmailParams, String>(
         name: "draft_email",
-        description: "Uses the \"mailto:\" URL scheme to create an email draft in the default email client.",
+        description: "Opens an email draft in the user's default email client via the `mailto:` scheme.",
         params: [
             FunctionParameter(
                 label: "recipients",
-                description: "An array containing the email addresses of the recipients.",
+                description: "To: addresses.",
                 datatype: .stringArray,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "cc",
-                description: "An array containing the email addresses of the cc recipients.",
+                description: "Cc: addresses.",
                 datatype: .stringArray,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "bcc",
-                description: "An array containing the email addresses of the cc recipients.",
+                description: "Bcc: addresses.",
                 datatype: .stringArray,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "subject",
-                description: "The subject of the email",
+                description: "Email subject.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "body",
-                description: "The body of the email.",
+                description: "Email body.",
                 datatype: .string,
                 isRequired: true
             )
@@ -384,7 +384,7 @@ The content from each site here is an incomplete except. Use the `get_website_co
     /// A function to get the user's location
     static let getLocation = Function<BlankParams, String>(
         name: "get_location",
-        description: "A function to get the user's location. Use this before providing answers that depend on location, such as weather or holidays.",
+        description: "Returns the user's approximate location via IP. Use before answering location-dependent questions (weather, holidays, etc.).",
         allowsParallelExecution: true,
         params: [
         ],

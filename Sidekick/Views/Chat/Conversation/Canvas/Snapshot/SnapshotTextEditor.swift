@@ -19,12 +19,7 @@ struct SnapshotTextEditor: View {
 	@State private var messages: Set<TextLocated<LanguageSupport.Message>> = Set()
 	
 	var selectedConversation: Conversation? {
-		guard let selectedConversationId = conversationState.selectedConversationId else {
-			return nil
-		}
-		return self.conversationManager.getConversation(
-			id: selectedConversationId
-		)
+		return self.conversationState.selectedConversation
 	}
 	
 	var selectedSnapshotId: UUID? {

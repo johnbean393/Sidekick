@@ -48,6 +48,14 @@ public struct ChatParameters: Codable {
         
         // Add reasoning parameter for Claude 4+ on OpenRouter
         self.reasoning = Self.getReasoningOptions(modelType: modelType, usingRemoteModel: usingRemoteModel)
+        
+        // Resolve sampler defaults for the local model architecture,
+        // deferring to any active Advanced Parameters flags.
+        await self.applySamplingDefaults(
+            modelType: modelType,
+            usingRemoteModel: usingRemoteModel,
+            enableThinking: enableThinking
+        )
     }
     
     /// Init for chat & context aware agent
@@ -94,7 +102,6 @@ public struct ChatParameters: Codable {
         }
         // Tell the LLM to use sources
         fullSystemPromptComponents.append(InferenceSettings.useSourcesPrompt)
-        // Tell the LLM to use functions when enabled and server does not support native tool calling
         // Use enabled functions from FunctionSelectionManager if no custom functions provided
         let enabledFunctions: [any AnyFunctionBox]
         if let customFunctions = functions {
@@ -102,10 +109,6 @@ public struct ChatParameters: Codable {
         } else {
             enabledFunctions = await MainActor.run { FunctionSelection.getEnabledFunctions() }
         }
-        let supportsNativeToolCalling = InferenceSettings.supportsNativeToolCalling(
-            modelType: modelType,
-            usingRemoteModel: usingRemoteModel
-        )
         // Check if we should encourage using query_database function
         let isDefaultExpert: Bool
         if let resolvedExpert = expert {
@@ -129,18 +132,9 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
             }
         }
         if Settings.useFunctions && useFunctions {
-            if supportsNativeToolCalling {
-                fullSystemPromptComponents.append(
-                    InferenceSettings.useNativeFunctionsPrompt
-                )
-            } else {
-                fullSystemPromptComponents.append(InferenceSettings.useFunctionsPrompt)
-                fullSystemPromptComponents.append(InferenceSettings.functionsSchemaPrompt)
-                let functions: [any AnyFunctionBox] = enabledFunctions
-                for function in functions {
-                    fullSystemPromptComponents.append(function.getJsonSchema())
-                }
-            }
+            fullSystemPromptComponents.append(
+                InferenceSettings.useFunctionsPrompt
+            )
         }
         // Join all components
         let fullSystemPrompt: String = fullSystemPromptComponents.joined(separator: "\n\n")
@@ -160,8 +154,13 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         self.messages = messagesWithSystemPrompt
         self.model = Self.getModelName(modelType: modelType) ?? ""
         self.tools = !useFunctions ? [] : enabledFunctions.map(keyPath: \.openAiFunctionCall)
-        if supportsNativeToolCalling && useFunctions {
+        if useFunctions {
             self.tool_choice = toolChoice ?? .auto
+            // Force llama.cpp's lazy grammar to keep constraining structure across
+            // every consecutive `<tool_call>` in a single turn. Without this, only the
+            // first call is grammar-enforced and later ones can be emitted as
+            // malformed XML in the content stream. OpenAI defaults this to true.
+            self.parallel_tool_calls = true
         }
         self.chat_template_kwargs = Self.getChatTemplateKwargs(
             modelType: modelType,
@@ -171,6 +170,14 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         
         // Add reasoning parameter for Claude 4+ on OpenRouter
         self.reasoning = Self.getReasoningOptions(modelType: modelType, usingRemoteModel: usingRemoteModel)
+        
+        // Resolve sampler defaults for the local model architecture,
+        // deferring to any active Advanced Parameters flags.
+        await self.applySamplingDefaults(
+            modelType: modelType,
+            usingRemoteModel: usingRemoteModel,
+            enableThinking: enableThinking
+        )
     }
     
     var model: String
@@ -178,8 +185,20 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
     
     var tools: [OpenAIFunction] = []
     var tool_choice: ToolChoice?
+    var parallel_tool_calls: Bool?
     
-    var temperature = InferenceSettings.temperature
+    /// Sampler parameters. ``applySamplingDefaults(...)`` populates these
+    /// from ``ModelArchitecture`` (for local models) and from
+    /// ``InferenceSettings.temperature`` (as a fallback). Any field the user
+    /// has actively configured under "Advanced Parameters" is left `nil`
+    /// here so the server-side CLI flag remains authoritative.
+    var temperature: Double? = InferenceSettings.temperature
+    var top_p: Double?
+    var top_k: Int?
+    var min_p: Double?
+    var presence_penalty: Double?
+    var frequency_penalty: Double?
+    var repetition_penalty: Double?
     
     var stream: Bool = true
     var stream_options: StreamOptions = .init()
@@ -194,17 +213,23 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         modelType: ModelType,
         omittedParams: [ParamKey] = []
     ) -> String {
-        // Omit tools if non-regular, or has no native tool calling
+        // Tool calls only make sense for the regular chat model
         var omittedParams = omittedParams
-        if modelType != .regular || !InferenceSettings.supportsNativeToolCalling(
-            modelType: modelType,
-            usingRemoteModel: usingRemoteModel
-        ) {
-            omittedParams += [.tools, .tool_choice]
+        if modelType != .regular {
+            omittedParams += [.tools, .tool_choice, .parallel_tool_calls]
         }
-        // If is remote model, omit temperature to use provider reccomended params
+        // If is remote model, omit all local sampler parameters so the
+        // provider's own recommended defaults are used.
         if usingRemoteModel {
-            omittedParams.append(.temperature)
+            omittedParams += [
+                .temperature,
+                .top_p,
+                .top_k,
+                .min_p,
+                .presence_penalty,
+                .frequency_penalty,
+                .repetition_penalty,
+            ]
         }
         // Keep unique omits only
         omittedParams = Array(Set(omittedParams))
@@ -214,10 +239,17 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
             let model: String?
             let messages: [Message.MessageSubset]?
             let temperature: Double?
+            let top_p: Double?
+            let top_k: Int?
+            let min_p: Double?
+            let presence_penalty: Double?
+            let frequency_penalty: Double?
+            let repetition_penalty: Double?
             let stream: Bool?
             let stream_options: StreamOptions?
             let tools: [OpenAIFunction]?
             let tool_choice: ToolChoice?
+            let parallel_tool_calls: Bool?
             let chat_template_kwargs: ChatTemplateKwargs?
             let reasoning: ReasoningOptions?
             
@@ -228,10 +260,17 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
                 self.model = omitted.contains(.model) ? nil : parent.model
                 self.messages = omitted.contains(.messages) ? nil : parent.messages
                 self.temperature = omitted.contains(.temperature) ? nil : parent.temperature
+                self.top_p = omitted.contains(.top_p) ? nil : parent.top_p
+                self.top_k = omitted.contains(.top_k) ? nil : parent.top_k
+                self.min_p = omitted.contains(.min_p) ? nil : parent.min_p
+                self.presence_penalty = omitted.contains(.presence_penalty) ? nil : parent.presence_penalty
+                self.frequency_penalty = omitted.contains(.frequency_penalty) ? nil : parent.frequency_penalty
+                self.repetition_penalty = omitted.contains(.repetition_penalty) ? nil : parent.repetition_penalty
                 self.stream = omitted.contains(.stream) ? nil : parent.stream
                 self.stream_options = omitted.contains(.stream_options) ? nil : parent.stream_options
                 self.tools = omitted.contains(.tools) ? nil : parent.tools
                 self.tool_choice = omitted.contains(.tool_choice) ? nil : parent.tool_choice
+                self.parallel_tool_calls = omitted.contains(.parallel_tool_calls) ? nil : parent.parallel_tool_calls
                 self.chat_template_kwargs = omitted.contains(.chat_template_kwargs) ? nil : parent.chat_template_kwargs
                 self.reasoning = omitted.contains(.reasoning) ? nil : parent.reasoning
             }
@@ -242,10 +281,23 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
                 if let model = model        { try container.encode(model, forKey: .model) }
                 if let messages = messages  { try container.encode(messages, forKey: .messages) }
                 if let temperature = temperature { try container.encode(temperature, forKey: .temperature) }
+                if let top_p = top_p        { try container.encode(top_p, forKey: .top_p) }
+                if let top_k = top_k        { try container.encode(top_k, forKey: .top_k) }
+                if let min_p = min_p        { try container.encode(min_p, forKey: .min_p) }
+                if let presence_penalty = presence_penalty {
+                    try container.encode(presence_penalty, forKey: .presence_penalty)
+                }
+                if let frequency_penalty = frequency_penalty {
+                    try container.encode(frequency_penalty, forKey: .frequency_penalty)
+                }
+                if let repetition_penalty = repetition_penalty {
+                    try container.encode(repetition_penalty, forKey: .repetition_penalty)
+                }
                 if let stream = stream      { try container.encode(stream, forKey: .stream) }
                 if let stream_options = stream_options { try container.encode(stream_options, forKey: .stream_options) }
                 if let tools = tools        { try container.encode(tools, forKey: .tools) }
                 if let tool_choice = tool_choice { try container.encode(tool_choice, forKey: .tool_choice) }
+                if let parallel_tool_calls = parallel_tool_calls { try container.encode(parallel_tool_calls, forKey: .parallel_tool_calls) }
                 if let chat_template_kwargs = chat_template_kwargs {
                     try container.encode(chat_template_kwargs, forKey: .chat_template_kwargs)
                 }
@@ -274,10 +326,17 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         case model
         case messages
         case temperature
+        case top_p
+        case top_k
+        case min_p
+        case presence_penalty
+        case frequency_penalty
+        case repetition_penalty
         case stream
         case stream_options
         case tools
         case tool_choice
+        case parallel_tool_calls
         case chat_template_kwargs
         case provider
         case reasoning
@@ -332,6 +391,111 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         return nil
     }
 
+    /// Mapping from llama-server CLI flags (used by the Advanced Parameters
+    /// settings UI) to the JSON sampler keys we'd otherwise send per-request.
+    /// Keeping this in one place avoids drift between the two layers.
+    private static let advancedParameterFlagToParamKey: [String: ParamKey] = [
+        "--temp": .temperature,
+        "--temperature": .temperature,
+        "--top-p": .top_p,
+        "--top-k": .top_k,
+        "--min-p": .min_p,
+        "--presence-penalty": .presence_penalty,
+        "--frequency-penalty": .frequency_penalty,
+        "--repeat-penalty": .repetition_penalty,
+        "--repetition-penalty": .repetition_penalty,
+    ]
+    
+    /// Resolves architecture-recommended sampler defaults for the current
+    /// local model and writes them into `self`, while *deferring to*
+    /// any Advanced Parameters flags the user has marked active.
+    ///
+    /// Resolution order, per field:
+    ///   1. If the user has activated a matching CLI flag under Advanced
+    ///      Parameters (e.g. `--top-k`), the field is left `nil` here so
+    ///      the server-side default (set at process launch) remains
+    ///      authoritative.
+    ///   2. Otherwise, if the model's GGUF filename matches a known
+    ///      ``ModelArchitecture``, that family's publisher-recommended
+    ///      value is used.
+    ///   3. For `temperature`, an unknown architecture falls back to the
+    ///      user's global ``InferenceSettings.temperature`` slider.
+    ///
+    /// Skipped entirely for remote models so the upstream provider's own
+    /// recommended defaults are preserved.
+    private mutating func applySamplingDefaults(
+        modelType: ModelType,
+        usingRemoteModel: Bool,
+        enableThinking: Bool?
+    ) async {
+        guard !usingRemoteModel else {
+            // Remote provider chooses sampling. Strip everything we
+            // populated by default so the request body stays clean.
+            self.temperature = nil
+            self.top_p = nil
+            self.top_k = nil
+            self.min_p = nil
+            self.presence_penalty = nil
+            self.frequency_penalty = nil
+            self.repetition_penalty = nil
+            return
+        }
+        // Snapshot which advanced flags the user has marked active.
+        let activeFlags: Set<String> = await MainActor.run {
+            Set(ServerArgumentsStore.activeArguments().map(\.flag))
+        }
+        let suppressedKeys: Set<ParamKey> = Set(
+            activeFlags.compactMap { Self.advancedParameterFlagToParamKey[$0] }
+        )
+        // Pick the architecture-recommended preset (if any).
+        let modelUrl = InferenceSettings.localModelUrl(modelType: modelType)
+        let arch = ModelArchitecture.detect(modelUrl: modelUrl)
+        let useReasoning = Self.resolveUseReasoningForSampling(
+            modelType: modelType,
+            enableThinking: enableThinking
+        )
+        let recommended: SamplingParameters = arch?.recommendedSampling(
+            useReasoning: useReasoning
+        ) ?? SamplingParameters(
+            // No known architecture: keep the existing user-visible
+            // temperature behaviour and leave everything else to llama.cpp.
+            temperature: InferenceSettings.temperature
+        )
+        // Write fields that the user has *not* taken over via Advanced
+        // Parameters. Otherwise leave them `nil` so the JSON request body
+        // omits them, and the server-side CLI flag wins.
+        self.temperature       = suppressedKeys.contains(.temperature)       ? nil : recommended.temperature
+        self.top_p             = suppressedKeys.contains(.top_p)             ? nil : recommended.topP
+        self.top_k             = suppressedKeys.contains(.top_k)             ? nil : recommended.topK
+        self.min_p             = suppressedKeys.contains(.min_p)             ? nil : recommended.minP
+        self.presence_penalty  = suppressedKeys.contains(.presence_penalty)  ? nil : recommended.presencePenalty
+        self.frequency_penalty = suppressedKeys.contains(.frequency_penalty) ? nil : recommended.frequencyPenalty
+        self.repetition_penalty = suppressedKeys.contains(.repetition_penalty) ? nil : recommended.repetitionPenalty
+    }
+    
+    /// Picks the right "thinking vs non-thinking" sampling preset.
+    ///
+    /// The existing reasoning-toggle helper only marks a handful of model
+    /// families as having a toggle (Qwen3.5+, Gemma 4). For everything else
+    /// — including original Qwen3 and gpt-oss, which default to thinking
+    /// mode — we treat reasoning as on so the right preset is selected.
+    private static func resolveUseReasoningForSampling(
+        modelType: ModelType,
+        enableThinking: Bool?
+    ) -> Bool {
+        if let enableThinking {
+            return enableThinking
+        }
+        if InferenceSettings.localModelSupportsLiveReasoningToggle(
+            modelType: modelType
+        ) {
+            return InferenceSettings.localModelLiveReasoningEnabledByDefault(
+                modelType: modelType
+            )
+        }
+        return true
+    }
+    
     static func getChatTemplateKwargs(
         modelType: ModelType,
         usingRemoteModel: Bool,

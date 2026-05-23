@@ -14,5 +14,6 @@ public enum Notifications: String, NotificationName {
     case didCommandSelectExpert
     case newConversation
     case switchToConversation
+    case requestResubmit
     
 }

@@ -22,39 +22,27 @@ public class ExpertFunctions {
             // a synchronous main-actor hop. Falls back to an empty
             // string if the call is made before the container is up.
             let expertNames: String = MainActor.assumeIsolated {
-                ExpertManager.experts().map(\.name).joined(separator: "\n")
+                ExpertManager.experts().map(\.name).joined(separator: ", ")
             }
-            return """
-"Query a vector database. The databases available are listed below:"
-
-\(expertNames)
-"""
+            return "Semantic-search a vector database. Available databases: \(expertNames)."
         }(),
         allowsParallelExecution: true,
         params: [
             FunctionParameter(
                 label: "database",
-                description: "The database to search within.",
+                description: "Database name.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "query",
-                description: """
-The query to look up in the specified database.
-
-This query will be used with a RAG system, not Google Search. RAG systems use semantic search, meaning search queries work best when semantically similar to the search results.
-
-Example:
-Google Search query: "apple average weight"
-RAG query: "the average apple weighs 100 grams"
-""",
+                description: "Semantic search query (RAG, not keyword search). Phrase like the expected answer, e.g. `the average apple weighs 100 grams`.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "max_results",
-                description: "The maximum number of search results (optional, default: 5)",
+                description: "Maximum number of results. Defaults to 5.",
                 datatype: .integer,
                 isRequired: false
             )

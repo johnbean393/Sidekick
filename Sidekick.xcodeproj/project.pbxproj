@@ -21,7 +21,6 @@
 		2000EF482DCE1FA2006F9A95 /* StepChainLinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2000EF472DCE1FA2006F9A95 /* StepChainLinkView.swift */; };
 		2000EF4A2DCE1FFE006F9A95 /* StepChainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2000EF492DCE1FFE006F9A95 /* StepChainView.swift */; };
 		2000EF4C2DCE2248006F9A95 /* DeepResearchPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2000EF4B2DCE2248006F9A95 /* DeepResearchPreviewView.swift */; };
-		200363292D769AC700770391 /* JavaScriptRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200363282D769AC700770391 /* JavaScriptRunner.swift */; };
 		2004D7642CBC9DA2009F294E /* ConversationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2004D7632CBC9DA2009F294E /* ConversationState.swift */; };
 		200619A22D6750D9001949EF /* DiagrammerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200619A12D6750D9001949EF /* DiagrammerViewController.swift */; };
 		200619AD2D675DB9001949EF /* DiagrammerPromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200619AC2D675DB9001949EF /* DiagrammerPromptView.swift */; };
@@ -124,9 +123,6 @@
 		200FBFF52CB66C0000A92A74 /* LlamaServerError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200FBFF42CB66C0000A92A74 /* LlamaServerError.swift */; };
 		200FBFF72CB68ABF00A92A74 /* ChatParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200FBFF62CB68ABF00A92A74 /* ChatParameters.swift */; };
 		201A1A932CDB8109001E9BA9 /* Extension+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201A1A922CDB8109001E9BA9 /* Extension+Collection.swift */; };
-		2EBEEF0100000000DEADBEE2 /* ChatMarkdownWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBEEF0100000000DEADBEE1 /* ChatMarkdownWebView.swift */; };
-		2EBEEF0200000000DEADBEE2 /* ChatMarkdownWebView in Resources */ = {isa = PBXBuildFile; fileRef = 2EBEEF0200000000DEADBEE1 /* ChatMarkdownWebView */; };
-		2EBEEF0300000000DEADBEE2 /* ChatMarkdownAssetSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBEEF0300000000DEADBEE1 /* ChatMarkdownAssetSchemeHandler.swift */; };
 		201BB9942D8AF77F00890EE6 /* ConversationSidebarButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201BB9932D8AF77F00890EE6 /* ConversationSidebarButtons.swift */; };
 		201BB9962D8AF8AA00890EE6 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201BB9952D8AF8AA00890EE6 /* CanvasView.swift */; };
 		201BB99A2D8AFDE000890EE6 /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201BB9992D8AFDE000890EE6 /* Snapshot.swift */; };
@@ -146,7 +142,6 @@
 		202D4E722EBC30EA005D6F74 /* CollapsibleUserMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202D4E712EBC30EA005D6F74 /* CollapsibleUserMessageView.swift */; };
 		202D4E762EBC5E95005D6F74 /* PromptAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202D4E742EBC5E95005D6F74 /* PromptAnalyzer.swift */; };
 		202D4E772EBC5E95005D6F74 /* UserRequestClassifier.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 202D4E752EBC5E95005D6F74 /* UserRequestClassifier.mlmodel */; };
-		202D4E792EBCDC97005D6F74 /* PythonRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202D4E782EBCDC97005D6F74 /* PythonRunner.swift */; };
 		202D4E7B2EBD371E005D6F74 /* TodoFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202D4E7A2EBD371E005D6F74 /* TodoFunctions.swift */; };
 		202E3EDD2CBB8F7B00AF86C8 /* ReferencedURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202E3EDC2CBB8F7B00AF86C8 /* ReferencedURL.swift */; };
 		202E93662DB22D3000AB361E /* InputFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202E93652DB22D3000AB361E /* InputFunctions.swift */; };
@@ -245,7 +240,6 @@
 		20573F322CB53172004C19FE /* InferenceSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20573F312CB53172004C19FE /* InferenceSettings.swift */; };
 		20573F362CB53878004C19FE /* CircleMenuStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20573F352CB53878004C19FE /* CircleMenuStyle.swift */; };
 		205B50D12CD3025A0057769F /* SourceRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 205B50D02CD3025A0057769F /* SourceRowView.swift */; };
-		205B7C6D2ECBCE0900336F19 /* X86AssemblyRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 205B7C6C2ECBCE0900336F19 /* X86AssemblyRunner.swift */; };
 		205E3F282D8723AB00128D67 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = 205E3F272D8723AB00128D67 /* Highlightr */; };
 		205E3F2A2D87288400128D67 /* Extension+NSAttributedString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 205E3F292D87288400128D67 /* Extension+NSAttributedString.swift */; };
 		205E3F2C2D872E4200128D67 /* Extension+NSMutableAttributedString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 205E3F2B2D872E4200128D67 /* Extension+NSMutableAttributedString.swift */; };
@@ -264,30 +258,36 @@
 		2075220B2D7FDF6C00A1CA60 /* Extension+SecureDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2075220A2D7FDF6C00A1CA60 /* Extension+SecureDefaults.swift */; };
 		2075FE922EBAC06100EA6131 /* llama-server in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE912EBAC06100EA6131 /* llama-server */; };
 		2075FE932EBAC06100EA6131 /* llama-perplexity in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE902EBAC06100EA6131 /* llama-perplexity */; };
-		2075FE942EBAC06100EA6131 /* libggml-rpc.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE8D2EBAC06100EA6131 /* libggml-rpc.0.dylib */; };
 		2075FE952EBAC06100EA6131 /* libggml-base.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE892EBAC06100EA6131 /* libggml-base.0.dylib */; };
 		2075FE962EBAC06100EA6131 /* libggml-blas.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE8A2EBAC06100EA6131 /* libggml-blas.0.dylib */; };
 		2075FE972EBAC06100EA6131 /* libggml.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE882EBAC06100EA6131 /* libggml.0.dylib */; };
 		2075FE982EBAC06100EA6131 /* libggml-cpu.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE8B2EBAC06100EA6131 /* libggml-cpu.0.dylib */; };
 		2075FE992EBAC06100EA6131 /* libllama.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE8E2EBAC06100EA6131 /* libllama.0.dylib */; };
 		2075FE9A2EBAC06100EA6131 /* libmtmd.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE8F2EBAC06100EA6131 /* libmtmd.0.dylib */; };
+		2FB0A0010000000DEADBEE2 /* libllama-common.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */; };
+		2FB0A0020000000DEADBEE2 /* libllama-server-impl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */; };
+		2FB0A0030000000DEADBEE2 /* libllama-perplexity-impl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */; };
 		2075FE9B2EBAC06100EA6131 /* libggml-metal.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE8C2EBAC06100EA6131 /* libggml-metal.0.dylib */; };
 		2075FE9C2EBAC2D600EA6131 /* libggml.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE882EBAC06100EA6131 /* libggml.0.dylib */; };
 		2075FE9D2EBAC2D600EA6131 /* libggml-base.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE892EBAC06100EA6131 /* libggml-base.0.dylib */; };
 		2075FE9E2EBAC2D600EA6131 /* libggml-blas.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE8A2EBAC06100EA6131 /* libggml-blas.0.dylib */; };
 		2075FE9F2EBAC2D600EA6131 /* libggml-cpu.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE8B2EBAC06100EA6131 /* libggml-cpu.0.dylib */; };
 		2075FEA02EBAC2D600EA6131 /* libggml-metal.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE8C2EBAC06100EA6131 /* libggml-metal.0.dylib */; };
-		2075FEA12EBAC2D600EA6131 /* libggml-rpc.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE8D2EBAC06100EA6131 /* libggml-rpc.0.dylib */; };
 		2075FEA22EBAC2D600EA6131 /* libllama.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE8E2EBAC06100EA6131 /* libllama.0.dylib */; };
 		2075FEA32EBAC2D600EA6131 /* libmtmd.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE8F2EBAC06100EA6131 /* libmtmd.0.dylib */; };
+		2FB0A0010000000DEADBEE3 /* libllama-common.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */; };
+		2FB0A0020000000DEADBEE3 /* libllama-server-impl.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */; };
+		2FB0A0030000000DEADBEE3 /* libllama-perplexity-impl.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */; };
 		2075FEAE2EBAC37B00EA6131 /* libggml.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE882EBAC06100EA6131 /* libggml.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEAF2EBAC37B00EA6131 /* libggml-base.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE892EBAC06100EA6131 /* libggml-base.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEB02EBAC37B00EA6131 /* libggml-blas.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE8A2EBAC06100EA6131 /* libggml-blas.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEB12EBAC37B00EA6131 /* libggml-cpu.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE8B2EBAC06100EA6131 /* libggml-cpu.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEB22EBAC37B00EA6131 /* libggml-metal.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE8C2EBAC06100EA6131 /* libggml-metal.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		2075FEB32EBAC37B00EA6131 /* libggml-rpc.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE8D2EBAC06100EA6131 /* libggml-rpc.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEB42EBAC37B00EA6131 /* libllama.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE8E2EBAC06100EA6131 /* libllama.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEB52EBAC37B00EA6131 /* libmtmd.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE8F2EBAC06100EA6131 /* libmtmd.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		2FB0A0010000000DEADBEE4 /* libllama-common.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		2FB0A0020000000DEADBEE4 /* libllama-server-impl.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		2FB0A0030000000DEADBEE4 /* libllama-perplexity-impl.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEC72EBAC5F100EA6131 /* llama-server in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE912EBAC06100EA6131 /* llama-server */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEC82EBAC5F100EA6131 /* llama-perplexity in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE902EBAC06100EA6131 /* llama-perplexity */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		207A9F532CB82D9600E727DE /* SymbolPicker in Frameworks */ = {isa = PBXBuildFile; productRef = 207A9F522CB82D9600E727DE /* SymbolPicker */; };
@@ -313,7 +313,6 @@
 		208844332CDDE394003BCB6F /* ModelRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208844322CDDE394003BCB6F /* ModelRowView.swift */; };
 		208855CA2DAD062A00071F0B /* CapsuleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208855C92DAD062A00071F0B /* CapsuleButton.swift */; };
 		208855CC2DAD078800071F0B /* UseFunctionsButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208855CB2DAD078800071F0B /* UseFunctionsButton.swift */; };
-		208855CF2DAD1D6F00071F0B /* ArithmeticFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208855CE2DAD1D6F00071F0B /* ArithmeticFunctions.swift */; };
 		208855D12DAD1D9900071F0B /* CodeFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208855D02DAD1D9900071F0B /* CodeFunctions.swift */; };
 		208855D32DAD1E1400071F0B /* FileFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208855D22DAD1E1400071F0B /* FileFunctions.swift */; };
 		208855D52DAD20CC00071F0B /* Extension+CNContactStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208855D42DAD20CC00071F0B /* Extension+CNContactStore.swift */; };
@@ -332,7 +331,6 @@
 		208E34AC2EC1C644009B75C9 /* LlamaServer+ServerLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208E34AB2EC1C644009B75C9 /* LlamaServer+ServerLifecycle.swift */; };
 		208E34AE2EC1C70B009B75C9 /* Model+Status.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208E34AD2EC1C70B009B75C9 /* Model+Status.swift */; };
 		208E34B02EC1C716009B75C9 /* Model+Lifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208E34AF2EC1C716009B75C9 /* Model+Lifecycle.swift */; };
-		20FA1C0B2F00000100AA0001 /* InferenceLifecycleCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FA1C0A2F00000100AA0001 /* InferenceLifecycleCoordinator.swift */; };
 		208E34B22EC1C720009B75C9 /* Model+Inference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208E34B12EC1C720009B75C9 /* Model+Inference.swift */; };
 		2090A8A62D8995FA0060DC63 /* ModelType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2090A8A52D8995FA0060DC63 /* ModelType.swift */; };
 		209370762D6AB36900E1AF73 /* Refactorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209370752D6AB36900E1AF73 /* Refactorer.swift */; };
@@ -406,6 +404,14 @@
 		20B9E60C2CB140A000BA0AD2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20B9E60B2CB140A000BA0AD2 /* AppDelegate.swift */; };
 		20B9E60E2CB1414100BA0AD2 /* DockMenuCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20B9E60D2CB1414100BA0AD2 /* DockMenuCommands.swift */; };
 		20B9E6112CB142FD00BA0AD2 /* DebugCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20B9E6102CB142FD00BA0AD2 /* DebugCommands.swift */; };
+		20BEEF010000000000000001 /* SidekickSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000001 /* SidekickSchema.swift */; };
+		20BEEF010000000000000002 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000002 /* PersistenceController.swift */; };
+		20BEEF010000000000000003 /* JSONImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000003 /* JSONImporter.swift */; };
+		20BEEF010000000000000004 /* MessageStreamCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000004 /* MessageStreamCoordinator.swift */; };
+		20BEEF010000000000000005 /* MessageViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000005 /* MessageViewHelpers.swift */; };
+		20BEEF010000000000000006 /* ExpertViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000006 /* ExpertViewHelpers.swift */; };
+		20BEEF050000000000000001 /* RAGIndexingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF050000000000000002 /* RAGIndexingService.swift */; };
+		20BEEF050000000000000003 /* ModelContextActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF050000000000000004 /* ModelContextActor.swift */; };
 		20BF49CB2D649FD700C329F8 /* ModelFamily.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BF49CA2D649FD700C329F8 /* ModelFamily.swift */; };
 		20BF49CD2D64A08200C329F8 /* ModelExplorerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BF49CC2D64A08200C329F8 /* ModelExplorerViewController.swift */; };
 		20BF49D12D64A89300C329F8 /* ModelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BF49D02D64A89300C329F8 /* ModelView.swift */; };
@@ -419,6 +425,7 @@
 		20C5CBC62DA3D7310071F5F7 /* Function.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5CBC52DA3D7310071F5F7 /* Function.swift */; };
 		20C5CBC92DA3D82E0071F5F7 /* DefaultFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5CBC82DA3D82E0071F5F7 /* DefaultFunctions.swift */; };
 		20C5CBCB2DA4F3BA0071F5F7 /* KnownModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5CBCA2DA4F3BA0071F5F7 /* KnownModel.swift */; };
+		2FA01EAF00000000DEADBEE2 /* ModelArchitecture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA01EAF00000000DEADBEE1 /* ModelArchitecture.swift */; };
 		20C5CBCD2DA52AB40071F5F7 /* FunctionCallRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5CBCC2DA52AB40071F5F7 /* FunctionCallRecord.swift */; };
 		20C5CBD52DA5F7640071F5F7 /* FunctionCallsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5CBD42DA5F7640071F5F7 /* FunctionCallsView.swift */; };
 		20C62EBF2D71373500996566 /* SlideStudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C62EBE2D71373500996566 /* SlideStudioView.swift */; };
@@ -449,20 +456,21 @@
 		20F4EC4E2EC5622400F8C33E /* marp in Resources */ = {isa = PBXBuildFile; fileRef = 20F4EC4D2EC5622400F8C33E /* marp */; };
 		20F6A0022ED0000100AA1111 /* ReasoningToggleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20F6A0012ED0000100AA1111 /* ReasoningToggleButton.swift */; };
 		20F84B992D1CFED400F44990 /* DefaultModels in Frameworks */ = {isa = PBXBuildFile; productRef = 20F84B982D1CFED400F44990 /* DefaultModels */; };
+		20FA1C0B2F00000100AA0001 /* InferenceLifecycleCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FA1C0A2F00000100AA0001 /* InferenceLifecycleCoordinator.swift */; };
 		20FB0D892CBA8327006D062A /* Extension+SimilarityIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FB0D882CBA8327006D062A /* Extension+SimilarityIndex.swift */; };
 		20FB0D8B2CBA8828006D062A /* SearchResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FB0D8A2CBA8828006D062A /* SearchResult.swift */; };
 		20FDE2A02DAE50E7000A16F8 /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FDE29F2DAE50E7000A16F8 /* Provider.swift */; };
 		20FDE2A22DAE726E000A16F8 /* OpenAIFunction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FDE2A12DAE726E000A16F8 /* OpenAIFunction.swift */; };
 		20FDE2A42DAE73BF000A16F8 /* AnyFunctionBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FDE2A32DAE73BF000A16F8 /* AnyFunctionBox.swift */; };
 		20FE94DA2CB96DE8006E9F06 /* ExitButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FE94D92CB96DE8006E9F06 /* ExitButton.swift */; };
-		20BEEF010000000000000001 /* SidekickSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000001 /* SidekickSchema.swift */; };
-		20BEEF010000000000000002 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000002 /* PersistenceController.swift */; };
-		20BEEF010000000000000003 /* JSONImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000003 /* JSONImporter.swift */; };
-		20BEEF010000000000000004 /* MessageStreamCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000004 /* MessageStreamCoordinator.swift */; };
-		20BEEF050000000000000003 /* ModelContextActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF050000000000000004 /* ModelContextActor.swift */; };
-		20BEEF050000000000000001 /* RAGIndexingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF050000000000000002 /* RAGIndexingService.swift */; };
-		20BEEF010000000000000005 /* MessageViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000005 /* MessageViewHelpers.swift */; };
-		20BEEF010000000000000006 /* ExpertViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000006 /* ExpertViewHelpers.swift */; };
+		2EA5C50100000000DEAD0002 /* ChatScreenshotScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EA5C50100000000DEAD0001 /* ChatScreenshotScope.swift */; };
+		2EA5C50200000000DEAD0002 /* ChatScreenshotHTMLBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EA5C50200000000DEAD0001 /* ChatScreenshotHTMLBuilder.swift */; };
+		2EA5C50300000000DEAD0002 /* ChatScreenshotRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EA5C50300000000DEAD0001 /* ChatScreenshotRenderer.swift */; };
+		2EA5C50400000000DEAD0002 /* ChatScreenshotExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EA5C50400000000DEAD0001 /* ChatScreenshotExporter.swift */; };
+		2EBEEF0100000000DEADBEE2 /* ChatMarkdownWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBEEF0100000000DEADBEE1 /* ChatMarkdownWebView.swift */; };
+		2EBEEF0200000000DEADBEE2 /* ChatMarkdownWebView in Resources */ = {isa = PBXBuildFile; fileRef = 2EBEEF0200000000DEADBEE1 /* ChatMarkdownWebView */; };
+		2EBEEF0300000000DEADBEE2 /* ChatMarkdownAssetSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBEEF0300000000DEADBEE1 /* ChatMarkdownAssetSchemeHandler.swift */; };
+		2FA01EAD00000000DEADBEE2 /* GGUFMetadataReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA01EAD00000000DEADBEE1 /* GGUFMetadataReader.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -531,9 +539,11 @@
 				2075FEB02EBAC37B00EA6131 /* libggml-blas.0.dylib in Embed Libraries */,
 				2075FEB12EBAC37B00EA6131 /* libggml-cpu.0.dylib in Embed Libraries */,
 				2075FEB22EBAC37B00EA6131 /* libggml-metal.0.dylib in Embed Libraries */,
-				2075FEB32EBAC37B00EA6131 /* libggml-rpc.0.dylib in Embed Libraries */,
 				2075FEB42EBAC37B00EA6131 /* libllama.0.dylib in Embed Libraries */,
 				2075FEB52EBAC37B00EA6131 /* libmtmd.0.dylib in Embed Libraries */,
+				2FB0A0010000000DEADBEE4 /* libllama-common.0.dylib in Embed Libraries */,
+				2FB0A0020000000DEADBEE4 /* libllama-server-impl.dylib in Embed Libraries */,
+				2FB0A0030000000DEADBEE4 /* libllama-perplexity-impl.dylib in Embed Libraries */,
 				2075FEC72EBAC5F100EA6131 /* llama-server in Embed Libraries */,
 				2075FEC82EBAC5F100EA6131 /* llama-perplexity in Embed Libraries */,
 			);
@@ -557,7 +567,6 @@
 		2000EF472DCE1FA2006F9A95 /* StepChainLinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepChainLinkView.swift; sourceTree = "<group>"; };
 		2000EF492DCE1FFE006F9A95 /* StepChainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepChainView.swift; sourceTree = "<group>"; };
 		2000EF4B2DCE2248006F9A95 /* DeepResearchPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepResearchPreviewView.swift; sourceTree = "<group>"; };
-		200363282D769AC700770391 /* JavaScriptRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaScriptRunner.swift; sourceTree = "<group>"; };
 		2004D7632CBC9DA2009F294E /* ConversationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationState.swift; sourceTree = "<group>"; };
 		200549732CAFA67B00A3DCF2 /* Sidekick.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sidekick.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		200549842CAFA67D00A3DCF2 /* SidekickTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SidekickTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -660,9 +669,6 @@
 		200FBFF42CB66C0000A92A74 /* LlamaServerError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaServerError.swift; sourceTree = "<group>"; };
 		200FBFF62CB68ABF00A92A74 /* ChatParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatParameters.swift; sourceTree = "<group>"; };
 		201A1A922CDB8109001E9BA9 /* Extension+Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+Collection.swift"; sourceTree = "<group>"; };
-		2EBEEF0100000000DEADBEE1 /* ChatMarkdownWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMarkdownWebView.swift; sourceTree = "<group>"; };
-		2EBEEF0200000000DEADBEE1 /* ChatMarkdownWebView */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ChatMarkdownWebView; sourceTree = "<group>"; };
-		2EBEEF0300000000DEADBEE1 /* ChatMarkdownAssetSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMarkdownAssetSchemeHandler.swift; sourceTree = "<group>"; };
 		201BB9932D8AF77F00890EE6 /* ConversationSidebarButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationSidebarButtons.swift; sourceTree = "<group>"; };
 		201BB9952D8AF8AA00890EE6 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
 		201BB9992D8AFDE000890EE6 /* Snapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snapshot.swift; sourceTree = "<group>"; };
@@ -682,7 +688,6 @@
 		202D4E712EBC30EA005D6F74 /* CollapsibleUserMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollapsibleUserMessageView.swift; sourceTree = "<group>"; };
 		202D4E742EBC5E95005D6F74 /* PromptAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptAnalyzer.swift; sourceTree = "<group>"; };
 		202D4E752EBC5E95005D6F74 /* UserRequestClassifier.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = UserRequestClassifier.mlmodel; sourceTree = "<group>"; };
-		202D4E782EBCDC97005D6F74 /* PythonRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonRunner.swift; sourceTree = "<group>"; };
 		202D4E7A2EBD371E005D6F74 /* TodoFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoFunctions.swift; sourceTree = "<group>"; };
 		202E3EDC2CBB8F7B00AF86C8 /* ReferencedURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferencedURL.swift; sourceTree = "<group>"; };
 		202E93652DB22D3000AB361E /* InputFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputFunctions.swift; sourceTree = "<group>"; };
@@ -772,7 +777,6 @@
 		20573F312CB53172004C19FE /* InferenceSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InferenceSettings.swift; sourceTree = "<group>"; };
 		20573F352CB53878004C19FE /* CircleMenuStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleMenuStyle.swift; sourceTree = "<group>"; };
 		205B50D02CD3025A0057769F /* SourceRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceRowView.swift; sourceTree = "<group>"; };
-		205B7C6C2ECBCE0900336F19 /* X86AssemblyRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = X86AssemblyRunner.swift; sourceTree = "<group>"; };
 		205E3F292D87288400128D67 /* Extension+NSAttributedString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+NSAttributedString.swift"; sourceTree = "<group>"; };
 		205E3F2B2D872E4200128D67 /* Extension+NSMutableAttributedString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+NSMutableAttributedString.swift"; sourceTree = "<group>"; };
 		20692A082DE91FC700152345 /* conversationExportTemplate.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = conversationExportTemplate.html; sourceTree = "<group>"; };
@@ -791,9 +795,11 @@
 		2075FE8A2EBAC06100EA6131 /* libggml-blas.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-blas.0.dylib"; sourceTree = "<group>"; };
 		2075FE8B2EBAC06100EA6131 /* libggml-cpu.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-cpu.0.dylib"; sourceTree = "<group>"; };
 		2075FE8C2EBAC06100EA6131 /* libggml-metal.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-metal.0.dylib"; sourceTree = "<group>"; };
-		2075FE8D2EBAC06100EA6131 /* libggml-rpc.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-rpc.0.dylib"; sourceTree = "<group>"; };
 		2075FE8E2EBAC06100EA6131 /* libllama.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libllama.0.dylib; sourceTree = "<group>"; };
 		2075FE8F2EBAC06100EA6131 /* libmtmd.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmtmd.0.dylib; sourceTree = "<group>"; };
+		2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libllama-common.0.dylib"; sourceTree = "<group>"; };
+		2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libllama-server-impl.dylib"; sourceTree = "<group>"; };
+		2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libllama-perplexity-impl.dylib"; sourceTree = "<group>"; };
 		2075FE902EBAC06100EA6131 /* llama-perplexity */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "llama-perplexity"; sourceTree = "<group>"; };
 		2075FE912EBAC06100EA6131 /* llama-server */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "llama-server"; sourceTree = "<group>"; };
 		207A9F542CB8A96F00E727DE /* ExpertNavigationRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpertNavigationRowView.swift; sourceTree = "<group>"; };
@@ -818,7 +824,6 @@
 		208844322CDDE394003BCB6F /* ModelRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelRowView.swift; sourceTree = "<group>"; };
 		208855C92DAD062A00071F0B /* CapsuleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleButton.swift; sourceTree = "<group>"; };
 		208855CB2DAD078800071F0B /* UseFunctionsButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UseFunctionsButton.swift; sourceTree = "<group>"; };
-		208855CE2DAD1D6F00071F0B /* ArithmeticFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArithmeticFunctions.swift; sourceTree = "<group>"; };
 		208855D02DAD1D9900071F0B /* CodeFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeFunctions.swift; sourceTree = "<group>"; };
 		208855D22DAD1E1400071F0B /* FileFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileFunctions.swift; sourceTree = "<group>"; };
 		208855D42DAD20CC00071F0B /* Extension+CNContactStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+CNContactStore.swift"; sourceTree = "<group>"; };
@@ -836,7 +841,6 @@
 		208E34AB2EC1C644009B75C9 /* LlamaServer+ServerLifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LlamaServer+ServerLifecycle.swift"; sourceTree = "<group>"; };
 		208E34AD2EC1C70B009B75C9 /* Model+Status.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Model+Status.swift"; sourceTree = "<group>"; };
 		208E34AF2EC1C716009B75C9 /* Model+Lifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Model+Lifecycle.swift"; sourceTree = "<group>"; };
-		20FA1C0A2F00000100AA0001 /* InferenceLifecycleCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InferenceLifecycleCoordinator.swift; sourceTree = "<group>"; };
 		208E34B12EC1C720009B75C9 /* Model+Inference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Model+Inference.swift"; sourceTree = "<group>"; };
 		2090A8A52D8995FA0060DC63 /* ModelType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelType.swift; sourceTree = "<group>"; };
 		209370752D6AB36900E1AF73 /* Refactorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Refactorer.swift; sourceTree = "<group>"; };
@@ -905,6 +909,14 @@
 		20B9E60B2CB140A000BA0AD2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		20B9E60D2CB1414100BA0AD2 /* DockMenuCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockMenuCommands.swift; sourceTree = "<group>"; };
 		20B9E6102CB142FD00BA0AD2 /* DebugCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugCommands.swift; sourceTree = "<group>"; };
+		20BEEF020000000000000001 /* SidekickSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidekickSchema.swift; sourceTree = "<group>"; };
+		20BEEF020000000000000002 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		20BEEF020000000000000003 /* JSONImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONImporter.swift; sourceTree = "<group>"; };
+		20BEEF020000000000000004 /* MessageStreamCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageStreamCoordinator.swift; sourceTree = "<group>"; };
+		20BEEF020000000000000005 /* MessageViewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageViewHelpers.swift; sourceTree = "<group>"; };
+		20BEEF020000000000000006 /* ExpertViewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpertViewHelpers.swift; sourceTree = "<group>"; };
+		20BEEF050000000000000002 /* RAGIndexingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RAGIndexingService.swift; sourceTree = "<group>"; };
+		20BEEF050000000000000004 /* ModelContextActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelContextActor.swift; sourceTree = "<group>"; };
 		20BF49CA2D649FD700C329F8 /* ModelFamily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelFamily.swift; sourceTree = "<group>"; };
 		20BF49CC2D64A08200C329F8 /* ModelExplorerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelExplorerViewController.swift; sourceTree = "<group>"; };
 		20BF49D02D64A89300C329F8 /* ModelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelView.swift; sourceTree = "<group>"; };
@@ -918,6 +930,7 @@
 		20C5CBC52DA3D7310071F5F7 /* Function.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Function.swift; sourceTree = "<group>"; };
 		20C5CBC82DA3D82E0071F5F7 /* DefaultFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultFunctions.swift; sourceTree = "<group>"; };
 		20C5CBCA2DA4F3BA0071F5F7 /* KnownModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownModel.swift; sourceTree = "<group>"; };
+		2FA01EAF00000000DEADBEE1 /* ModelArchitecture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelArchitecture.swift; sourceTree = "<group>"; };
 		20C5CBCC2DA52AB40071F5F7 /* FunctionCallRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionCallRecord.swift; sourceTree = "<group>"; };
 		20C5CBD42DA5F7640071F5F7 /* FunctionCallsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionCallsView.swift; sourceTree = "<group>"; };
 		20C62EBE2D71373500996566 /* SlideStudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlideStudioView.swift; sourceTree = "<group>"; };
@@ -947,6 +960,7 @@
 		20F2D5112CC1F33B004CE730 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		20F4EC4D2EC5622400F8C33E /* marp */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = marp; sourceTree = "<group>"; };
 		20F6A0012ED0000100AA1111 /* ReasoningToggleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReasoningToggleButton.swift; sourceTree = "<group>"; };
+		20FA1C0A2F00000100AA0001 /* InferenceLifecycleCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InferenceLifecycleCoordinator.swift; sourceTree = "<group>"; };
 		20FB0D882CBA8327006D062A /* Extension+SimilarityIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+SimilarityIndex.swift"; sourceTree = "<group>"; };
 		20FB0D8A2CBA8828006D062A /* SearchResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResult.swift; sourceTree = "<group>"; };
 		20FDE29F2DAE50E7000A16F8 /* Provider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Provider.swift; sourceTree = "<group>"; };
@@ -954,15 +968,14 @@
 		20FDE2A32DAE73BF000A16F8 /* AnyFunctionBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyFunctionBox.swift; sourceTree = "<group>"; };
 		20FE94D92CB96DE8006E9F06 /* ExitButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExitButton.swift; sourceTree = "<group>"; };
 		20FE94DB2CB96FCD006E9F06 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		20BEEF020000000000000001 /* SidekickSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidekickSchema.swift; sourceTree = "<group>"; };
-		20BEEF020000000000000002 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
-		20BEEF020000000000000003 /* JSONImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONImporter.swift; sourceTree = "<group>"; };
-		20BEEF020000000000000004 /* MessageStreamCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageStreamCoordinator.swift; sourceTree = "<group>"; };
-		20BEEF050000000000000004 /* ModelContextActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelContextActor.swift; sourceTree = "<group>"; };
-		20BEEF050000000000000002 /* RAGIndexingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RAGIndexingService.swift; sourceTree = "<group>"; };
-		20BEEF040000000000000001 /* Services */ = {isa = PBXGroup; children = (20BEEF050000000000000002 /* RAGIndexingService.swift */); path = Services; sourceTree = "<group>"; };
-		20BEEF020000000000000005 /* MessageViewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageViewHelpers.swift; sourceTree = "<group>"; };
-		20BEEF020000000000000006 /* ExpertViewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpertViewHelpers.swift; sourceTree = "<group>"; };
+		2EA5C50100000000DEAD0001 /* ChatScreenshotScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScreenshotScope.swift; sourceTree = "<group>"; };
+		2EA5C50200000000DEAD0001 /* ChatScreenshotHTMLBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScreenshotHTMLBuilder.swift; sourceTree = "<group>"; };
+		2EA5C50300000000DEAD0001 /* ChatScreenshotRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScreenshotRenderer.swift; sourceTree = "<group>"; };
+		2EA5C50400000000DEAD0001 /* ChatScreenshotExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScreenshotExporter.swift; sourceTree = "<group>"; };
+		2EBEEF0100000000DEADBEE1 /* ChatMarkdownWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMarkdownWebView.swift; sourceTree = "<group>"; };
+		2EBEEF0200000000DEADBEE1 /* ChatMarkdownWebView */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ChatMarkdownWebView; sourceTree = "<group>"; };
+		2EBEEF0300000000DEADBEE1 /* ChatMarkdownAssetSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMarkdownAssetSchemeHandler.swift; sourceTree = "<group>"; };
+		2FA01EAD00000000DEADBEE1 /* GGUFMetadataReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGUFMetadataReader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -987,13 +1000,15 @@
 				20B53D072D5B03B900D1AE79 /* Sparkle in Frameworks */,
 				208388DD2CBF4E8A00C2A9F8 /* SecureDefaults in Frameworks */,
 				2064353A2D905D2300020CC0 /* SimilaritySearchKitDistilbert in Frameworks */,
-				2075FE942EBAC06100EA6131 /* libggml-rpc.0.dylib in Frameworks */,
 				2075FE952EBAC06100EA6131 /* libggml-base.0.dylib in Frameworks */,
 				2075FE962EBAC06100EA6131 /* libggml-blas.0.dylib in Frameworks */,
 				2075FE972EBAC06100EA6131 /* libggml.0.dylib in Frameworks */,
 				2075FE982EBAC06100EA6131 /* libggml-cpu.0.dylib in Frameworks */,
 				2075FE992EBAC06100EA6131 /* libllama.0.dylib in Frameworks */,
 				2075FE9A2EBAC06100EA6131 /* libmtmd.0.dylib in Frameworks */,
+				2FB0A0010000000DEADBEE2 /* libllama-common.0.dylib in Frameworks */,
+				2FB0A0020000000DEADBEE2 /* libllama-server-impl.dylib in Frameworks */,
+				2FB0A0030000000DEADBEE2 /* libllama-perplexity-impl.dylib in Frameworks */,
 				2075FE9B2EBAC06100EA6131 /* libggml-metal.0.dylib in Frameworks */,
 				200AADF82EC2AB27000995B7 /* SQLite in Frameworks */,
 				200B236D2DB15AA800127D48 /* Shimmer in Frameworks */,
@@ -1389,6 +1404,7 @@
 				208E34A72EC1C62B009B75C9 /* LlamaServer+Chat.swift */,
 				208E34A92EC1C634009B75C9 /* LlamaServer+Networking.swift */,
 				208E34AB2EC1C644009B75C9 /* LlamaServer+ServerLifecycle.swift */,
+				2FA01EAD00000000DEADBEE1 /* GGUFMetadataReader.swift */,
 				200FBFF22CB66B8300A92A74 /* ServerHealth.swift */,
 				20896B362D54B0F0006F9368 /* build */,
 				200FBFE62CB6384400A92A74 /* llama-server-watchdog */,
@@ -1716,6 +1732,10 @@
 				2031B9972CEAE78F00627D53 /* ShortcutController.swift */,
 				209370752D6AB36900E1AF73 /* Refactorer.swift */,
 				2051FED82D8E51FA001B1E0D /* SpeechService.swift */,
+				2EA5C50100000000DEAD0001 /* ChatScreenshotScope.swift */,
+				2EA5C50200000000DEAD0001 /* ChatScreenshotHTMLBuilder.swift */,
+				2EA5C50300000000DEAD0001 /* ChatScreenshotRenderer.swift */,
+				2EA5C50400000000DEAD0001 /* ChatScreenshotExporter.swift */,
 				208E34A32EC1B019009B75C9 /* ContextCompressor.swift */,
 				2041868C2D81E6B2002A5D1C /* NetworkMonitor.swift */,
 				200AAE102EC4F06C000995B7 /* StartupMetrics.swift */,
@@ -1851,9 +1871,6 @@
 		207E5EF02D6FDEBE00A8F6FA /* Tools */ = {
 			isa = PBXGroup;
 			children = (
-				200363282D769AC700770391 /* JavaScriptRunner.swift */,
-				202D4E782EBCDC97005D6F74 /* PythonRunner.swift */,
-				205B7C6C2ECBCE0900336F19 /* X86AssemblyRunner.swift */,
 				207E5EF12D6FDEEF00A8F6FA /* ImageSearch.swift */,
 				20457D332D92827900954892 /* CompletionsController.swift */,
 				20DFF4852DB741D900F3F76C /* FileMonitor.swift */,
@@ -1888,7 +1905,6 @@
 			isa = PBXGroup;
 			children = (
 				20C5CBC82DA3D82E0071F5F7 /* DefaultFunctions.swift */,
-				208855CE2DAD1D6F00071F0B /* ArithmeticFunctions.swift */,
 				206AB9622DB0889F00385510 /* CalendarFunctions.swift */,
 				208855D02DAD1D9900071F0B /* CodeFunctions.swift */,
 				20E2843E2DD4712B007E99AF /* DeepResearchFunctions.swift */,
@@ -1910,9 +1926,11 @@
 				2075FE8A2EBAC06100EA6131 /* libggml-blas.0.dylib */,
 				2075FE8B2EBAC06100EA6131 /* libggml-cpu.0.dylib */,
 				2075FE8C2EBAC06100EA6131 /* libggml-metal.0.dylib */,
-				2075FE8D2EBAC06100EA6131 /* libggml-rpc.0.dylib */,
 				2075FE8E2EBAC06100EA6131 /* libllama.0.dylib */,
 				2075FE8F2EBAC06100EA6131 /* libmtmd.0.dylib */,
+				2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */,
+				2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */,
+				2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */,
 				2075FE902EBAC06100EA6131 /* llama-perplexity */,
 				2075FE912EBAC06100EA6131 /* llama-server */,
 			);
@@ -2087,18 +2105,6 @@
 			path = Logic;
 			sourceTree = "<group>";
 		};
-		20BEEF030000000000000001 /* Persistence */ = {
-			isa = PBXGroup;
-			children = (
-				20BEEF020000000000000001 /* SidekickSchema.swift */,
-				20BEEF020000000000000002 /* PersistenceController.swift */,
-				20BEEF020000000000000003 /* JSONImporter.swift */,
-				20BEEF020000000000000004 /* MessageStreamCoordinator.swift */,
-				20BEEF050000000000000004 /* ModelContextActor.swift */,
-			);
-			path = Persistence;
-			sourceTree = "<group>";
-		};
 		20B97CD22CAFEC90009A0A5D /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
@@ -2231,6 +2237,26 @@
 			path = "Data Models";
 			sourceTree = "<group>";
 		};
+		20BEEF030000000000000001 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				20BEEF020000000000000001 /* SidekickSchema.swift */,
+				20BEEF020000000000000002 /* PersistenceController.swift */,
+				20BEEF020000000000000003 /* JSONImporter.swift */,
+				20BEEF020000000000000004 /* MessageStreamCoordinator.swift */,
+				20BEEF050000000000000004 /* ModelContextActor.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+		20BEEF040000000000000001 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				20BEEF050000000000000002 /* RAGIndexingService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
 		20C221072CC4B59B00A99796 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
@@ -2244,6 +2270,7 @@
 			isa = PBXGroup;
 			children = (
 				20C5CBCA2DA4F3BA0071F5F7 /* KnownModel.swift */,
+				2FA01EAF00000000DEADBEE1 /* ModelArchitecture.swift */,
 				20BF49CA2D649FD700C329F8 /* ModelFamily.swift */,
 				2090A8A52D8995FA0060DC63 /* ModelType.swift */,
 				20FDE29F2DAE50E7000A16F8 /* Provider.swift */,
@@ -2331,10 +2358,10 @@
 				2005496F2CAFA67B00A3DCF2 /* Sources */,
 				200549702CAFA67B00A3DCF2 /* Frameworks */,
 				200549712CAFA67B00A3DCF2 /* Resources */,
-				2075FEC62EBAC5F000EA6131 /* Sign llama.cpp executables */,
 				200FBFEB2CB63B9400A92A74 /* Embed Helper Tools */,
 				20228A182D126ED70050FA90 /* Embed Foundation Extensions */,
 				2093709A2D6B71FB00E1AF73 /* Embed Libraries */,
+				2075FEC62EBAC5F000EA6131 /* Sign llama.cpp executables */,
 			);
 			buildRules = (
 			);
@@ -2517,7 +2544,6 @@
 				2075FE9E2EBAC2D600EA6131 /* libggml-blas.0.dylib in Resources */,
 				2075FE9F2EBAC2D600EA6131 /* libggml-cpu.0.dylib in Resources */,
 				2075FEA02EBAC2D600EA6131 /* libggml-metal.0.dylib in Resources */,
-				2075FEA12EBAC2D600EA6131 /* libggml-rpc.0.dylib in Resources */,
 				200AADB22EC28395000995B7 /* demoExpertUse.png in Resources */,
 				200AADB32EC28395000995B7 /* slideStudioExport.png in Resources */,
 				200AADB42EC28395000995B7 /* webSearchFunction.png in Resources */,
@@ -2589,6 +2615,9 @@
 				200AADF52EC28395000995B7 /* newWindow.png in Resources */,
 				2075FEA22EBAC2D600EA6131 /* libllama.0.dylib in Resources */,
 				2075FEA32EBAC2D600EA6131 /* libmtmd.0.dylib in Resources */,
+				2FB0A0010000000DEADBEE3 /* libllama-common.0.dylib in Resources */,
+				2FB0A0020000000DEADBEE3 /* libllama-server-impl.dylib in Resources */,
+				2FB0A0030000000DEADBEE3 /* libllama-perplexity-impl.dylib in Resources */,
 				2075FE922EBAC06100EA6131 /* llama-server in Resources */,
 				2075FE932EBAC06100EA6131 /* llama-perplexity in Resources */,
 				20ADCEC42DBE1CBA00B13C98 /* mermaidCheatsheet.md in Resources */,
@@ -2623,42 +2652,22 @@
 /* Begin PBXShellScriptBuildPhase section */
 		2075FEC62EBAC5F000EA6131 /* Sign llama.cpp executables */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml-base.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml-blas.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml-cpu.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml-metal.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml-rpc.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libllama.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libmtmd.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/llama-server",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/llama-perplexity",
 			);
 			name = "Sign llama.cpp executables";
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml-base.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml-blas.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml-cpu.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml-metal.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libggml-rpc.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libllama.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/libmtmd.0.dylib",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/llama-server",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/llama-perplexity",
-				"$(DERIVED_FILE_DIR)/sign-llama-binaries.stamp",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ -z \"$EXPANDED_CODE_SIGN_IDENTITY\" ]; then\n  exit 0\nfi\n\nfor binary in \\\n  \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/libggml.0.dylib\" \\\n  \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/libggml-base.0.dylib\" \\\n  \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/libggml-blas.0.dylib\" \\\n  \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/libggml-cpu.0.dylib\" \\\n  \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/libggml-metal.0.dylib\" \\\n  \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/libggml-rpc.0.dylib\" \\\n  \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/libllama.0.dylib\" \\\n  \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/libmtmd.0.dylib\" \\\n  \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/llama-server\" \\\n  \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/llama-perplexity\"\ndo\n  if [ -f \"$binary\" ]; then\n    /usr/bin/codesign --force --options runtime --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" \"$binary\"\n  fi\ndone\n\ntouch \"$DERIVED_FILE_DIR/sign-llama-binaries.stamp\"\n";
+			shellPath = /bin/bash;
+			shellScript = "if [ -z \"$EXPANDED_CODE_SIGN_IDENTITY\" ]; then\n  exit 0\nfi\n\nNAMES=(\n  libggml.0.dylib\n  libggml-base.0.dylib\n  libggml-blas.0.dylib\n  libggml-cpu.0.dylib\n  libggml-metal.0.dylib\n  libllama.0.dylib\n  libllama-common.0.dylib\n  libllama-server-impl.dylib\n  libllama-perplexity-impl.dylib\n  libmtmd.0.dylib\n  llama-server\n  llama-perplexity\n)\n\n# Re-sign in both Resources/ (custom load locations) and Frameworks/ (runtime\n# rpath target). CodeSignOnCopy preserves the linker-default adhoc signature on\n# unsigned/adhoc dylibs, which fails library validation against the app's Team ID.\nfor dir in \\\n  \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\" \\\n  \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH\"\ndo\n  for name in \"${NAMES[@]}\"; do\n    binary=\"$dir/$name\"\n    if [ -f \"$binary\" ]; then\n      /usr/bin/codesign --force --options runtime --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" \"$binary\"\n    fi\n  done\ndone\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2704,6 +2713,7 @@
 				208844332CDDE394003BCB6F /* ModelRowView.swift in Sources */,
 				208C5FD62D79CB8E00D82AA6 /* LiquidView.swift in Sources */,
 				20C5CBCB2DA4F3BA0071F5F7 /* KnownModel.swift in Sources */,
+				2FA01EAF00000000DEADBEE2 /* ModelArchitecture.swift in Sources */,
 				20353FF12CF84546002BC78E /* ToggleLaTeXButton.swift in Sources */,
 				2030D6222D6C7F8C00F18BF4 /* CircularProgressView.swift in Sources */,
 				20B97CCE2CAFEC37009A0A5D /* Settings.swift in Sources */,
@@ -2725,7 +2735,6 @@
 				200AAE092EC2B249000995B7 /* KnowledgeGraph.swift in Sources */,
 				208388E52CBF526E00C2A9F8 /* RetrievalSettings.swift in Sources */,
 				2041868D2D81E6B2002A5D1C /* NetworkMonitor.swift in Sources */,
-				205B7C6D2ECBCE0900336F19 /* X86AssemblyRunner.swift in Sources */,
 				20E284412DD47576007E99AF /* ExpertFunctions.swift in Sources */,
 				20573F212CB527DB004C19FE /* MessageView.swift in Sources */,
 				204735802D642BE5000740F9 /* ModelExplorerView.swift in Sources */,
@@ -2783,7 +2792,6 @@
 				20C62EC32D713D5100996566 /* SlideStudioPromptView.swift in Sources */,
 				208855CC2DAD078800071F0B /* UseFunctionsButton.swift in Sources */,
 				20F6A0022ED0000100AA1111 /* ReasoningToggleButton.swift in Sources */,
-				202D4E792EBCDC97005D6F74 /* PythonRunner.swift in Sources */,
 				2034876F2D6723A200A88DA4 /* ToolCardButton.swift in Sources */,
 				204AE3C62CEC7C030086B42D /* NewCommandView.swift in Sources */,
 				204C795C2CB79AB900EED58E /* ExpertManagerView.swift in Sources */,
@@ -2796,6 +2804,7 @@
 				20457D322D927AB400954892 /* CompletionsExclusionList.swift in Sources */,
 				20B97CD02CAFEC37009A0A5D /* Model.swift in Sources */,
 				208E34AC2EC1C644009B75C9 /* LlamaServer+ServerLifecycle.swift in Sources */,
+				2FA01EAD00000000DEADBEE2 /* GGUFMetadataReader.swift in Sources */,
 				20457D2A2D9250AD00954892 /* CompletionsTutorialView.swift in Sources */,
 				20ADCEC62DBE390B00B13C98 /* ZoomablePannableView.swift in Sources */,
 				200AADFE2EC2B1B3000995B7 /* EntityExtractor.swift in Sources */,
@@ -2875,7 +2884,6 @@
 				2040DBA52D85CB2200A8F6BD /* MarkdownImageProvider.swift in Sources */,
 				2EBEEF0100000000DEADBEE2 /* ChatMarkdownWebView.swift in Sources */,
 				2EBEEF0300000000DEADBEE2 /* ChatMarkdownAssetSchemeHandler.swift in Sources */,
-				200363292D769AC700770391 /* JavaScriptRunner.swift in Sources */,
 				208388DA2CBF4DF500C2A9F8 /* Tavily.swift in Sources */,
 				2099BDA52CB8069800E02732 /* ConversationNameEditor.swift in Sources */,
 				206FBB212D54B40700A045FF /* MessageReasoningProcessView.swift in Sources */,
@@ -2938,6 +2946,10 @@
 				20C16E1B2D0EBE500001B3C9 /* IntroductionViewController.swift in Sources */,
 				20BF4A092D64C6ED00C329F8 /* SpecialtyView.swift in Sources */,
 				2051FED92D8E51FA001B1E0D /* SpeechService.swift in Sources */,
+				2EA5C50100000000DEAD0002 /* ChatScreenshotScope.swift in Sources */,
+				2EA5C50200000000DEAD0002 /* ChatScreenshotHTMLBuilder.swift in Sources */,
+				2EA5C50300000000DEAD0002 /* ChatScreenshotRenderer.swift in Sources */,
+				2EA5C50400000000DEAD0002 /* ChatScreenshotExporter.swift in Sources */,
 				20DFF48B2DB76B9E00F3F76C /* Memories.swift in Sources */,
 				2099BDA12CB7EABC00E02732 /* ConversationQuickPromptsView.swift in Sources */,
 				2000EF412DCC46BD006F9A95 /* DeepResearchAgent.swift in Sources */,
@@ -2969,7 +2981,6 @@
 				202801FC2CC9C5C2005C1F7D /* TemporaryResourceView.swift in Sources */,
 				20573F182CB50743004C19FE /* ConversationView.swift in Sources */,
 				20C3B2372DDB163300555320 /* DragModifier.swift in Sources */,
-				208855CF2DAD1D6F00071F0B /* ArithmeticFunctions.swift in Sources */,
 				2034876D2D67236000A88DA4 /* DiagrammerView.swift in Sources */,
 				204AE3B92CEAF57E0086B42D /* CommandManager.swift in Sources */,
 				208855D12DAD1D9900071F0B /* CodeFunctions.swift in Sources */,
@@ -3197,6 +3208,7 @@
 				DEVELOPMENT_TEAM = KM2C4ZAVPJ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sidekick/Info.plist;
@@ -3244,6 +3256,7 @@
 				DEVELOPMENT_TEAM = KM2C4ZAVPJ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				"EXCLUDED_ARCHS[sdk=*]" = x86_64;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GENERATE_INFOPLIST_FILE = YES;

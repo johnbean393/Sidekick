@@ -59,8 +59,49 @@ public final class PromptController: NSObject, DropDelegate {
     /// A list of resources temporarily passed to the chatbot, of type ``[TemporaryResource]``
     var tempResources: [TemporaryResource] = []
 
+    /// Pending programmatic resubmission staged for the next
+    /// ``PromptInputField`` ``Notifications/requestResubmit`` cycle.
+    /// Consumed by the input field, which is the single owner of the
+    /// `submit()` pipeline.
+    var pendingResubmit: ResubmitRequest? = nil
+
     public override init() {
         super.init()
+    }
+
+    /// Payload describing a programmatic resubmission triggered from a
+    /// message view (Rerun, Edit and Send, etc.).
+    public struct ResubmitRequest {
+        /// Text to feed back through the existing submission flow.
+        public var prompt: String
+        /// File attachments that should ride along with the prompt.
+        public var attachments: [URL]
+        /// When set, every message strictly after `dropAfterMessageId`
+        /// is removed from the active conversation before resubmission
+        /// so the new response slots in immediately after the anchor.
+        public var dropAfterMessageId: UUID?
+
+        public init(
+            prompt: String,
+            attachments: [URL] = [],
+            dropAfterMessageId: UUID? = nil
+        ) {
+            self.prompt = prompt
+            self.attachments = attachments
+            self.dropAfterMessageId = dropAfterMessageId
+        }
+    }
+
+    /// Stages a ``ResubmitRequest`` for ``PromptInputField`` to pick
+    /// up and run through the existing `submit()` pipeline. Posts
+    /// ``Notifications/requestResubmit`` so the field can react
+    /// without holding a direct reference to every caller.
+    public func requestResubmit(_ request: ResubmitRequest) {
+        self.pendingResubmit = request
+        NotificationCenter.default.post(
+            name: Notifications.requestResubmit.name,
+            object: nil
+        )
     }
     
     /// A `Bool` representing whether resources will be passed to the chatbot

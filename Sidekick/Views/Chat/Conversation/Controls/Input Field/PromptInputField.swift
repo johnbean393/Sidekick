@@ -41,12 +41,7 @@ struct PromptInputField: View {
     @State private var lastReasoningToggleModelIdentifier: String?
     
     var selectedConversation: Conversation? {
-        guard let selectedConversationId = conversationState.selectedConversationId else {
-            return nil
-        }
-        return self.conversationManager.getConversation(
-            id: selectedConversationId
-        )
+        return self.conversationState.selectedConversation
     }
     
     var selectedExpert: Expert? {
@@ -123,6 +118,13 @@ struct PromptInputField: View {
                     // Handle model change
                     self.handleModelChange()
                 }
+            }
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: Notifications.requestResubmit.name
+                )
+            ) { _ in
+                self.handleResubmitRequest()
             }
             .onAppear {
                 self.isFocused = true
@@ -273,6 +275,51 @@ struct PromptInputField: View {
             // Send message
             self.submit()
         }
+    }
+    
+    /// Consumes the staged ``PromptController/ResubmitRequest`` posted
+    /// from a message view (Rerun, Edit and Send, fallback retry…)
+    /// and routes it through the existing `submit()` pipeline. Drops
+    /// any trailing messages after the anchor first so the new
+    /// response slots in at the right point in the conversation.
+    private func handleResubmitRequest() {
+        guard let request = self.promptController.pendingResubmit else {
+            return
+        }
+        // Always clear so a failure path doesn't strand the request.
+        self.promptController.pendingResubmit = nil
+        // Cancel any in-flight generation before mutating the
+        // conversation; `submit()` retries on `processing` but the
+        // truncation below would otherwise race the streaming append.
+        if self.model.status == .processing || self.model.status == .coldProcessing {
+            Task { @MainActor in
+                await self.model.interrupt()
+            }
+        }
+        // Truncate conversation if requested. `inclusive: true`
+        // drops the anchor message itself so the fresh user message
+        // appended by `submit()` doesn't fail
+        // ``Conversation/addMessage(_:)`` 's same-sender duplicate
+        // guard. The anchor's text and attachments live in
+        // `request.prompt`/`request.attachments`, so the resubmitted
+        // user message reproduces it (or replaces it, for Edit and
+        // Send).
+        if let anchorId = request.dropAfterMessageId,
+           var conversation = self.selectedConversation {
+            conversation.truncateAfter(id: anchorId, inclusive: true)
+            self.conversationManager.update(conversation)
+        }
+        // Stop dictation so streamed transcripts don't clobber the
+        // prompt we're about to feed in.
+        self.promptController.stopRecording()
+        // Replace tempResources with the request's attachments. The
+        // existing `persistTemporaryResources` step inside `submit()`
+        // will copy them into the conversation cache directory.
+        self.promptController.tempResources = request.attachments.map { url in
+            TemporaryResource(url: url)
+        }
+        self.promptController.prompt = request.prompt
+        self.submit()
     }
     
     /// Function to send to bot

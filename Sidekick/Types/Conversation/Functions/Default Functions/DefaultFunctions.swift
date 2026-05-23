@@ -30,7 +30,6 @@ public class DefaultFunctions {
     
     /// An list of functions available in chat (unfiltered)
     static var chatFunctions: [AnyFunctionBox] = [
-        ArithmeticFunctions.functions,
         CalendarFunctions.functions,
         CodeFunctions.functions,
         ExpertFunctions.functions,
@@ -61,28 +60,24 @@ public class DefaultFunctions {
     /// A function to get all contacts
     static let fetchContacts = Function<FetchContactsParams, String>(
         name: "fetch_contacts",
-        description: """
-Fetches contacts from macOS Contacts. The user's contact can be accessed to obtain their email, birthday, address, etc.
-
-Returns JSON objects for each contact containing the person's name, emails, phone numbers, birthday, and address. Supports filtering based on name, email, and phone number.
-""",
+        description: "Returns the user's macOS contacts (name, emails, phones, birthday, address). Optionally filter by name, email, or phone.",
         clearance: .sensitive,
         params: [
             FunctionParameter(
                 label: "name",
-                description: "Filter for contacts with a name containing this string. (optional)",
+                description: "Substring to match against contact names.",
                 datatype: .string,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "email",
-                description: "Filter for contacts with this email. (optional)",
+                description: "Substring to match against contact emails.",
                 datatype: .string,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "phone",
-                description: "Filter for contacts with this phone number. (optional)",
+                description: "Substring to match against contact phone numbers.",
                 datatype: .string,
                 isRequired: false
             )
@@ -199,24 +194,17 @@ Returns JSON objects for each contact containing the person's name, emails, phon
     /// A function to draw a diagram
     static let drawDiagram = Function<DrawDiagramParams, String>(
         name: "draw_diagram",
-        description: "Renders a diagram from provided MermaidJS code, then saves it as an SVG file. Returns the path of the SVG file to be displayed as a Markdown image or moved to another location.",
+        description: "Renders MermaidJS code to an SVG file and returns its path.",
         params: [
             FunctionParameter(
                 label: "diagram_name",
-                description: "The name of the diagram file to save.",
+                description: "Filename for the saved diagram.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "mermaid_code",
-                description: """
-The MermaidJS code to render as a diagram.
-
-Check if ALL text in nodes is correctly wrapped with double quotes.
-Examples:
-A["Start"] ==> B{"Is it?"};
-E --> F{"Is arr[j] < arr[min_index]?"}
-""",
+                description: "MermaidJS code. Wrap all node text in double quotes (e.g. `A[\"Start\"] ==> B{\"Is it?\"};`).",
                 datatype: .string,
                 isRequired: true
             )

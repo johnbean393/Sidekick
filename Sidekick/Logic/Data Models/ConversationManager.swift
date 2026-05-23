@@ -168,17 +168,12 @@ public final class ConversationManager {
     }
 
     /// Function returning a conversation with the given ID.
-    /// Falls back to the in-memory draft tracked by
-    /// ``ConversationState`` so views that resolve the active
-    /// conversation by id continue to work for blank chats that
-    /// have not yet been persisted.
+    /// Only resolves persisted conversations; the unpersisted
+    /// blank-chat draft is owned by ``ConversationState`` and
+    /// surfaced by ``ConversationState.selectedConversation``.
     public func getConversation(
         id conversationId: UUID
     ) -> Conversation? {
-        if let draft = ConversationState.shared.draftConversation,
-           draft.id == conversationId {
-            return draft
-        }
         return self.conversations.filter({ $0.id == conversationId }).first
     }
 

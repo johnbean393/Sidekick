@@ -14,7 +14,6 @@ public protocol AnyFunctionBox {
     var params: [FunctionParameter] { get }
     var allowsParallelExecution: Bool { get }
     
-    func getJsonSchema() -> String
     func call(withData data: Data) async throws -> String?
     
     var paramsType: any FunctionParams.Type { get }

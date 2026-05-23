@@ -17,7 +17,9 @@ struct MessageReadAloudButton: View {
 		return !message.outputEnded && message.getSender() == .assistant
 	}
 	
-	@State private var isReading: Bool = false
+	private var isReading: Bool {
+		self.speechSynthesizer.isSpeaking
+	}
 	
 	var imageName: String {
 		return !self.isReading ? "speaker.wave.3" : "speaker.slash.fill"
@@ -25,16 +27,9 @@ struct MessageReadAloudButton: View {
 	
     var body: some View {
 		Button {
-			// Toggle reading
-			if self.isReading {
-				self.stopReading()
-			} else {
-				self.startReading()
-			}
-			// Toggle flag
-			withAnimation(.linear) {
-				self.isReading.toggle()
-			}
+			self.speechSynthesizer.toggleReading(
+				text: self.message.readableText
+			)
 		} label: {
 			Image(systemName: self.imageName)
 				.foregroundStyle(.secondary)
@@ -43,28 +38,12 @@ struct MessageReadAloudButton: View {
 		.disabled(self.isGenerating)
     }
 	
-	/// Function to start reading the response
-	private func startReading() {
-		// Get response text
-		let text: String = message.hasReasoning ? message.responseText : message.text
-		// Start TTS
-		Task { @MainActor in
-			await speechSynthesizer.speak(
-				text: text
-			) {
-				withAnimation(.linear) {
-					self.isReading = false // Reset on complete
-				}
-			}
-		}
+}
+
+extension Message {
+	/// Text to feed into TTS. Strips reasoning chatter so playback
+	/// starts at the assistant's actual answer.
+	var readableText: String {
+		return self.hasReasoning ? self.responseText : self.text
 	}
-	
-	/// Function to stop reading the response
-	private func stopReading() {
-		// End TTS
-		Task {
-			await speechSynthesizer.stopSpeaking()
-		}
-	}
-	
 }

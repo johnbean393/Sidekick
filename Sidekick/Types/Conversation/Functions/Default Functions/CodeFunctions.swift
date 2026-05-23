@@ -9,70 +9,14 @@ import Foundation
 
 public class CodeFunctions {
     
-    static var functions: [AnyFunctionBox] = {
-        var baseFunctions: [AnyFunctionBox] = [
-            CodeFunctions.runJavaScript,
-            CodeFunctions.runCommand
-        ]
-        // Add runPython if Python is installed
-        if PythonRunner.isPythonInstalled() {
-            baseFunctions.append(CodeFunctions.runPython)
-        }
-        // Add runX86Assembly if x86_64 assembly is supported
-        if X86AssemblyRunner.isX86AssemblySupported() {
-            baseFunctions.append(CodeFunctions.runX86Assembly)
-        }
-        return baseFunctions
-    }()
-    
-    /// A ``Function`` for running JavaScript
-    static let runJavaScript = Function<RunJavaScriptParams, String>(
-        name: "run_javascript",
-        description: "Runs JavaScript code and returns the result. Useful for performing calculations with many steps or performing transformations on data.",
-        clearance: .dangerous,
-        params: [
-            FunctionParameter(
-                label: "code",
-                description: "The JavaScript code to run",
-                datatype: .string,
-                isRequired: true
-            )
-        ],
-        run: { params in
-            return try JavaScriptRunner.executeJavaScript(params.code)
-        }
-    )
-    struct RunJavaScriptParams: FunctionParams {
-        let code: String
-    }
-    
-    /// A ``Function`` for running Python
-    static let runPython = Function<RunPythonParams, String>(
-        name: "run_python",
-        description: "Runs Python code and returns the result. Useful for performing calculations with many steps or performing transformations on data.",
-        clearance: .dangerous,
-        params: [
-            FunctionParameter(
-                label: "code",
-                description: "The Python code to run",
-                datatype: .string,
-                isRequired: true
-            )
-        ],
-        run: { params in
-            return try PythonRunner.executePython(params.code)
-        }
-    )
-    
-    struct RunPythonParams: FunctionParams {
-        let code: String
-    }
-    
+    static var functions: [AnyFunctionBox] = [
+        CodeFunctions.runCommand
+    ]
     
     /// A function to run a terminal command
     static let runCommand = Function<RunCommandParams, String>(
         name: "run_command",
-        description: "Executes the specified command in the macOS Terminal and returns the output.",
+        description: "Executes a shell command in zsh and returns its output.",
         clearance: .dangerous,
         params: [
             FunctionParameter(
@@ -83,7 +27,7 @@ public class CodeFunctions {
             ),
             FunctionParameter(
                 label: "workingDirectory",
-                description: "The POSIX path of the working directory for command execution. Defaults to home directory `\(URL.homeDirectory.posixPath)` if not specified.",
+                description: "Working directory POSIX path. Defaults to the user's home directory.",
                 datatype: .string,
                 isRequired: false
             )
@@ -146,28 +90,6 @@ public class CodeFunctions {
     struct RunCommandParams: FunctionParams {
         var command: String
         var workingDirectory: String?
-    }
-    
-    /// A function to run x86_64 assembly code
-    static let runX86Assembly = Function<RunX86AssemblyParams, String>(
-        name: "run_x86_assembly",
-        description: "Compiles and executes x86_64 assembly code using Rosetta 2 on Apple Silicon Macs. The assembly code should use AT&T syntax and include a _main entry point.",
-        clearance: .dangerous,
-        params: [
-            FunctionParameter(
-                label: "code",
-                description: "The x86_64 assembly code to compile and execute. Should use AT&T syntax with .globl _main and _main: label.",
-                datatype: .string,
-                isRequired: true
-            )
-        ],
-        run: { params in
-            return try X86AssemblyRunner.executeX86Assembly(params.code)
-        }
-    )
-    
-    struct RunX86AssemblyParams: FunctionParams {
-        let code: String
     }
     
 }

@@ -10,7 +10,6 @@ import Foundation
 /// Enum representing different categories of functions available for tool calling
 public enum FunctionCategory: String, Codable, CaseIterable, Identifiable, Equatable {
     
-    case arithmetic = "Arithmetic"
     case calendar = "Calendar"
     case code = "Code"
     case expert = "Expert"
@@ -29,8 +28,6 @@ public enum FunctionCategory: String, Codable, CaseIterable, Identifiable, Equat
     /// User-facing description of the function category
     var description: String {
         switch self {
-        case .arithmetic:
-            return String(localized: "Arithmetic")
         case .calendar:
             return String(localized: "Calendar")
         case .code:
@@ -57,8 +54,6 @@ public enum FunctionCategory: String, Codable, CaseIterable, Identifiable, Equat
     /// Get functions for this category
     var functions: [AnyFunctionBox] {
         switch self {
-        case .arithmetic:
-            return ArithmeticFunctions.functions
         case .calendar:
             return CalendarFunctions.functions
         case .code:

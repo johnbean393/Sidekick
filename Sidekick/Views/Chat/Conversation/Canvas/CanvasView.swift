@@ -16,12 +16,7 @@ struct CanvasView: View {
 	@Environment(ConversationManager.self) private var conversationManager
 	
 	var selectedConversation: Conversation? {
-		guard let selectedConversationId = conversationState.selectedConversationId else {
-			return nil
-		}
-		return self.conversationManager.getConversation(
-			id: selectedConversationId
-		)
+		return self.conversationState.selectedConversation
 	}
 	
 	var assistantMessages: [Message]? {

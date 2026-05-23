@@ -25,12 +25,7 @@ struct MessagesView: View {
     @State private var scrollResetTask: DispatchWorkItem?
     
     var selectedConversation: Conversation? {
-        guard let selectedConversationId = conversationState.selectedConversationId else {
-            return nil
-        }
-        return self.conversationManager.getConversation(
-            id: selectedConversationId
-        )
+        return self.conversationState.selectedConversation
     }
     
     var messages: [Message] {

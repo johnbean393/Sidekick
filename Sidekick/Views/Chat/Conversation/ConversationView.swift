@@ -74,15 +74,7 @@ struct ConversationView: View {
 			expertId: promptController.sentExpertId
 		)
 		// Add message to conversation
-		guard let currentConversationId: UUID = conversationState
-			.selectedConversationId else {
-			print("Could not get conversation id")
-			return
-		}
-		guard var currentConversation: Conversation = conversationManager
-			.getConversation(
-			id: currentConversationId
-			) else {
+		guard var currentConversation: Conversation = self.conversationState.selectedConversation else {
 			print("Could not get conversation")
 			return
 		}
@@ -99,16 +91,11 @@ struct ConversationView: View {
 	
 	/// Function to handle image generation cancellation
 	private func cancelImageGeneration() {
-		// Remove previous message from conversation
-		guard let currentConversationId: UUID = conversationState
-			.selectedConversationId else {
-			print("Could not get conversation id")
-			return
-		}
-		guard var currentConversation: Conversation = conversationManager
-			.getConversation(
-				id: currentConversationId
-			) else {
+		// Remove previous message from conversation. By the time
+		// we get here the conversation must already be persisted
+		// (the user sent a prompt to produce the cancelled image),
+		// so we can rely on the regular ``update`` path.
+		guard var currentConversation: Conversation = self.conversationState.selectedConversation else {
 			print("Could not get conversation")
 			return
 		}

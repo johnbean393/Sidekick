@@ -78,24 +78,31 @@ public final class ConversationState {
     /// ``commitDraftIfNeeded(_:)``. If a draft is already around,
     /// the same one is reused so the user can never accumulate
     /// multiple blank chats.
+    ///
+    /// All state mutations are bundled into a single
+    /// ``withAnimation`` transaction so SwiftUI sees the draft
+    /// creation and the selection change as one atomic update.
+    /// Splitting them across transactions can leave consumers
+    /// observing an intermediate state where the selection still
+    /// points at the previous conversation - that's how we used
+    /// to land on the wrong (non-centered) layout until something
+    /// else (e.g. a prompt edit) forced a re-render.
     public func newConversation() {
-        let targetId: UUID
-        if let existing = self.draftConversation {
-            targetId = existing.id
-        } else {
-            let defaultTitle: String = Date.now.formatted(
-                date: .abbreviated,
-                time: .shortened
-            )
-            let draft: Conversation = Conversation(
-                title: defaultTitle,
-                createdAt: .now,
-                messages: []
-            )
-            self.draftConversation = draft
-            targetId = draft.id
-        }
         withAnimation(.linear) {
+            if self.draftConversation == nil {
+                let defaultTitle: String = Date.now.formatted(
+                    date: .abbreviated,
+                    time: .shortened
+                )
+                self.draftConversation = Conversation(
+                    title: defaultTitle,
+                    createdAt: .now,
+                    messages: []
+                )
+            }
+            // Force-unwrap is safe: we just ensured the draft
+            // exists (or it already did).
+            let targetId: UUID = self.draftConversation!.id
             self.selectedExpertId = ExpertManager.default?.id
             self.selectedConversationId = targetId
         }

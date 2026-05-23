@@ -24,6 +24,7 @@ struct MessageContentView: View {
     
     @Environment(ConversationManager.self) private var conversationManager
     @Environment(ConversationState.self) private var conversationState
+    @Environment(PromptController.self) private var promptController
     
     @Binding private var isEditing: Bool
     @State private var messageText: String
@@ -33,12 +34,7 @@ struct MessageContentView: View {
     var deprioritizeStreamingUpdates: Bool
     
     var selectedConversation: Conversation? {
-        guard let selectedConversationId = conversationState.selectedConversationId else {
-            return nil
-        }
-        return self.conversationManager.getConversation(
-            id: selectedConversationId
-        )
+        return self.conversationState.selectedConversation
     }
     
     var viewReferenceTip: ViewReferenceTip = .init()
@@ -129,25 +125,27 @@ struct MessageContentView: View {
             HStack {
                 Spacer()
                 Button {
-                    withAnimation(
-                        .linear(duration: 0.5)
-                    ) {
-                        self.isEditing.toggle()
-                    }
+                    self.cancelEdit()
                 } label: {
                     Text("Cancel")
                 }
+                .keyboardShortcut(.cancelAction)
                 Button {
-                    self.updateMessage()
-                    withAnimation(
-                        .linear(duration: 0.5)
-                    ) {
-                        self.isEditing.toggle()
-                    }
+                    self.saveEdit()
                 } label: {
                     Text("Save")
                 }
                 .keyboardShortcut("s", modifiers: .command)
+                if self.message.getSender() == .user {
+                    Button {
+                        self.sendEdit()
+                    } label: {
+                        Text("Send")
+                    }
+                    .keyboardShortcut(.return, modifiers: .command)
+                    .buttonStyle(.borderedProminent)
+                    .disabled(self.isGenerating)
+                }
             }
         }
     }
@@ -203,6 +201,42 @@ struct MessageContentView: View {
         message.text = messageText
         conversation.updateMessage(message)
         conversationManager.update(conversation)
+    }
+    
+    /// Discards in-flight edits and exits edit mode.
+    private func cancelEdit() {
+        self.messageText = self.message.text
+        withAnimation(.linear(duration: 0.5)) {
+            self.isEditing = false
+        }
+    }
+    
+    /// Persists the edited text in place and exits edit mode without
+    /// triggering a new model response.
+    private func saveEdit() {
+        self.updateMessage()
+        withAnimation(.linear(duration: 0.5)) {
+            self.isEditing = false
+        }
+    }
+    
+    /// Persists the edit, drops every message after this user
+    /// message, and asks ``PromptInputField`` to resubmit the edited
+    /// text so the assistant produces a fresh reply.
+    private func sendEdit() {
+        guard self.message.getSender() == .user else { return }
+        self.updateMessage()
+        let attachments: [URL] = self.message.referencedURLs.map(\.url)
+        self.promptController.requestResubmit(
+            .init(
+                prompt: self.messageText,
+                attachments: attachments,
+                dropAfterMessageId: self.message.id
+            )
+        )
+        withAnimation(.linear(duration: 0.5)) {
+            self.isEditing = false
+        }
     }
     
 }

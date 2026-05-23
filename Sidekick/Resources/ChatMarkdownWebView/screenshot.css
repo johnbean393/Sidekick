@@ -1,0 +1,361 @@
+/* Chat screenshot layout. Loaded *after* chat.css so its variables (--md-fg,
+   --md-bg, etc.) are already defined and we can override theme tokens
+   specific to the screenshot surface (a solid bg, denser bubble chrome). */
+
+:root {
+    --sk-screenshot-bg: #ffffff;
+    --sk-bubble-bg: #fafafa;
+    --sk-bubble-border: rgba(0, 0, 0, 0.12);
+    --sk-bubble-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --sk-chip-bg: rgba(0, 0, 0, 0.04);
+    --sk-chip-border: rgba(0, 0, 0, 0.12);
+    --sk-chip-fg: #424447;
+    --sk-meta-fg: #6a737d;
+
+    /* Status pills (function calls, reasoning) mirror the SwiftUI
+       palette: status color filled at .opacity(0.2), purple-tint
+       for reasoning. Solid hexes (not opacity-tinted) double up as
+       the dot/icon foreground. */
+    --sk-fn-success-fill: rgba(51, 204, 0, 0.20);   /* .brightGreen */
+    --sk-fn-success-dot:  #33CC00;
+    --sk-fn-failed-fill:  rgba(255, 59, 48, 0.20);  /* system red */
+    --sk-fn-failed-dot:   #FF3B30;
+    --sk-fn-pending-stroke: rgba(110, 113, 121, 0.80); /* .secondary */
+    --sk-fn-pending-dot:    #8E8E93;
+    --sk-reasoning-fill:  rgba(175, 82, 222, 0.20); /* .purple */
+    --sk-reasoning-dot:   #AF52DE;
+}
+
+body.theme-dark {
+    --sk-screenshot-bg: #1d1f21;
+    --sk-bubble-bg: #26282b;
+    --sk-bubble-border: rgba(255, 255, 255, 0.10);
+    --sk-bubble-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+    --sk-chip-bg: rgba(255, 255, 255, 0.06);
+    --sk-chip-border: rgba(255, 255, 255, 0.12);
+    --sk-chip-fg: #c8ccd1;
+    --sk-meta-fg: #8d96a0;
+
+    --sk-fn-success-fill: rgba(0, 249, 0, 0.20);    /* .brightGreen (dark) */
+    --sk-fn-success-dot:  #00F900;
+    --sk-fn-failed-fill:  rgba(255, 69, 58, 0.20);  /* system red (dark) */
+    --sk-fn-failed-dot:   #FF453A;
+    --sk-fn-pending-stroke: rgba(152, 152, 157, 0.80);
+    --sk-fn-pending-dot:    #98989D;
+    --sk-reasoning-fill:  rgba(191, 90, 242, 0.22); /* .purple (dark) */
+    --sk-reasoning-dot:   #BF5AF2;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--sk-screenshot-bg);
+    overflow: hidden;
+}
+
+body {
+    cursor: default;
+    /* The renderer fixes the viewport to the same width as #root so
+       there is no horizontal slack to scroll. */
+}
+
+#root.screenshot-root {
+    box-sizing: border-box;
+    width: 820px;
+    padding: 28px 28px 6px 28px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+/* ---- Message row ---- */
+
+.message-row {
+    display: grid;
+    grid-template-columns: 33px 1fr;
+    column-gap: 10px;
+    align-items: flex-start;
+}
+
+.message-row .avatar {
+    width: 25px;
+    height: 25px;
+    border-radius: 12.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.message-row .avatar svg {
+    width: 14px;
+    height: 14px;
+    display: block;
+}
+
+.message-column {
+    min-width: 0;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--sk-meta-fg);
+    margin: 0 0 6px 0;
+    line-height: 1.4;
+}
+
+.message-header .sender-name {
+    font-weight: 600;
+    color: var(--md-fg);
+}
+
+.message-header .timestamp {
+    color: var(--sk-meta-fg);
+}
+
+.message-header .model-tag {
+    color: var(--sk-meta-fg);
+    opacity: 0.85;
+}
+
+/* ---- Bubble ---- */
+
+.message-bubble {
+    background: var(--sk-bubble-bg);
+    border: 0.5px solid var(--sk-bubble-border);
+    box-shadow: var(--sk-bubble-shadow);
+    /* Mirrors MessageBackgroundView's UnevenRoundedRectangle: square
+       top-leading corner, 13px everywhere else. */
+    border-radius: 0 13px 13px 13px;
+    padding: 12px 14px;
+    color: var(--md-fg);
+}
+
+.message-bubble > .message-text {
+    /* The rendered Markdown lives here. chat.css's .markdown-body
+       rules are reused for typography. */
+    font-size: var(--md-font-size);
+    line-height: var(--md-line-height);
+}
+
+.message-bubble > .message-text > :first-child {
+    margin-top: 0;
+}
+.message-bubble > .message-text > :last-child {
+    margin-bottom: 0;
+}
+
+/* Generated-image messages render an <img> instead of Markdown. */
+.message-bubble > .message-image {
+    margin: 0;
+    padding: 0;
+}
+.message-bubble > .message-image img {
+    display: block;
+    max-width: 100%;
+    max-height: 360px;
+    border-radius: 9px;
+    object-fit: contain;
+}
+.message-bubble > .message-image figcaption {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--sk-meta-fg);
+    font-style: italic;
+}
+
+/* ---- Status pills (function calls, reasoning banner) ----
+   Mirrors SwiftUI's FunctionCallView and
+   MessageReasoningProcessView: a 33px-tall rounded pill with a
+   colored dot on the left, label text at opacity 0.8, and an
+   inactive chevron pinned to the right edge. */
+
+.function-calls {
+    margin: 0 0 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.status-pill {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 33px;
+    padding: 0 7px;
+    border-radius: 7px;
+    color: var(--md-fg);
+    font-size: var(--md-font-size);
+    line-height: 1;
+}
+
+.status-pill .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    margin: 0 5px;
+    flex-shrink: 0;
+}
+
+.status-pill .pill-label {
+    opacity: 0.8;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.status-pill .pill-chevron {
+    margin-left: auto;
+    width: 12px;
+    height: 12px;
+    opacity: 0.5;
+    flex-shrink: 0;
+    display: block;
+}
+
+/* Function call — fill with status color at 20%, or stroke when
+   the call is still executing (mirrors the SwiftUI fallback for
+   .secondary). */
+.status-pill.fn-pill .pill-label .fn-prefix { font-weight: 700; }
+.status-pill.fn-pill .pill-label .fn-name   { font-style: italic; }
+
+.status-pill.fn-pill.status-succeeded {
+    background: var(--sk-fn-success-fill);
+}
+.status-pill.fn-pill.status-succeeded .status-dot {
+    background: var(--sk-fn-success-dot);
+}
+
+.status-pill.fn-pill.status-failed {
+    background: var(--sk-fn-failed-fill);
+}
+.status-pill.fn-pill.status-failed .status-dot {
+    background: var(--sk-fn-failed-dot);
+}
+
+.status-pill.fn-pill.status-executing {
+    background: transparent;
+    border: 1px solid var(--sk-fn-pending-stroke);
+}
+.status-pill.fn-pill.status-executing .status-dot {
+    background: var(--sk-fn-pending-dot);
+}
+
+/* Reasoning — purple-tinted, with the brain.fill icon between
+   the dot and the label. */
+.status-pill.reasoning-pill {
+    background: var(--sk-reasoning-fill);
+    margin: 0 0 10px 0;
+}
+.status-pill.reasoning-pill .status-dot {
+    background: var(--sk-reasoning-dot);
+}
+.status-pill.reasoning-pill .reasoning-icon {
+    width: 12px;
+    height: 12px;
+    color: var(--sk-reasoning-dot);
+    flex-shrink: 0;
+    display: block;
+}
+.status-pill.reasoning-pill .pill-label {
+    font-weight: 600;
+}
+
+/* ---- Attachments + references chips ---- */
+
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0 0 0;
+}
+
+.chip-row.references {
+    margin: 12px 0 0 0;
+}
+
+.chip-section-title {
+    width: 100%;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sk-meta-fg);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--sk-chip-bg);
+    border: 0.5px solid var(--sk-chip-border);
+    font-size: 12px;
+    color: var(--sk-chip-fg);
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chip svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+.chip .chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+/* ---- Footer ---- */
+
+.screenshot-footer {
+    padding: 18px 28px 22px 28px;
+    color: var(--sk-meta-fg);
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-top: 0.5px solid var(--sk-bubble-border);
+    margin-top: 16px;
+}
+
+.screenshot-footer .screenshot-brand {
+    font-weight: 600;
+    color: var(--md-fg);
+    opacity: 0.85;
+}
+
+/* When the screenshot is just a single message, drop the divider so
+   the footer doesn't look heavier than the content. */
+#root.screenshot-root[data-row-count="1"] + .screenshot-footer {
+    border-top: none;
+    margin-top: 4px;
+}
+
+/* Stripe pre/code blocks the same as in-app, but never collapse them —
+   a screenshot should always show the full code. */
+.message-bubble .sk-codeblock[data-collapsed="true"] .sk-codeblock-body {
+    max-height: none;
+}
+.message-bubble .sk-codeblock[data-collapsed="true"] .sk-codeblock-body::after {
+    display: none;
+}
+/* Hide the toggle button (it's interactive UI that doesn't make
+   sense in a still image). */
+.message-bubble .sk-codeblock-actions .sk-codeblock-toggle,
+.message-bubble .sk-codeblock-actions .sk-codeblock-copy {
+    display: none;
+}

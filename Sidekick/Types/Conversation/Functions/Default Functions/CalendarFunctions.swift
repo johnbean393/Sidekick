@@ -12,9 +12,7 @@ public class CalendarFunctions {
     
     static var functions: [AnyFunctionBox] = [
         CalendarFunctions.getEvents,
-        CalendarFunctions.addEvent,
-        CalendarFunctions.removeEvent,
-        CalendarFunctions.editEvent
+        CalendarFunctions.addEvent
     ]
     
     /// An object representing an ``Event``
@@ -54,7 +52,6 @@ public class CalendarFunctions {
     public enum CalendarFunctionsError: LocalizedError {
         case noPermissions
         case invalidDateFormat
-        case eventNotFound(String)
         case failedToSaveEvent(Error)
         public var errorDescription: String? {
             switch self {
@@ -62,8 +59,6 @@ public class CalendarFunctions {
                     return "Invalid date format"
                 case .noPermissions:
                     return "Permissions to access calendar was denied"
-                case .eventNotFound(let id):
-                    return "Event with identifier `\(id)` not found"
                 case .failedToSaveEvent(let error):
                     return "Failed to save event: \(error.localizedDescription)"
             }
@@ -98,18 +93,18 @@ public class CalendarFunctions {
     /// A ``Function`` for getting the all events between 2 dates, inclusive
     static let getEvents = Function<GetEventsParams, String>(
         name: "get_events",
-        description: "Get all events between the provided start and end dates, inclusive.",
+        description: "Returns all calendar events between two dates, inclusive.",
         clearance: .sensitive,
         params: [
             FunctionParameter(
                 label: "start_date",
-                description: "The start date, in the format `yyyy-MM-dd HH:mm:ss`",
+                description: "Start date in `yyyy-MM-dd HH:mm:ss`.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "end_date",
-                description: "The end date, in the format `yyyy-MM-dd HH:mm:ss`",
+                description: "End date in `yyyy-MM-dd HH:mm:ss`.",
                 datatype: .string,
                 isRequired: true
             )
@@ -159,36 +154,36 @@ public class CalendarFunctions {
     /// A ``Function`` for adding an event to the user's calendar
     static let addEvent = Function<AddEventParams, String>(
         name: "add_event",
-        description: "Add a new event to the user's calendar.",
+        description: "Creates a new calendar event.",
         clearance: .sensitive,
         params: [
             FunctionParameter(
                 label: "title",
-                description: "The title of the event.",
+                description: "Event title.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "start_date",
-                description: "The start date/time of the event, in the format `yyyy-MM-dd HH:mm:ss`.",
+                description: "Start in `yyyy-MM-dd HH:mm:ss`.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "end_date",
-                description: "The end date/time of the event, in the format `yyyy-MM-dd HH:mm:ss`. (optional, defaults to one hour after startDate)",
+                description: "End in `yyyy-MM-dd HH:mm:ss`. Defaults to one hour after `start_date`.",
                 datatype: .string,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "is_all_day",
-                description: "Whether the event is an all day event.",
+                description: "Whether the event is all day.",
                 datatype: .boolean,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "notes",
-                description: "Notes or description for the event.",
+                description: "Event notes.",
                 datatype: .string,
                 isRequired: false
             ),
@@ -200,7 +195,7 @@ public class CalendarFunctions {
             ),
             FunctionParameter(
                 label: "ignore_conflicts",
-                description: "Schedule the event even if it conflicts with existing events. (optional, defaults to false)",
+                description: "Schedule even if it conflicts with existing events. Defaults to false.",
                 datatype: .boolean,
                 isRequired: false
             )
@@ -303,145 +298,6 @@ public class CalendarFunctions {
         var notes: String?
         var location: String?
         var ignore_conflicts: Bool?
-    }
-    
-    /// A ``Function`` to remove an event by its identifier.
-    static let removeEvent = Function<RemoveEventParams, String>(
-        name: "remove_event",
-        description: "Remove an event from the user's calendar by its event UUID. Call `get_events` to find the UUID of an event.",
-        clearance: .sensitive,
-        params: [
-            FunctionParameter(
-                label: "eventIdentifier",
-                description: "The unique UUID for the event.",
-                datatype: .string,
-                isRequired: true
-            )
-        ],
-        run: { params in
-            // Check permissions
-            if await !CalendarFunctions.requestCalendarAccess() {
-                throw CalendarFunctionsError.noPermissions
-            }
-            let eventStore = EKEventStore()
-            guard let event = eventStore.event(withIdentifier: params.eventIdentifier) else {
-                throw CalendarFunctionsError.eventNotFound(params.eventIdentifier)
-            }
-            do {
-                try eventStore.remove(event, span: .thisEvent, commit: true)
-            } catch {
-                throw CalendarFunctionsError.failedToSaveEvent(error)
-            }
-            // Optionally, return the identifier or confirmation message as JSON
-            let result = ["removedEventIdentifier": params.eventIdentifier]
-            let jsonEncoder = JSONEncoder()
-            let jsonData = try jsonEncoder.encode(result)
-            return String(data: jsonData, encoding: .utf8)!
-        }
-    )
-    struct RemoveEventParams: FunctionParams {
-        var eventIdentifier: String
-    }
-    
-    /// A ``Function`` to edit an event by its identifier.
-    static let editEvent = Function<EditEventParams, String>(
-        name: "edit_event",
-        description: "Edit an existing event in the user's calendar by its UUID. Only provided fields will be updated. Call `get_events` to find the UUID of an event.",
-        clearance: .sensitive,
-        params: [
-            FunctionParameter(
-                label: "eventIdentifier",
-                description: "The UUID of the event to edit.",
-                datatype: .string,
-                isRequired: true
-            ),
-            FunctionParameter(
-                label: "title",
-                description: "The new title of the event.",
-                datatype: .string,
-                isRequired: false
-            ),
-            FunctionParameter(
-                label: "startDate",
-                description: "The new start date/time of the event, in the format `yyyy-MM-dd HH:mm:ss`.",
-                datatype: .string,
-                isRequired: false
-            ),
-            FunctionParameter(
-                label: "endDate",
-                description: "The new end date/time of the event, in the format `yyyy-MM-dd HH:mm:ss`.",
-                datatype: .string,
-                isRequired: false
-            ),
-            FunctionParameter(
-                label: "isAllDay",
-                description: "Whether the event is an all day event.",
-                datatype: .boolean,
-                isRequired: false
-            ),
-            FunctionParameter(
-                label: "notes",
-                description: "Notes or description for the event.",
-                datatype: .string,
-                isRequired: false
-            ),
-            FunctionParameter(
-                label: "location",
-                description: "Event location.",
-                datatype: .string,
-                isRequired: false
-            )
-        ],
-        run: { params in
-            // Check permissions
-            if await !CalendarFunctions.requestCalendarAccess() {
-                throw CalendarFunctionsError.noPermissions
-            }
-            let eventStore = EKEventStore()
-            guard let event = eventStore.event(withIdentifier: params.eventIdentifier) else {
-                throw CalendarFunctionsError.eventNotFound(params.eventIdentifier)
-            }
-            // Update event fields if provided
-            if let title = params.title {
-                event.title = title
-            }
-            if let startDateStr = params.startDate {
-                event.startDate = try CalendarFunctions.convertStringToDate(startDateStr)
-            }
-            if let endDateStr = params.endDate {
-                event.endDate = try CalendarFunctions.convertStringToDate(endDateStr)
-            }
-            if let isAllDay = params.isAllDay {
-                event.isAllDay = isAllDay
-            }
-            if let notes = params.notes {
-                event.notes = notes
-            }
-            if let location = params.location {
-                event.location = location
-            }
-            // Save changes
-            do {
-                try eventStore.save(event, span: .thisEvent, commit: true)
-            } catch {
-                throw CalendarFunctionsError.failedToSaveEvent(error)
-            }
-            // Return the updated event as JSON
-            let updatedEvent = CalendarFunctions.Event(event: event)
-            let jsonEncoder = JSONEncoder()
-            jsonEncoder.outputFormatting = [.prettyPrinted]
-            let jsonData = try jsonEncoder.encode(updatedEvent)
-            return String(data: jsonData, encoding: .utf8)!
-        }
-    )
-    struct EditEventParams: FunctionParams {
-        var eventIdentifier: String
-        var title: String?
-        var startDate: String?
-        var endDate: String?
-        var isAllDay: Bool?
-        var notes: String?
-        var location: String?
     }
     
 }

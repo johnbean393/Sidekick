@@ -24,27 +24,23 @@ public class TodoFunctions {
     /// A function to create a new to-do list
     static let createTodoList = Function<CreateTodoListParams, String>(
         name: "create_todo_list",
-        description: """
-Creates a new to-do list with items to track tasks and progress. Use this when you need to organize multiple steps or track work over multiple interactions.
-
-The to-do list will persist across tool calls, and incomplete items will be automatically shown to you after each tool execution.
-""",
+        description: "Creates a persistent to-do list. Incomplete items are surfaced back to you after each tool call.",
         params: [
             FunctionParameter(
                 label: "list_id",
-                description: "A unique identifier for this to-do list (e.g., 'analysis_tasks', 'data_processing')",
+                description: "Unique identifier for the list (e.g. `analysis_tasks`).",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "title",
-                description: "A descriptive title for the to-do list",
+                description: "List title.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "items",
-                description: "Array of to-do items to create. Each item should be a clear, actionable task.",
+                description: "Actionable to-do items.",
                 datatype: .stringArray,
                 isRequired: true
             )
@@ -84,17 +80,17 @@ Created to-do list '\(params.title)' with \(params.items.count) items:
     /// A function to add items to an existing to-do list
     static let addTodoItem = Function<AddTodoItemParams, String>(
         name: "add_todo_item",
-        description: "Adds new items to an existing to-do list.",
+        description: "Adds items to an existing to-do list.",
         params: [
             FunctionParameter(
                 label: "list_id",
-                description: "The unique identifier of the to-do list",
+                description: "List identifier.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "items",
-                description: "Array of new to-do items to add",
+                description: "Items to add.",
                 datatype: .stringArray,
                 isRequired: true
             )
@@ -137,23 +133,23 @@ Current status:
     /// A function to mark items as finished
     static let finishTodoItem = Function<FinishTodoItemParams, String>(
         name: "finish_todo_item",
-        description: "Marks one or more items as finished in a to-do list. Items can be referenced by their index (0-based) or by matching description text.",
+        description: "Marks items in a to-do list as finished. Provide either indices or descriptions.",
         params: [
             FunctionParameter(
                 label: "list_id",
-                description: "The unique identifier of the to-do list",
+                description: "List identifier.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "item_indices",
-                description: "Array of item indices (0-based) to mark as finished (optional if item_descriptions provided)",
+                description: "0-based indices of items to mark finished.",
                 datatype: .integerArray,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "item_descriptions",
-                description: "Array of item descriptions (or partial matches) to mark as finished (optional if item_indices provided)",
+                description: "Substrings matching items to mark finished.",
                 datatype: .stringArray,
                 isRequired: false
             )

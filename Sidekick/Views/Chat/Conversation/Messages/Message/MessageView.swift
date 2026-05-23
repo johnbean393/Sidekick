@@ -20,6 +20,15 @@ struct MessageView: View {
     
     @State private var isEditing: Bool = false
 	@State private var isShowingSources: Bool = false
+	@State private var isHovered: Bool = false
+	/// Pending hide of the hover chips. Debounced so the user has
+	/// time to move from the bubble across the gap to a chip — and
+	/// so a stray `false` from the embedded WKWebView doesn't yank
+	/// the controls out from under the pointer mid-click.
+	@State private var hoverHideTask: Task<Void, Never>?
+	/// Grace period before the chips fade out after the pointer
+	/// leaves the message frame.
+	private static let chipHideDelay: Duration = .milliseconds(280)
 	
     var message: Message
     var shimmer: Bool = false
@@ -30,12 +39,7 @@ struct MessageView: View {
     }
     
     var selectedConversation: Conversation? {
-        guard let selectedConversationId = conversationState.selectedConversationId else {
-            return nil
-        }
-        return self.conversationManager.getConversation(
-            id: selectedConversationId
-        )
+        return self.conversationState.selectedConversation
     }
     
 	var sources: Sources? {
@@ -80,6 +84,10 @@ struct MessageView: View {
 			}
 		}
 		.padding(.trailing)
+		.contentShape(Rectangle())
+		.onHover { hovering in
+			self.updateHoverState(hovering)
+		}
 		.sheet(isPresented: $isShowingSources) {
 			SourcesView(
 				isShowingSources: $isShowingSources,
@@ -93,37 +101,29 @@ struct MessageView: View {
         HStack {
             Text(timeDescription)
                 .foregroundStyle(.secondary)
-            if showSources {
-                sourcesButton
-            }
-            MessageCopyButton(
-                message: message
-            )
-            if message.getSender() == .assistant {
-                MessageReadAloudButton(
-                    message: message
-                )
-                if self.isGenerating {
-                    StopGenerationButton {
-                        Task { @MainActor in
-                            await self.model.interrupt()
-                        }
+            // Stop button stays visible even when the chip row is
+            // hidden — the user needs to be able to interrupt a
+            // streaming reply without hunting for hover targets.
+            if self.isGenerating {
+                StopGenerationButton {
+                    Task { @MainActor in
+                        await self.model.interrupt()
                     }
-                } else {
-                    RegenerateButton {
-                        self.retryGeneration(
-                            message: message
-                        )
-                    }
-                    .labelStyle(.iconOnly)
-                    .foregroundStyle(.secondary)
                 }
             }
-            MessageOptionsView(
-                isEditing: $isEditing,
-                message: message,
-                canEdit: !self.isGenerating
-            )
+            // Hover-revealed action chips, mirrored to user and
+            // assistant messages so both sides get Copy / Rerun /
+            // Edit / More affordances.
+            actionChips
+                .opacity(self.isHovered ? 1 : 0)
+                .allowsHitTesting(self.isHovered)
+                .onHover { hovering in
+                    // Track the chip row directly so a brief gap
+                    // between the bubble and the chips (or a
+                    // child WebView swallowing the move event)
+                    // doesn't cause the row to vanish mid-click.
+                    self.updateHoverState(hovering)
+                }
             if hasMemories, let memory {
                 Spacer()
                 // Show memory updated
@@ -159,6 +159,54 @@ struct MessageView: View {
                 .padding(.top, 3)
             }
         }
+    }
+    
+    /// Inline hover-revealed action chips that match the ChatWise
+    /// layout: Copy / Rerun / Edit / More. Applied to user and
+    /// assistant messages alike. Hidden during generation because
+    /// the actions would race the streaming output.
+    var actionChips: some View {
+        HStack {
+            if showSources {
+                sourcesButton
+            }
+            MessageCopyButton(message: message)
+            if !self.isGenerating {
+                RegenerateButton {
+                    self.retryGeneration(message: message)
+                }
+                .labelStyle(.iconOnly)
+                .foregroundStyle(.secondary)
+            }
+            if !self.isGenerating && !self.isEditing {
+                editChip
+            }
+            MessageOptionsView(
+                isEditing: $isEditing,
+                message: message,
+                canEdit: !self.isGenerating
+            )
+        }
+    }
+    
+    var editChip: some View {
+        Button {
+            withAnimation(.linear(duration: 0.5)) {
+                self.isEditing.toggle()
+            }
+        } label: {
+            Image(systemName: "pencil")
+                .imageScale(.medium)
+                .background(.clear)
+                .imageScale(.small)
+                .padding(.leading, 1)
+                .padding(.horizontal, 3)
+                .frame(width: 15, height: 15)
+                .scaleEffect(CGSize(width: 0.96, height: 0.96))
+                .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+        .help("Edit")
     }
 	
 	var content: some View {
@@ -207,38 +255,65 @@ struct MessageView: View {
 		}
 	}
 	
+	/// Updates ``isHovered`` with a small debounce on the way out
+	/// so the action chips don't disappear under the user's cursor
+	/// while they're trying to click one.
+	private func updateHoverState(_ hovering: Bool) {
+		self.hoverHideTask?.cancel()
+		self.hoverHideTask = nil
+		if hovering {
+			if !self.isHovered {
+				withAnimation(.easeInOut(duration: 0.15)) {
+					self.isHovered = true
+				}
+			}
+			return
+		}
+		self.hoverHideTask = Task { @MainActor in
+			try? await Task.sleep(for: Self.chipHideDelay)
+			if Task.isCancelled { return }
+			withAnimation(.easeInOut(duration: 0.15)) {
+				self.isHovered = false
+			}
+		}
+	}
+	
+	/// Re-runs the prompt that produced `message` (or, when `message`
+	/// is itself a user prompt, re-runs `message`) directly through
+	/// the existing send pipeline. Resolves the user prompt to
+	/// resubmit, stages the request on ``PromptController``, and lets
+	/// ``PromptInputField`` truncate the trailing messages and call
+	/// `submit()`. Does **not** touch ``PromptController/prompt`` so
+	/// nothing leaks into the prompt field.
 	private func retryGeneration(
         message: Message
     ) {
-		// Get conversation
-        guard var conversation = self.selectedConversation else { return }
-		// Get drop count
-        var count: Int = 0
-        if let messageIndex = conversation.messages.firstIndex(where: { currMessage in
-            currMessage.id == message.id
-        }) {
-            count = conversation.messages.count - (messageIndex - 1)
-        } else {
-            // If index not found, is pending message
-            count = 1
+        guard let conversation = self.selectedConversation else { return }
+        // Resolve the user prompt to resend and the conversation
+        // anchor to truncate to.
+        let anchorUserMessage: Message?
+        switch message.getSender() {
+            case .user:
+                anchorUserMessage = message
+            default:
+                // Walk backwards from this message to find the most
+                // recent user prompt. Falls back to the conversation's
+                // last user message for safety.
+                anchorUserMessage = conversation.messages.previousElement(of: message)
+                    ?? conversation.messages.last(where: { $0.getSender() == .user })
         }
-        // Check for safety
-        count = max(min(count, conversation.messages.count), 0)
-        // Set prompt
-        let prevMessage: Message? = conversation.messages.previousElement(
-            of: message
-        ) ?? conversation.messages.last
-        self.promptController.prompt = prevMessage?.text ?? ""
-        // Set resources
-        let urls: [URL] = prevMessage?.referencedURLs.map(
-            keyPath: \.url
-        ) ?? []
-        self.promptController.tempResources += urls.map { url in
-            return TemporaryResource(url: url)
+        guard let userMessage = anchorUserMessage,
+              userMessage.getSender() == .user else {
+            return
         }
-        // Delete messages
-        conversation.messages = conversation.messages.dropLast(count)
-		conversationManager.update(conversation)
+        let attachments: [URL] = userMessage.referencedURLs.map(\.url)
+        self.promptController.requestResubmit(
+            .init(
+                prompt: userMessage.text,
+                attachments: attachments,
+                dropAfterMessageId: userMessage.id
+            )
+        )
 	}
 	
 }

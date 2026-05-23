@@ -24,6 +24,25 @@ struct SidekickTests {
 		await DefaultModels.checkModelRecommendations()
 	}
 
+    struct SumParams: FunctionParams {
+        var a: Float
+        var b: Float
+    }
+
+    /// A simple two-number adder used as a test fixture for the tool-calling
+    /// plumbing now that the production app no longer ships arithmetic tools.
+    private static let sumFunction = Function<SumParams, Float>(
+        name: "sum",
+        description: "Adds two numbers.",
+        params: [
+            FunctionParameter(label: "a", description: "First addend.", datatype: .float),
+            FunctionParameter(label: "b", description: "Second addend.", datatype: .float)
+        ],
+        run: { params in
+            return params.a + params.b
+        }
+    )
+
 	@Test func localVisionConfigurationUsesCompanionProjector() async throws {
 		let directoryUrl: URL = FileManager.default.temporaryDirectory
 			.appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -96,7 +115,7 @@ struct SidekickTests {
             modelName: nil,
             usage: nil,
             usedServer: false,
-            availableFunctions: ArithmeticFunctions.functions,
+            availableFunctions: [Self.sumFunction],
             malformedToolCalls: [
                 MalformedToolCall(
                     index: 0,
@@ -111,29 +130,11 @@ struct SidekickTests {
         #expect(response.requiresFunctionHandling)
     }
 
-    @Test func qwen36ModelNamesSupportNativeToolCalling() async throws {
-        #expect(InferenceSettings.modelNameSupportsNativeToolCalling("Qwen3.6-235B-A22B-Instruct-2509"))
-        #expect(InferenceSettings.modelNameSupportsNativeToolCalling("qwen/qwen3.6-coder"))
-        #expect(InferenceSettings.modelNameSupportsNativeToolCalling("Qwen3_6-30B-A3B.gguf"))
-        #expect(InferenceSettings.localModelSupportsLiveReasoningToggle(
-            modelUrl: URL(fileURLWithPath: "/tmp/Qwen3.6-30B-A3B-Q4_K_M.gguf")
-        ))
-    }
-
-    @Test func localQwen36UsesNativeToolCallingEvenWhenStoredToggleIsOff() async throws {
+    @Test func chatParametersIncludeToolsAndAutoToolChoice() async throws {
         let defaults = UserDefaults.standard
-        let originalModelUrl = defaults.url(forKey: "modelUrl")
-        let originalHasNativeToolCallingExists = defaults.exists(key: "hasNativeToolCalling")
-        let originalHasNativeToolCalling = defaults.bool(forKey: "hasNativeToolCalling")
         let originalUseFunctionsExists = defaults.exists(key: "useFunctions")
         let originalUseFunctions = defaults.bool(forKey: "useFunctions")
         defer {
-            Settings.modelUrl = originalModelUrl
-            if originalHasNativeToolCallingExists {
-                InferenceSettings.hasNativeToolCalling = originalHasNativeToolCalling
-            } else {
-                defaults.removeObject(forKey: "hasNativeToolCalling")
-            }
             if originalUseFunctionsExists {
                 Settings.useFunctions = originalUseFunctions
             } else {
@@ -141,8 +142,6 @@ struct SidekickTests {
             }
         }
 
-        Settings.modelUrl = URL(fileURLWithPath: "/tmp/Qwen3.6-30B-A3B-Q4_K_M.gguf")
-        InferenceSettings.hasNativeToolCalling = false
         Settings.useFunctions = true
 
         let params = await ChatParameters(
@@ -151,7 +150,7 @@ struct SidekickTests {
             systemPrompt: "System",
             messages: [],
             useFunctions: true,
-            functions: [ArithmeticFunctions.sum]
+            functions: [Self.sumFunction]
         )
         let json = params.toJSON(
             usingRemoteModel: false,
@@ -161,10 +160,6 @@ struct SidekickTests {
             with: Data(json.utf8)
         ) as? [String: Any]
 
-        #expect(InferenceSettings.supportsNativeToolCalling(
-            modelType: .regular,
-            usingRemoteModel: false
-        ))
         #expect(object?["tools"] != nil)
         #expect(object?["tool_choice"] as? String == "auto")
     }
@@ -209,7 +204,7 @@ struct SidekickTests {
             name: nativeToolCall?.function.name ?? "",
             arguments: nativeToolCall?.function.arguments ?? "",
             toolCallID: nativeToolCall?.id,
-            toolRegistry: ToolRegistry(functions: ArithmeticFunctions.functions)
+            toolRegistry: ToolRegistry(functions: [Self.sumFunction])
         )
 
         #expect(decodedCall?.name == "sum")
@@ -218,7 +213,7 @@ struct SidekickTests {
             return
         }
         let result = try await decodedCall.call(
-            using: ToolRegistry(functions: ArithmeticFunctions.functions)
+            using: ToolRegistry(functions: [Self.sumFunction])
         )
         #expect(result == "5.0")
     }
@@ -228,7 +223,7 @@ struct SidekickTests {
             name: "sum",
             arguments: #"{"arguments":"{\"a\":4,\"b\":6}"}"#,
             toolCallID: "call_wrapped",
-            toolRegistry: ToolRegistry(functions: ArithmeticFunctions.functions)
+            toolRegistry: ToolRegistry(functions: [Self.sumFunction])
         )
 
         #expect(decodedCall?.name == "sum")
@@ -237,62 +232,9 @@ struct SidekickTests {
             return
         }
         let result = try await decodedCall.call(
-            using: ToolRegistry(functions: ArithmeticFunctions.functions)
+            using: ToolRegistry(functions: [Self.sumFunction])
         )
         #expect(result == "10.0")
-    }
-
-    @Test func inlineToolCallParserIgnoresBracesInsideStringArguments() async throws {
-        let echoFunction = Function<ToolCallingEchoParams, String>(
-            name: "echo_tool",
-            description: "Returns the provided text.",
-            params: [
-                FunctionParameter(
-                    label: "text",
-                    description: "Text to echo",
-                    datatype: .string
-                )
-            ],
-            run: { params in
-                params.text
-            }
-        )
-        let otherFunctionWithSameSchema = Function<ToolCallingEchoParams, String>(
-            name: "other_tool",
-            description: "Should not be selected when only mentioned in an argument.",
-            params: [
-                FunctionParameter(
-                    label: "text",
-                    description: "Text to echo",
-                    datatype: .string
-                )
-            ],
-            run: { params in
-                "wrong function: \(params.text)"
-            }
-        )
-        let functions: [AnyFunctionBox] = [otherFunctionWithSameSchema, echoFunction]
-        let registry = ToolRegistry(functions: functions)
-        let response = LlamaServer.CompleteResponse(
-            text: """
-            Here is the call:
-            {"function_call":{"name":"echo_tool","arguments":{"text":"value with { braces }, mentions other_tool, and an escaped \\\"quote\\\""}}}
-            """,
-            responseStartSeconds: 0,
-            predictedPerSecond: nil,
-            modelName: nil,
-            usage: nil,
-            usedServer: false,
-            availableFunctions: functions
-        )
-
-        let functionCalls = response.functionCalls
-        #expect(functionCalls?.count == 1)
-        guard var functionCall = functionCalls?.first else {
-            return
-        }
-        let result = try await functionCall.call(using: registry)
-        #expect(result == #"value with { braces }, mentions other_tool, and an escaped "quote""#)
     }
 
     // MARK: - Provider Tests
@@ -301,7 +243,6 @@ struct SidekickTests {
         let minimax = Provider.popularProviders.first { $0.name == "MiniMax" }
         #expect(minimax != nil)
         #expect(minimax?.endpointUrl.absoluteString == "https://api.minimax.io/v1")
-        #expect(minimax?.supportsToolCalling == true)
     }
 
     @Test func popularProvidersAreSortedAlphabetically() async throws {
@@ -382,15 +323,14 @@ struct SidekickTests {
 
     // MARK: - Integration Tests (MiniMax Provider)
 
-    @Test func minimaxProviderToolCallingDetection() async throws {
-        // When endpoint matches MiniMax, providerSupportsToolCalling should
-        // find it in the popularProviders list
+    @Test func minimaxProviderDetectedByEndpoint() async throws {
+        // When endpoint matches MiniMax, it should be found in the
+        // popularProviders list.
         let minimaxUrl = "https://api.minimax.io/v1"
         let match = Provider.popularProviders.first {
             minimaxUrl == $0.endpointUrl.absoluteString
         }
         #expect(match != nil)
-        #expect(match?.supportsToolCalling == true)
     }
 
     @Test func minimaxOrganizationIncludedInCaseIterable() async throws {

@@ -102,6 +102,25 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
 		synthesizer.stopSpeaking(at: .immediate)
 	}
 	
+	/// Shared start/stop entry point used by message views. When the
+	/// synthesizer is already speaking the call stops playback;
+	/// otherwise it begins reading `text`. Decouples callers from
+	/// the synthesizer's mutable state so a chip and a menu item can
+	/// drive the same backend without re-implementing the toggle
+	/// each time.
+	public func toggleReading(
+		text: String,
+		onFinished: @escaping () -> Void = {}
+	) {
+		Task { @MainActor in
+			if self.isSpeaking {
+				await self.stopSpeaking()
+			} else {
+				await self.speak(text: text, onFinished: onFinished)
+			}
+		}
+	}
+	
 	/// Function to fetch list of all available voices
 	public func fetchVoices() {
 		let voices = AVSpeechSynthesisVoice.speechVoices().sorted { (firstVoice: AVSpeechSynthesisVoice, secondVoice: AVSpeechSynthesisVoice) -> Bool in

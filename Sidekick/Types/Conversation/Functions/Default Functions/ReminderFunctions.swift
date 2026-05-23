@@ -12,9 +12,7 @@ public class RemindersFunctions {
     
     static var functions: [AnyFunctionBox] = [
         RemindersFunctions.getReminders,
-        RemindersFunctions.addReminder,
-        RemindersFunctions.removeReminder,
-        RemindersFunctions.editReminder
+        RemindersFunctions.addReminder
     ]
     
     /// An object representing a ``Reminder``
@@ -60,7 +58,6 @@ public class RemindersFunctions {
         
         case noPermissions
         case invalidDateFormat
-        case reminderNotFound(String)
         case failedToSaveReminder(Error)
         
         public var errorDescription: String? {
@@ -69,8 +66,6 @@ public class RemindersFunctions {
                     return "Invalid date format"
                 case .noPermissions:
                     return "Permissions to access reminders was denied"
-                case .reminderNotFound(let id):
-                    return "Reminder with identifier '\(id)' not found"
                 case .failedToSaveReminder(let error):
                     return "Failed to save reminder: \(error.localizedDescription)"
             }
@@ -103,24 +98,24 @@ public class RemindersFunctions {
     /// A ``Function`` for getting all reminders, optionally filtered by completion state and due date range
     static let getReminders = Function<GetRemindersParams, String>(
         name: "get_reminders",
-        description: "Get all reminders, optionally filtering by completion and due date range.",
+        description: "Returns reminders, optionally filtered by completion and due-date range.",
         clearance: .sensitive,
         params: [
             FunctionParameter(
                 label: "completed",
-                description: "Whether to include completed reminders (optional, defaults to false).",
+                description: "Include completed reminders. Defaults to false.",
                 datatype: .boolean,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "startDueDate",
-                description: "The start due date, format `yyyy-MM-dd HH:mm:ss` (optional).",
+                description: "Start due date in `yyyy-MM-dd HH:mm:ss`.",
                 datatype: .string,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "endDueDate",
-                description: "The end due date, format `yyyy-MM-dd HH:mm:ss` (optional).",
+                description: "End due date in `yyyy-MM-dd HH:mm:ss`.",
                 datatype: .string,
                 isRequired: false
             )
@@ -177,30 +172,30 @@ public class RemindersFunctions {
     /// A ``Function`` for adding a reminder to the user's reminders
     static let addReminder = Function<AddReminderParams, String>(
         name: "add_reminder",
-        description: "Add a new reminder to the user's reminders list.",
+        description: "Creates a new reminder.",
         clearance: .sensitive,
         params: [
             FunctionParameter(
                 label: "title",
-                description: "The title of the reminder.",
+                description: "Reminder title.",
                 datatype: .string,
                 isRequired: true
             ),
             FunctionParameter(
                 label: "dueDate",
-                description: "The due date/time for the reminder, format `yyyy-MM-dd HH:mm:ss` (optional).",
+                description: "Due date/time in `yyyy-MM-dd HH:mm:ss`.",
                 datatype: .string,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "notes",
-                description: "Notes or description for the reminder.",
+                description: "Reminder notes.",
                 datatype: .string,
                 isRequired: false
             ),
             FunctionParameter(
                 label: "priority",
-                description: "The priority of the reminder (0 = none, 1 = high, 5 = medium, 9 = low, optional).",
+                description: "Priority: 0 = none, 1 = high, 5 = medium, 9 = low.",
                 datatype: .integer,
                 isRequired: false
             )
@@ -249,160 +244,6 @@ public class RemindersFunctions {
         var title: String
         var dueDate: String?
         var notes: String?
-        var priority: Int?
-    }
-    
-    /// A ``Function`` for removing a reminder by its identifier
-    static let removeReminder = Function<RemoveReminderParams, String>(
-        name: "remove_reminder",
-        description: "Remove a reminder by its identifier. Call `get_reminders` to find the UUID of a reminder.",
-        clearance: .sensitive,
-        params: [
-            FunctionParameter(
-                label: "reminderIdentifier",
-                description: "The UUID of the reminder to remove.",
-                datatype: .string,
-                isRequired: true
-            )
-        ],
-        run: { params in
-            if await !RemindersFunctions.requestRemindersAccess() {
-                throw RemindersFunctionsError.noPermissions
-            }
-            let eventStore = EKEventStore()
-            let calendars = eventStore.calendars(for: .reminder)
-            let predicate = eventStore.predicateForReminders(in: calendars)
-            let reminders = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[EKReminder], Error>) in
-                eventStore.fetchReminders(matching: predicate) { reminders in
-                    continuation.resume(returning: reminders ?? [])
-                }
-            }
-            guard let reminder = reminders.first(where: { $0.calendarItemIdentifier == params.reminderIdentifier }) else {
-                throw RemindersFunctionsError.reminderNotFound(params.reminderIdentifier)
-            }
-            // Formulate success message
-            var successMessage: String = "The reminder was removed successfully"
-            if let name = reminder.title {
-                successMessage = "The reminder `\(name)` was removed successfully"
-            }
-            // Remove reminder
-            do {
-                try eventStore.remove(reminder, commit: true)
-            } catch {
-                throw RemindersFunctionsError.failedToSaveReminder(error)
-            }
-            return successMessage
-        }
-    )
-    struct RemoveReminderParams: FunctionParams {
-        var reminderIdentifier: String
-    }
-    
-    /// A ``Function`` for editing an existing reminder by its identifier
-    static let editReminder = Function<EditReminderParams, String>(
-        name: "edit_reminder",
-        description: "Edit an existing reminder by its UUID. You can update the title, due date, notes, completion status, or priority. Call `get_reminders` to find the UUID of a reminder.",
-        clearance: .sensitive,
-        params: [
-            FunctionParameter(
-                label: "reminderIdentifier",
-                description: "The UUID of the reminder to edit.",
-                datatype: .string,
-                isRequired: true
-            ),
-            FunctionParameter(
-                label: "title",
-                description: "The new title for the reminder (optional).",
-                datatype: .string,
-                isRequired: false
-            ),
-            FunctionParameter(
-                label: "dueDate",
-                description: "The new due date/time for the reminder, format `yyyy-MM-dd HH:mm:ss` (optional).",
-                datatype: .string,
-                isRequired: false
-            ),
-            FunctionParameter(
-                label: "notes",
-                description: "The new notes or description for the reminder (optional).",
-                datatype: .string,
-                isRequired: false
-            ),
-            FunctionParameter(
-                label: "isCompleted",
-                description: "Whether the reminder is completed (optional).",
-                datatype: .boolean,
-                isRequired: false
-            ),
-            FunctionParameter(
-                label: "priority",
-                description: "The new priority of the reminder (0 = none, 1 = high, 5 = medium, 9 = low, optional).",
-                datatype: .integer,
-                isRequired: false
-            )
-        ],
-        run: { params in
-            // Check permissions
-            if await !RemindersFunctions.requestRemindersAccess() {
-                throw RemindersFunctions.RemindersFunctionsError.noPermissions
-            }
-            // Get reminders
-            let eventStore = EKEventStore()
-            let calendars = eventStore.calendars(for: .reminder)
-            let predicate = eventStore.predicateForReminders(in: calendars)
-            let reminders = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[EKReminder], Error>) in
-                eventStore.fetchReminders(matching: predicate) { reminders in
-                    continuation.resume(returning: reminders ?? [])
-                }
-            }
-            guard let reminder = reminders.first(where: { $0.calendarItemIdentifier == params.reminderIdentifier }) else {
-                throw RemindersFunctionsError.reminderNotFound(params.reminderIdentifier)
-            }
-            // Update fields if provided
-            if let title = params.title {
-                reminder.title = title
-            }
-            if let dueDateString = params.dueDate {
-                let dueDate = try RemindersFunctions.convertStringToDate(dueDateString)
-                reminder.dueDateComponents = Calendar.current.dateComponents(
-                    [.year, .month, .day, .hour, .minute, .second],
-                    from: dueDate
-                )
-            }
-            if let notes = params.notes {
-                reminder.notes = notes
-            }
-            if let isCompleted = params.isCompleted {
-                reminder.isCompleted = isCompleted
-                if isCompleted {
-                    reminder.completionDate = Date()
-                } else {
-                    reminder.completionDate = nil
-                }
-            }
-            if let priority = params.priority {
-                reminder.priority = priority
-            }
-            // Save changes
-            do {
-                try eventStore.save(reminder, commit: true)
-            } catch {
-                throw RemindersFunctions.RemindersFunctionsError.failedToSaveReminder(error)
-            }
-            // Return the updated reminder as JSON
-            let updatedReminder = RemindersFunctions.Reminder(reminder: reminder)
-            let jsonEncoder = JSONEncoder()
-            jsonEncoder.outputFormatting = [.prettyPrinted]
-            let jsonData = try jsonEncoder.encode(updatedReminder)
-            return String(data: jsonData, encoding: .utf8)!
-        }
-    )
-    struct EditReminderParams: FunctionParams {
-        var reminderIdentifier: String
-        var title: String?
-        var dueDate: String?
-        var notes: String?
-        var isCompleted: Bool?
         var priority: Int?
     }
     

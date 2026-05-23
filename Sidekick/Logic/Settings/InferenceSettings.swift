@@ -37,34 +37,10 @@ If the provided information is related to the request, you will respond with ref
     
     /// Static constant for the part of the system prompt telling the LLM to use functions
     public static let useFunctionsPrompt: String = """
-In this environment you have access to a set of tools you can use to answer the user's question. Call a tool by outputting JSON in the format below. Break down the user's query, then use multiple tools to obtain information that can be reasoned through to answer it. You can call multiple tools at once. 
-
-{
-  "function_call": {
-    "name": "name_of_function",
-    "arguments": {
-      "example_param_1": "Hello, World",
-      "example_param_2": 1.1,
-      "example_param_3": [1, 2, 3, 4],
-      "optional_example_param_4": null
-    }
-  }
-}
-
-After a tool is run, a result will be provided. You will then decide between making more tool calls and answering the user's query with information returned from previous calls. 
-"""
-    
-    /// Static constant for the part of the system prompt telling the LLM to use native tool calling
-    public static let useNativeFunctionsPrompt: String = """
 In this environment you have access to tools you can use to answer the user's question.
 
 Use tools whenever they would help you obtain information or complete actions for the user.
 After a tool result is returned, either use another tool if needed or answer the user's query normally.
-"""
-    
-    /// Static constant for the part of the system prompt telling the LLM what functions are available
-    public static let functionsSchemaPrompt: String = """
-Here are the functions available in JSON schema format:
 """
     
     /// Computed property for the part of the system prompt where metadata is fed to the LLM
@@ -269,63 +245,15 @@ You recall the following information about the user from prior interactions:
         guard let modelName = modelUrl?.lastPathComponent.lowercased() else {
             return false
         }
-        return modelName.contains("qwen3.5")
-            || modelNameSupportsQwen36NativeToolCalling(modelName)
-            || modelName.contains("gemma-4")
-            || modelName.contains("gemma4")
-    }
-
-    public static func modelSupportsNativeToolCalling(
-        modelType: ModelType,
-        usingRemoteModel: Bool
-    ) -> Bool {
-        let modelName: String
-        if usingRemoteModel {
-            switch modelType {
-                case .regular:
-                    modelName = Self.serverModelName
-                case .worker:
-                    modelName = Self.serverWorkerModelName
-                case .completions:
-                    modelName = Self.completionsModelUrl?
-                        .deletingPathExtension()
-                        .lastPathComponent ?? ""
-            }
-        } else {
-            modelName = Self.localModelUrl(modelType: modelType)?
-                .deletingPathExtension()
-                .lastPathComponent ?? ""
-        }
-        return Self.modelNameSupportsNativeToolCalling(modelName)
-    }
-
-    public static func supportsNativeToolCalling(
-        modelType: ModelType,
-        usingRemoteModel: Bool
-    ) -> Bool {
-        if Self.modelSupportsNativeToolCalling(
-            modelType: modelType,
-            usingRemoteModel: usingRemoteModel
-        ) {
-            return true
-        }
-        return Self.hasNativeToolCalling
-    }
-
-    public static func modelNameSupportsNativeToolCalling(
-        _ modelName: String
-    ) -> Bool {
-        return modelNameSupportsQwen36NativeToolCalling(modelName)
-    }
-
-    private static func modelNameSupportsQwen36NativeToolCalling(
-        _ modelName: String
-    ) -> Bool {
-        let normalized = modelName.lowercased()
+        let normalized = modelName
             .replacingOccurrences(of: "_", with: "")
             .replacingOccurrences(of: "-", with: "")
             .replacingOccurrences(of: " ", with: "")
-        return normalized.contains("qwen3.6") || normalized.contains("qwen36")
+        return modelName.contains("qwen3.5")
+            || normalized.contains("qwen3.6")
+            || normalized.contains("qwen36")
+            || modelName.contains("gemma-4")
+            || modelName.contains("gemma4")
     }
 
     public static func localModelUrl(
@@ -418,36 +346,6 @@ You recall the following information about the user from prior interactions:
         set {
             UserDefaults.standard.set(newValue, forKey: "serverModelHasVision")
         }
-    }
-    
-    /// A `Bool` representing whether the inference provider supports tool calling natively
-    public static var hasNativeToolCalling: Bool {
-        get {
-            // Set default
-            if !UserDefaults.standard.exists(key: "hasNativeToolCalling") {
-                // Use default
-                Self.hasNativeToolCalling = Self.providerSupportsToolCalling() ?? false
-            }
-            return UserDefaults.standard.bool(
-                forKey: "hasNativeToolCalling"
-            )
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: "hasNativeToolCalling")
-        }
-    }
-    
-    /// A function to check if the provider selected supports tool calling
-    public static func providerSupportsToolCalling() -> Bool? {
-        // Check inference provider
-        for provider in Provider.popularProviders {
-            // If matches, use provider value
-            if Self.endpoint == provider.endpointUrl.absoluteString {
-                return provider.supportsToolCalling
-            }
-        }
-        // Default to nil
-        return nil
     }
     
     /// A `String` representing the name of the remote worker model

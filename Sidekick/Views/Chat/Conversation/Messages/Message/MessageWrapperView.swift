@@ -16,12 +16,7 @@ struct MessageWrapperView<Content: View>: View {
     @Environment(PromptController.self) private var promptController
     
     var selectedConversation: Conversation? {
-        guard let selectedConversationId = conversationState.selectedConversationId else {
-            return nil
-        }
-        return self.conversationManager.getConversation(
-            id: selectedConversationId
-        )
+        return self.conversationState.selectedConversation
     }
     var time: Date
     private var timeDescription: String {
