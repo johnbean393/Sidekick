@@ -25,6 +25,9 @@ public enum FunctionCategory: String, Codable, CaseIterable, Identifiable, Equat
         return self.rawValue
     }
     
+    /// Categories that are enabled by default on first launch.
+    static let defaultEnabled: Set<FunctionCategory> = [.code, .web]
+    
     /// User-facing description of the function category
     var description: String {
         switch self {

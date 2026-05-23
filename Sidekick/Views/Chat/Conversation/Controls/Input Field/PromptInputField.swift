@@ -291,9 +291,11 @@ struct PromptInputField: View {
         // Cancel any in-flight generation before mutating the
         // conversation; `submit()` retries on `processing` but the
         // truncation below would otherwise race the streaming append.
-        if self.model.status == .processing || self.model.status == .coldProcessing {
+        if self.model.isGenerating(conversationId: self.selectedConversation?.id) {
             Task { @MainActor in
-                await self.model.interrupt()
+                await self.model.interrupt(
+                    conversationId: self.selectedConversation?.id
+                )
             }
         }
         // Truncate conversation if requested. `inclusive: true`
@@ -394,6 +396,8 @@ struct PromptInputField: View {
             case .text:
                 self.startTextGeneration(
                     prompt: promptController.prompt,
+                    conversation: updatedConversation,
+                    expertId: self.conversationState.selectedExpertId,
                     tempResources: tempResources,
                     enableThinking: enableThinking
                 )
@@ -405,6 +409,8 @@ struct PromptInputField: View {
                     // Else, fall back to text
                     self.startTextGeneration(
                         prompt: promptController.prompt,
+                        conversation: updatedConversation,
+                        expertId: self.conversationState.selectedExpertId,
                         tempResources: tempResources,
                         enableThinking: enableThinking
                     )
@@ -422,17 +428,22 @@ struct PromptInputField: View {
     
     private func startTextGeneration(
         prompt: String,
+        conversation: Conversation,
+        expertId: UUID?,
         tempResources: [TemporaryResource],
         enableThinking: Bool?
     ) {
         // Get response
-        Task {
+        let task = Task {
             await self.generateChatResponse(
                 prompt: prompt,
+                conversation: conversation,
+                expertId: expertId,
                 tempResources: tempResources,
                 enableThinking: enableThinking
             )
         }
+        self.model.setChatRunTask(task, for: conversation.id)
     }
     
     private func startImageGeneration() {
@@ -569,17 +580,21 @@ struct PromptInputField: View {
     
     private func generateChatResponse(
         prompt: String,
+        conversation sentConversation: Conversation,
+        expertId: UUID?,
         tempResources: [TemporaryResource],
         enableThinking: Bool?
     ) async {
         // If processing, use recursion to update
-        if (model.status == .processing || model.status == .coldProcessing) {
+        if model.isGenerating(conversationId: sentConversation.id) {
             Task {
-                await model.interrupt()
+                await model.interrupt(conversationId: sentConversation.id)
                 Task.detached(priority: .userInitiated) {
                     try? await Task.sleep(for: .seconds(1))
                     await generateChatResponse(
                         prompt: prompt,
+                        conversation: sentConversation,
+                        expertId: expertId,
                         tempResources: tempResources,
                         enableThinking: enableThinking
                     )
@@ -588,13 +603,13 @@ struct PromptInputField: View {
             return
         }
         // Get and save conversation
-        guard var conversation = self.promptController.sentConversation else { return }
+        var conversation = sentConversation
         let originalConversation: Conversation = conversation
         let preparedResources: [TemporaryResource] = await self.conversationTemporaryResources(
             for: conversation,
             currentResources: tempResources
         )
-        self.model.setSentConversationId(conversation.id)
+        self.model.beginChatRun(conversationId: conversation.id)
         // Generate title & update again
         let isFirstMessage: Bool = conversation.messages.count <= 1
         let shouldGenerateConversationTitle: Bool = Settings.generateConversationTitles && isFirstMessage
@@ -603,7 +618,7 @@ struct PromptInputField: View {
         var response: LlamaServer.CompleteResponse
         var didUseSources: Bool = false
         do {
-            self.model.indicateStartedQuerying()
+            self.model.indicateStartedQuerying(conversationId: conversation.id)
             var index: SimilarityIndex? = nil
             // If there are resources
             if !((selectedExpert?.resources.resources.isEmpty) ?? true) {
@@ -619,27 +634,32 @@ struct PromptInputField: View {
             // Get mode
             let mode: Model.Mode = self.promptController.isUsingDeepResearch ? .deepResearch : .chat
             // Get response
-            response = try await model.listenThinkRespond(
-                messages: conversation.messages,
-                modelType: .regular,
-                mode: mode,
-                similarityIndex: index,
-                useWebSearch: useWebSearch,
-                useFunctions: self.promptController.useFunctions,
-                expert: selectedExpert,
-                enableThinking: enableThinking,
-                useCanvas: self.conversationState.useCanvas,
-                canvasSelection: self.canvasController.selection,
-                temporaryResources: preparedResources,
-                showPreview: true
-            )
+            response = try await InferenceRunContext.$conversationId.withValue(
+                conversation.id
+            ) {
+                try await model.listenThinkRespond(
+                    messages: conversation.messages,
+                    modelType: .regular,
+                    mode: mode,
+                    similarityIndex: index,
+                    useWebSearch: useWebSearch,
+                    useFunctions: self.promptController.useFunctions,
+                    expert: selectedExpert,
+                    enableThinking: enableThinking,
+                    useCanvas: self.conversationState.useCanvas,
+                    canvasSelection: self.canvasController.selection,
+                    temporaryResources: preparedResources,
+                    conversationId: conversation.id,
+                    showPreview: true
+                )
+            }
         } catch let error as LlamaServerError {
-            await model.interrupt()
+            await model.interrupt(conversationId: conversation.id)
             // Don't show error dialog for user-initiated cancellation
             if case .cancelled = error {
-                await self.handleCancellation(originalConversation: originalConversation)
+                self.handleCancellation(originalConversation: originalConversation)
             } else {
-                await self.handleResponseError(
+                self.handleResponseError(
                     error,
                     originalConversation: originalConversation
                 )
@@ -647,6 +667,7 @@ struct PromptInputField: View {
             return
         } catch {
             print("Agent listen threw unexpected error", error as Any)
+            self.model.finishChatRun(conversationId: conversation.id)
             return
         }
         // Update UI
@@ -658,7 +679,7 @@ struct PromptInputField: View {
                 sender: .assistant,
                 model: response.modelName,
                 functionCallRecords: response.functionCallRecords,
-                expertId: promptController.sentExpertId
+                expertId: expertId
             )
             responseMessage.startTime = response.startTime
             responseMessage.update(
@@ -677,7 +698,10 @@ struct PromptInputField: View {
                 SoundEffects.ping.play()
             }
             // Reset sentConversation
-            self.promptController.sentConversation = nil
+            if self.promptController.sentConversation?.id == conversation.id {
+                self.promptController.sentConversation = nil
+            }
+            self.model.finishChatRun(conversationId: conversation.id)
         }
         if shouldGenerateConversationTitle {
             let conversationId: UUID = conversation.id
@@ -788,8 +812,7 @@ A user is chatting with an assistant and they have sent the message below. Gener
             self.promptController.prompt = prompt
         }
         // Reset model status
-        self.model.status = .ready
-        self.model.sentConversationId = nil
+        self.model.finishChatRun(conversationId: originalConversation.id)
         self.promptController.sentConversation = nil
     }
     
@@ -806,8 +829,7 @@ A user is chatting with an assistant and they have sent the message below. Gener
             self.promptController.prompt = prompt
         }
         // Reset model status
-        self.model.status = .ready
-        self.model.sentConversationId = nil
+        self.model.finishChatRun(conversationId: originalConversation.id)
         self.promptController.sentConversation = nil
     }
     

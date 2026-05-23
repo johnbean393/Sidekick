@@ -46,13 +46,10 @@ public struct InferenceRecord: Identifiable, Codable {
     
     public enum UsageType: String, Codable, CaseIterable {
         
-        case completions // Used for chat with an instruct tuned model
-        case chatCompletions // Used for completions with a foundation model
+        case chatCompletions // Used for chat with an instruct tuned model
         
         var description: String {
             switch self {
-                case .completions:
-                    return String(localized: "Completions")
                 case .chatCompletions:
                     return String(localized: "Chat Completions")
             }

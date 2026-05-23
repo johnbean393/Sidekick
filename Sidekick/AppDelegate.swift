@@ -20,11 +20,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         category: String(describing: AppDelegate.self)
     )
     
-    /// A object of type  ``InlineAssistantController`` controller
-    let inlineAssistantController: InlineAssistantController = .shared
-    /// A object of type  ``CompletionsController`` controller
-    let completionsController: CompletionsController = .shared
-    
     /// Hard ceiling on coordinated quit cleanup. Bigger than the per-server
     /// SIGTERM grace period so two servers can shut down sequentially before
     /// SIGKILL is escalated, but short enough that the app never feels stuck
@@ -53,8 +48,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 .displayFrequency(.daily)
             ]
         )
-        // Configure keyboard shortcuts
-        ShortcutController.setup()
         // Update endpoint format
         Task { @MainActor in
             await Refactorer.updateEndpoint()
@@ -117,10 +110,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         coordinator.registerShutdownHook(identifier: "Model") {
             await Model.shared.interrupt()
             await Model.shared.stopServers()
-        }
-        // Hook: completions llama-server (separate process, separate port).
-        coordinator.registerShutdownHook(identifier: "Completions") { [weak self] in
-            await self?.completionsController.stopAsync()
         }
     }
     

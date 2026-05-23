@@ -74,7 +74,9 @@ struct MessageWrapperView<Content: View>: View {
     /// Function to stop generation
     private func stopGeneration() {
         Task.detached { @MainActor in
-            await self.model.interrupt()
+            await self.model.interrupt(
+                conversationId: self.selectedConversation?.id
+            )
             self.retryGeneration()
         }
     }

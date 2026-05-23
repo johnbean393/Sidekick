@@ -64,8 +64,6 @@ public actor LlamaServer {
                     return "4579"
                 case .worker:
                     return "9830"
-                case .completions:
-                    return "1623"
             }
         }()
     }
@@ -78,8 +76,6 @@ public actor LlamaServer {
                 return Settings.modelUrl
             case .worker:
                 return InferenceSettings.workerModelUrl
-            case .completions:
-                return InferenceSettings.completionsModelUrl
         }
     }
     

@@ -34,6 +34,7 @@ public class Model: ObservableObject {
     @Published var pendingMessage: Message? = nil
     @Published var status: Status = .cold
     @Published var sentConversationId: UUID? = nil
+    @Published var chatRuns: [UUID: ChatRunState] = [:]
     
     // MARK: - Model Servers
     

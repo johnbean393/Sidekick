@@ -15,6 +15,10 @@
     --md-quote-border: rgba(0, 0, 0, 0.18);
     --md-table-row-alt: rgba(0, 0, 0, 0.03);
     --md-table-border: rgba(0, 0, 0, 0.12);
+    /* These two are kept in sync with the user's macOS accent colour via
+       the JS bridge (`sk.setAccentColors`); the values here are only the
+       fallback used before the host pushes the resolved colours. */
+    --md-accent: #0a66c2;
     --md-selection: rgba(10, 102, 194, 0.25);
 }
 
@@ -28,7 +32,10 @@ body.theme-dark {
     --md-quote-border: rgba(255, 255, 255, 0.2);
     --md-table-row-alt: rgba(255, 255, 255, 0.04);
     --md-table-border: rgba(255, 255, 255, 0.12);
-    --md-selection: rgba(76, 142, 248, 0.3);
+    /* --md-accent and --md-selection are NOT overridden here: the Swift
+       side resolves NSColor.controlAccentColor and selectedTextBackground
+       against the current appearance and writes the result as an inline
+       style on :root, which has higher specificity than this rule. */
 }
 
 html, body {
@@ -314,11 +321,11 @@ body[data-mode="reasoning"] .md-block.md-new {
     outline: none;
 }
 .markdown-body .sk-codeblock-actions button:focus-visible {
-    outline: 1.5px solid var(--md-link);
+    outline: 1.5px solid var(--md-accent);
     outline-offset: 1px;
 }
 .markdown-body .sk-codeblock-actions button.sk-copied {
-    color: var(--md-link);
+    color: var(--md-accent);
 }
 .markdown-body .sk-codeblock-actions .sk-icon {
     width: 14px;

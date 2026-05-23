@@ -63,23 +63,6 @@ struct LengthyTasksProgressTip: Tip {
 	
 }
 
-struct TryToolsTip: Tip {
-	
-	var title: Text {
-		Text("Try Tools")
-	}
-	
-	var message: Text? {
-		Text("Leverage Sidekick's built-in tools to quickly generate and check content.")
-	}
-	
-	var image: Image? {
-		Image(systemName: "wrench.adjustable")
-	}
-	
-}
-
-
 struct AddFilesTip: Tip {
 	
 	// Track whether the user is ready for adding files

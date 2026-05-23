@@ -178,6 +178,8 @@ extension ChatMarkdownWebView {
         private(set) var lastColorScheme: ColorScheme
         private(set) var lastFontSize: CGFloat
         private(set) var lastMode: ChatMarkdownWebView.Mode
+        private(set) var lastAccent: String?
+        private(set) var lastSelection: String?
 
         /// Pending state to flush when the page becomes ready.
         private var pendingText: String?
@@ -185,9 +187,16 @@ extension ChatMarkdownWebView {
         private var pendingColorScheme: ColorScheme?
         private var pendingFontSize: CGFloat?
         private var pendingMode: ChatMarkdownWebView.Mode?
+        private var pendingAccent: String?
+        private var pendingSelection: String?
 
         /// Whether the guest reported ready (chat.js finished loading).
         private var ready: Bool = false
+
+        /// NotificationCenter observer that re-pushes the accent / selection
+        /// colours when the user changes their system accent in System
+        /// Settings → Appearance.
+        private var systemColorsObserver: NSObjectProtocol?
 
         init(
             colorScheme: ColorScheme,
@@ -209,6 +218,29 @@ extension ChatMarkdownWebView {
             self.pendingFontSize = fontSize
             self.pendingMode = mode
             super.init()
+            // Seed the colour pair from the current system accent so the
+            // first paint already uses it.
+            let accent = Coordinator.accentRGBA(for: colorScheme)
+            let selection = Coordinator.selectionRGBA(for: colorScheme)
+            self.lastAccent = accent
+            self.lastSelection = selection
+            self.pendingAccent = accent
+            self.pendingSelection = selection
+            // Listen for accent-change notifications (fired when the user
+            // changes their system accent, increases contrast, etc.).
+            self.systemColorsObserver = NotificationCenter.default.addObserver(
+                forName: Notification.Name("NSSystemColorsDidChangeNotification"),
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.refreshSystemColors()
+            }
+        }
+
+        deinit {
+            if let observer = self.systemColorsObserver {
+                NotificationCenter.default.removeObserver(observer)
+            }
         }
 
         // MARK: Bridge inputs
@@ -229,6 +261,10 @@ extension ChatMarkdownWebView {
                 } else {
                     self.pendingColorScheme = colorScheme
                 }
+                // Accent / selection colours resolve differently between
+                // light and dark mode (the system tints them for legibility),
+                // so re-push whenever the appearance flips.
+                self.refreshSystemColors()
             }
 
             // Font size.
@@ -338,8 +374,8 @@ extension ChatMarkdownWebView {
 
         private func handleReady() {
             self.ready = true
-            // Drain pending state in the right order: theme + font + mode,
-            // then text, then streaming flag so the trailing-block
+            // Drain pending state in the right order: theme + font + mode +
+            // accent, then text, then streaming flag so the trailing-block
             // decoration is correct.
             if let scheme = self.pendingColorScheme {
                 self.callJS("window.sk && sk.setColorScheme(\(quote(scheme == .dark ? "dark" : "light")))")
@@ -353,6 +389,11 @@ extension ChatMarkdownWebView {
                 self.callJS("window.sk && sk.setMode(\(quote(mode.rawValue)))")
                 self.pendingMode = nil
             }
+            if let accent = self.pendingAccent, let selection = self.pendingSelection {
+                self.callJS("window.sk && sk.setAccentColors(\(quote(accent)), \(quote(selection)))")
+                self.pendingAccent = nil
+                self.pendingSelection = nil
+            }
             if let text = self.pendingText {
                 self.callJS("window.sk && sk.setMarkdown(\(quote(text)))")
                 self.pendingText = nil
@@ -361,6 +402,69 @@ extension ChatMarkdownWebView {
                 self.callJS("window.sk && sk.setStreaming(\(streaming ? "true" : "false"))")
                 self.pendingIsStreaming = nil
             }
+        }
+
+        /// Recomputes the accent + selection colours for the current
+        /// appearance and pushes them to JS (or stashes them in the
+        /// pending slot if the page isn't ready yet).
+        fileprivate func refreshSystemColors() {
+            let accent = Coordinator.accentRGBA(for: self.lastColorScheme)
+            let selection = Coordinator.selectionRGBA(for: self.lastColorScheme)
+            if accent == self.lastAccent && selection == self.lastSelection {
+                return
+            }
+            self.lastAccent = accent
+            self.lastSelection = selection
+            if self.ready {
+                self.callJS("window.sk && sk.setAccentColors(\(quote(accent)), \(quote(selection)))")
+            } else {
+                self.pendingAccent = accent
+                self.pendingSelection = selection
+            }
+        }
+
+        /// User's chosen system accent colour, resolved against `scheme`.
+        static func accentRGBA(for scheme: ColorScheme) -> String {
+            return rgbaString(
+                color: NSColor.controlAccentColor,
+                scheme: scheme,
+                fallback: "rgba(10, 102, 194, 1)"
+            )
+        }
+
+        /// macOS's selected-text background colour for the current accent
+        /// and appearance. This is the same tint that NSTextView and
+        /// Safari use for highlights, so the WebView matches them.
+        static func selectionRGBA(for scheme: ColorScheme) -> String {
+            return rgbaString(
+                color: NSColor.selectedTextBackgroundColor,
+                scheme: scheme,
+                fallback: scheme == .dark
+                    ? "rgba(76, 142, 248, 0.30)"
+                    : "rgba(10, 102, 194, 0.25)"
+            )
+        }
+
+        private static func rgbaString(
+            color: NSColor,
+            scheme: ColorScheme,
+            fallback: String
+        ) -> String {
+            let appearance = NSAppearance(
+                named: scheme == .dark ? .darkAqua : .aqua
+            ) ?? NSAppearance.current
+            var result = fallback
+            appearance?.performAsCurrentDrawingAppearance {
+                guard let resolved = color.usingColorSpace(.sRGB) else { return }
+                var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+                resolved.getRed(&r, green: &g, blue: &b, alpha: &a)
+                let ri = max(0, min(255, Int((r * 255).rounded())))
+                let gi = max(0, min(255, Int((g * 255).rounded())))
+                let bi = max(0, min(255, Int((b * 255).rounded())))
+                let af = max(0, min(1, a))
+                result = "rgba(\(ri), \(gi), \(bi), \(String(format: "%.3f", af)))"
+            }
+            return result
         }
 
         private func callJS(_ script: String) {

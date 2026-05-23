@@ -22,35 +22,6 @@ private func castCF<T, U>(_ value: T, to type: U.Type = U.self) -> U? {
 }
 
 public extension AXUIElement {
-    /// Attempts to return the bounding rect of the insertion point (cursor) in the current text area.
-    /// Fallback order: Caret Bounds → Caret Rect → Mouse Cursor Rect.
-    /// - Returns: `cursorPositionResult` representing the bounding rectangle and type
-    ///
-    func resolveCursorPosition() -> CursorPositionResult? {
-		// 1. Attempt to get caret bounds
-		if let caretBounds = getCaretBounds() {
-			return CursorPositionResult(
-				type: .caret,
-				bounds: caretBounds
-			)
-		}
-		// 2. Attempt to get caret bounds with fallback
-		if let caretBounds = fallbackGetCaretBounds() {
-			return CursorPositionResult(
-				type: .caretFallback,
-				bounds: caretBounds
-			)
-		}
-        // 3. Attempt to get caret rect
-        if let caretRect = getCaretRect() {
-            return CursorPositionResult(type: .rect, bounds: caretRect)
-        }
-        // 4. Fallback to mouse cursor position
-        if let mouseRect = getMouseCursorRect() {
-            return CursorPositionResult(type: .mouseCursor, bounds: mouseRect)
-        }
-        return nil
-    }
     
     // MARK: - Primary Method: Caret Bounds
     

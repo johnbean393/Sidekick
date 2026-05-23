@@ -69,6 +69,7 @@ extension LlamaServer {
         toolChoice: ChatParameters.ToolChoice? = nil,
         expert: Expert? = nil,
         enableThinking: Bool? = nil,
+        requestIDHandler: (@Sendable (UUID) async -> Void)? = nil,
         updateStatusHandler: (@Sendable (Model.Status) async -> Void)? = nil,
         progressHandler: (@Sendable (String) -> Void)? = nil
     ) async throws -> CompleteResponse {
@@ -84,6 +85,7 @@ extension LlamaServer {
                 toolChoice: toolChoice,
                 expert: expert,
                 enableThinking: enableThinking,
+                requestIDHandler: requestIDHandler,
                 updateStatusHandler: updateStatusHandler,
                 progressHandler: progressHandler
             )
@@ -108,6 +110,7 @@ extension LlamaServer {
         toolChoice: ChatParameters.ToolChoice? = nil,
         expert: Expert? = nil,
         enableThinking: Bool? = nil,
+        requestIDHandler: (@Sendable (UUID) async -> Void)? = nil,
         updateStatusHandler: (@Sendable (Model.Status) async -> Void)? = nil,
         progressHandler: (@Sendable (String) -> Void)? = nil
     ) async throws -> CompleteResponse {
@@ -234,6 +237,9 @@ extension LlamaServer {
             session: session
         )
         self.activeRequests[requestID] = context
+        if let requestIDHandler {
+            await requestIDHandler(requestID)
+        }
         if self.pendingCancellationForAllRequests {
             context.cancel()
         }
@@ -564,8 +570,6 @@ extension LlamaServer {
                     return stopResponse?.model ?? InferenceSettings.serverModelName
                 case .worker:
                     return stopResponse?.model ?? InferenceSettings.serverWorkerModelName
-                case .completions:
-                    return InferenceSettings.completionsModelUrl?.deletingPathExtension().lastPathComponent ?? "Unknown Model"
             }
         }()
         // Log use
@@ -732,85 +736,6 @@ extension LlamaServer {
             }
         }
         return trimmed
-    }
-
-    /// Function to get a completion from the LLM
-    /// - Parameter text: The text to complete
-    /// - Parameter tokenNumber: The number of tokens to predict
-    /// - Returns: A sequence of tokens, each with a probability
-    public func getCompletion(
-        text: String,
-        maxTokenNumber: Int
-    ) async -> [Token]? {
-        // Formulate request
-        let url: URL = URL(
-            string: "\(self.scheme)://\(self.host):\(self.port)/v1/completions"
-        )!
-        var request = URLRequest(
-            url: url
-        )
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        // Formulate JSON
-        let params: CompletionParams = .init(
-            prompt: text,
-            max_tokens: maxTokenNumber
-        )
-        let encoder: JSONEncoder = .init()
-        guard let data: Data = try? encoder.encode(params) else {
-            return nil
-        }
-        let requestJson: String = String(
-            data: data,
-            encoding: .utf8
-        )!
-        request.httpBody = requestJson.data(using: .utf8)
-        // Formulate session
-        let urlSession: URLSession = URLSession.shared
-        urlSession.configuration.waitsForConnectivity = false
-        urlSession.configuration.timeoutIntervalForRequest = 10
-        urlSession.configuration.timeoutIntervalForResource = 10
-        // Log start time
-        let startTime: Date = Date.now
-        // Get JSON response
-        guard let (data, _): (Data, URLResponse) = try? await URLSession.shared.data(
-            for: request
-        ) else {
-            Self.logger.error("Failed to generate completion.")
-            return nil
-        }
-        // Log response object
-        if let responseStr = String(data: data, encoding: .utf8) {
-            Self.logger.info("Received response object: \(responseStr, privacy: .public)")
-        }
-        // Decode response
-        let decoder: JSONDecoder = .init()
-        guard let response: CompletionResponse = try? decoder.decode(
-            CompletionResponse.self,
-            from: data
-        ) else {
-            Self.logger.error("Failed to decode completion response.")
-            return nil
-        }
-        // Log
-        let timeElapsed: Double = Date.now.timeIntervalSince(
-            startTime
-        )
-        let tokensPerSecond: Double = Double(
-            response.usage.completion_tokens ?? 0
-        ) / timeElapsed
-        let record: InferenceRecord = .init(
-            name: modelName,
-            startTime: startTime,
-            type: .completions,
-            inputTokens: response.usage.prompt_tokens ?? 0,
-            outputTokens: response.usage.completion_tokens ?? 0,
-            tokensPerSecond: tokensPerSecond
-        )
-        await MainActor.run { InferenceRecords.record(record) }
-        // Extract and return
-        let content = response.choices.first?.logprobs.content
-        return content
     }
 
 }
@@ -1221,56 +1146,6 @@ extension LlamaServer {
         var functionCalls: [(any DecodableFunctionCall)]?
         /// Malformed tool calls that failed to parse
         var malformedToolCalls: [MalformedToolCall]?
-
-    }
-
-    struct CompletionParams: Codable {
-
-        var prompt: String
-        var max_tokens: Int
-        var logprobs: Int = 1
-        var temperature: Double = 0.0
-
-    }
-
-    struct CompletionResponse: Codable {
-
-        var completion: String? {
-            return choices.first?.text
-        }
-        var logprob: Double? {
-            return choices.first?.logprob
-        }
-
-        var choices: [Choice]
-
-        var usage: Usage
-
-        struct Choice: Codable {
-
-            var text: String
-
-            var logprobs: Logprob
-            var logprob: Double {
-                return self.logprobs.content
-                    .map(keyPath: \.logprob)
-                    .reduce(0, +)
-            }
-
-            struct Logprob: Codable {
-
-                var content: [Token]
-
-            }
-
-        }
-
-    }
-
-    public struct Token: Codable {
-
-        var token: String
-        var logprob: Double
 
     }
 

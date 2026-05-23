@@ -28,6 +28,7 @@ extension Model {
         useCanvas: Bool = false,
         canvasSelection: String? = nil,
         temporaryResources: [TemporaryResource] = [],
+        conversationId: UUID? = nil,
         showPreview: Bool = false,
         handleResponseUpdate: @escaping (
             String, // Full message
@@ -39,15 +40,19 @@ extension Model {
             Int? // Tokens used
         ) -> Void = { _, _, _ in }
     ) async throws -> LlamaServer.CompleteResponse {
+        let runConversationId = self.effectiveConversationId(conversationId)
         // Reset pending message
         if showPreview {
-            self.pendingMessage = nil
+            self.setPendingMessage(nil, conversationId: runConversationId)
         }
         // Set flag
-        let preQueryStatus: Status = self.status
+        let preQueryStatus: Status = self.chatRun(for: runConversationId)?.status ?? self.status
         if preQueryStatus.isForegroundTask {
-            let isDeepResearching: Bool = self.status == .deepResearch
-            self.status = (mode.isAgent || isDeepResearching) ? .deepResearch : .querying
+            let isDeepResearching: Bool = preQueryStatus == .deepResearch
+            self.setStatus(
+                (mode.isAgent || isDeepResearching) ? .deepResearch : .querying,
+                conversationId: runConversationId
+            )
         }
         // Check if remote server is reachable
         let canReachRemoteServer: Bool = await self.remoteServerIsReachable()
@@ -77,11 +82,11 @@ extension Model {
                 )
             }
         // Respond to prompt
-        if self.status.isForegroundTask && self.status != .deepResearch {
+        if preQueryStatus.isForegroundTask && preQueryStatus != .deepResearch {
             if preQueryStatus == .cold {
-                self.status = .coldProcessing
+                self.setStatus(.coldProcessing, conversationId: runConversationId)
             } else {
-                self.status = .processing
+                self.setStatus(.processing, conversationId: runConversationId)
             }
         }
         // Send different response based on mode
@@ -94,11 +99,12 @@ extension Model {
                     ) || (InferenceSettings.workerModelUrl?.fileExists ?? false)
                     let progressHandler: @Sendable (String) -> Void = { partialResponse in
                         DispatchQueue.main.async {
-                            self.handleCompletionProgress(
-                                showPreview: showPreview,
-                                partialResponse: partialResponse,
-                                handleResponseUpdate: handleResponseUpdate
-                            )
+	                            self.handleCompletionProgress(
+	                                showPreview: showPreview,
+	                                partialResponse: partialResponse,
+                                    conversationId: runConversationId,
+	                                handleResponseUpdate: handleResponseUpdate
+	                            )
                         }
                     }
                     if shouldUseDedicatedWorkerServer {
@@ -106,42 +112,59 @@ extension Model {
                             response = try await self.workerModelServer.getChatCompletion(
                                 mode: mode,
                                 canReachRemoteServer: canReachRemoteServer,
-                                messages: messagesWithSources,
-                                enableThinking: enableThinking,
-                                progressHandler: progressHandler
-                            )
+	                                messages: messagesWithSources,
+	                                enableThinking: enableThinking,
+                                    requestIDHandler: self.requestIDHandler(
+                                        modelType: .worker,
+                                        conversationId: runConversationId
+                                    ),
+	                                progressHandler: progressHandler
+	                            )
                         } catch {
                             response = try await self.mainModelServer.getChatCompletion(
                                 mode: mode,
                                 canReachRemoteServer: canReachRemoteServer,
-                                messages: messagesWithSources,
-                                enableThinking: enableThinking,
-                                progressHandler: progressHandler
-                            )
+	                                messages: messagesWithSources,
+	                                enableThinking: enableThinking,
+                                    requestIDHandler: self.requestIDHandler(
+                                        modelType: .regular,
+                                        conversationId: runConversationId
+                                    ),
+	                                progressHandler: progressHandler
+	                            )
                         }
                     } else {
                         response = try await self.mainModelServer.getChatCompletion(
                             mode: mode,
                             canReachRemoteServer: canReachRemoteServer,
-                            messages: messagesWithSources,
-                            enableThinking: enableThinking,
-                            progressHandler: progressHandler
-                        )
+	                            messages: messagesWithSources,
+	                            enableThinking: enableThinking,
+                                requestIDHandler: self.requestIDHandler(
+                                    modelType: .regular,
+                                    conversationId: runConversationId
+                                ),
+	                            progressHandler: progressHandler
+	                        )
                     }
                 } else {
                     response = try await self.mainModelServer.getChatCompletion(
                         mode: mode,
                         canReachRemoteServer: canReachRemoteServer,
-                        messages: messagesWithSources,
-                        enableThinking: enableThinking,
-                        progressHandler: { partialResponse in
+	                        messages: messagesWithSources,
+	                        enableThinking: enableThinking,
+                            requestIDHandler: self.requestIDHandler(
+                                modelType: .regular,
+                                conversationId: runConversationId
+                            ),
+	                        progressHandler: { partialResponse in
                             DispatchQueue.main.async {
                                 // Update response
-                                self.handleCompletionProgress(
-                                    showPreview: showPreview,
-                                    partialResponse: partialResponse,
-                                    handleResponseUpdate: handleResponseUpdate
-                                )
+	                                self.handleCompletionProgress(
+	                                    showPreview: showPreview,
+	                                    partialResponse: partialResponse,
+                                        conversationId: runConversationId,
+	                                    handleResponseUpdate: handleResponseUpdate
+	                                )
                             }
                         }
                     )
@@ -158,32 +181,34 @@ extension Model {
                     expert: expert,
                     enableThinking: enableThinking,
                     similarityIndex: similarityIndex,
+                    conversationId: runConversationId,
                     showPreview: showPreview,
                     handleResponseUpdate: handleResponseUpdate
                 )
             case .deepResearch:
                 // Indicate started Deep Research
-                self.indicateStartedDeepResearch()
+                self.indicateStartedDeepResearch(conversationId: runConversationId)
                 // Init and run deep research workflow
-                self.agent = DeepResearchAgent(
+                let agent = DeepResearchAgent(
                     messages: messages,
                     similarityIndex: similarityIndex
                 )
-                response = try await self.agent?.run()
-                self.agent = nil
-                self.pendingMessage = nil
-                self.status = .ready
+                self.setAgent(agent, conversationId: runConversationId)
+                response = try await agent.run()
+                self.setAgent(nil, conversationId: runConversationId)
+                self.setPendingMessage(nil, conversationId: runConversationId)
+                self.setStatus(.ready, conversationId: runConversationId)
         }
         // Handle response finish
         handleResponseFinish(
             response!.text,
-            self.pendingMessage?.text ?? "",
+            self.pendingMessage(for: runConversationId)?.text ?? "",
             response!.usage?.total_tokens
         )
         // Update display
-        if showPreview && self.agent == nil {
-            self.pendingMessage = nil
-            self.status = .ready
+        if showPreview && self.agent(for: runConversationId) == nil {
+            self.setPendingMessage(nil, conversationId: runConversationId)
+            self.setStatus(.ready, conversationId: runConversationId)
         }
         Self.logger.notice("Finished responding to prompt")
         return response!
@@ -191,10 +216,12 @@ extension Model {
 
     /// A function to update the inference status
     func updateStatus(
-        _ status: Status
+        _ status: Status,
+        conversationId: UUID? = nil
     ) {
-        if self.status != status && self.status != .deepResearch {
-            self.status = status
+        let currentStatus = self.chatRun(for: conversationId)?.status ?? self.status
+        if currentStatus != status && currentStatus != .deepResearch {
+            self.setStatus(status, conversationId: conversationId)
         }
     }
 
@@ -210,6 +237,7 @@ extension Model {
         expert: Expert? = nil,
         enableThinking: Bool? = nil,
         similarityIndex: SimilarityIndex? = nil,
+        conversationId: UUID?,
         showPreview: Bool,
         handleResponseUpdate: @escaping (String, String) -> Void
     ) async throws -> LlamaServer.CompleteResponse {
@@ -225,6 +253,7 @@ extension Model {
             functions: functions,
             expert: expert,
             enableThinking: enableThinking,
+            conversationId: conversationId,
             showPreview: showPreview,
             handleResponseUpdate: handleResponseUpdate,
             increment: increment
@@ -246,6 +275,7 @@ extension Model {
             functions: functions,
             enableThinking: enableThinking,
             similarityIndex: similarityIndex,
+            conversationId: conversationId,
             showPreview: showPreview,
             handleResponseUpdate: handleResponseUpdate,
             increment: increment
@@ -262,6 +292,7 @@ extension Model {
         functions: [AnyFunctionBox]? = nil,
         expert: Expert? = nil,
         enableThinking: Bool? = nil,
+        conversationId: UUID?,
         showPreview: Bool,
         handleResponseUpdate: @escaping (String, String) -> Void,
         increment: Int
@@ -277,20 +308,25 @@ extension Model {
             functions: functions,
             expert: expert,
             enableThinking: enableThinking,
+            requestIDHandler: self.requestIDHandler(
+                modelType: .regular,
+                conversationId: conversationId
+            ),
             updateStatusHandler: { status in
-                await self.updateStatus(status)
+                await self.updateStatus(status, conversationId: conversationId)
             },
             progressHandler:  { partialResponse in
                 DispatchQueue.main.async {
                     updateResponse += partialResponse
                     let shouldUpdate = updateResponse.count >= increment ||
-                    (self.pendingMessage?.text.count ?? 0 < increment)
+	                    (self.pendingMessage(for: conversationId)?.text.count ?? 0 < increment)
                     if shouldUpdate {
-                        self.handleCompletionProgress(
-                            showPreview: showPreview,
-                            partialResponse: updateResponse,
-                            handleResponseUpdate: handleResponseUpdate
-                        )
+	                        self.handleCompletionProgress(
+	                            showPreview: showPreview,
+	                            partialResponse: updateResponse,
+                                conversationId: conversationId,
+	                            handleResponseUpdate: handleResponseUpdate
+	                        )
                         updateResponse = ""
                     }
                 }
@@ -307,6 +343,7 @@ extension Model {
         functions: [AnyFunctionBox]? = nil,
         enableThinking: Bool? = nil,
         similarityIndex: SimilarityIndex?,
+        conversationId: UUID?,
         showPreview: Bool,
         handleResponseUpdate: @escaping (
             String, // Full message
@@ -315,8 +352,9 @@ extension Model {
         increment: Int
     ) async throws -> LlamaServer.CompleteResponse {
         // Set status
-        if self.status != .deepResearch {
-            self.status = .usingFunctions
+        let currentStatus = self.chatRun(for: conversationId)?.status ?? self.status
+        if currentStatus != .deepResearch {
+            self.setStatus(.usingFunctions, conversationId: conversationId)
         }
         let activeFunctions: [AnyFunctionBox]
         if !initialResponse.availableFunctions.isEmpty {
@@ -337,7 +375,9 @@ extension Model {
         var response: LlamaServer.CompleteResponse? = initialResponse
         var messages: [Message.MessageSubset] = messages
         var results: [FunctionCallResult] = []
-        var functionCallRecords: [FunctionCallRecord] = self.pendingMessage?.functionCallRecords ?? []
+        var functionCallRecords: [FunctionCallRecord] = self
+            .pendingMessage(for: conversationId)?
+            .functionCallRecords ?? []
         // Track consecutive malformed call attempts for circuit breaking
         var consecutiveMalformedAttempts: Int = 0
         let maxConsecutiveMalformed: Int = 3
@@ -414,7 +454,8 @@ extension Model {
                 let executionOutput = await self.executeFunctionCalls(
                     functionCalls,
                     using: toolRegistry,
-                    existingRecords: functionCallRecords
+                    existingRecords: functionCallRecords,
+                    conversationId: conversationId
                 )
                 functionCallRecords = executionOutput.functionCallRecords
                 results += executionOutput.results
@@ -449,7 +490,8 @@ extension Model {
                         modelType: modelType,
                         messages: messages,
                         canReachRemoteServer: canReachRemoteServer,
-                        results: results
+                        results: results,
+                        conversationId: conversationId
                     )
                 }
             }
@@ -495,7 +537,9 @@ Call another tool to obtain more information or execute more actions. Try breaki
                 }
 
                 var updateResponse: String = ""
-                self.pendingMessage?.text = updateResponse
+                self.updatePendingMessage(conversationId: conversationId) { pendingMessage in
+                    pendingMessage?.text = updateResponse
+                }
 
                 do {
                     response = try await self.mainModelServer.getChatCompletion(
@@ -506,23 +550,28 @@ Call another tool to obtain more information or execute more actions. Try breaki
                         useFunctions: true,
                         functions: toolRegistry.functions,
                         toolChoice: toolChoice,
-                        enableThinking: enableThinking,
-                        updateStatusHandler: { status in
-                            await self.updateStatus(status)
-                        },
+	                        enableThinking: enableThinking,
+                            requestIDHandler: self.requestIDHandler(
+                                modelType: .regular,
+                                conversationId: conversationId
+                            ),
+	                        updateStatusHandler: { status in
+	                            await self.updateStatus(status, conversationId: conversationId)
+	                        },
                         progressHandler: { partialResponse in
                             DispatchQueue.main.async {
                                 updateResponse += partialResponse
                                 let shouldUpdate = updateResponse.count >= increment ||
                                 (
-                                    self.pendingMessage?.text.count ?? 0 < increment
-                                )
+	                                    self.pendingMessage(for: conversationId)?.text.count ?? 0 < increment
+	                                )
                                 if shouldUpdate {
-                                    self.handleCompletionProgress(
-                                        showPreview: showPreview,
-                                        partialResponse: updateResponse,
-                                        handleResponseUpdate: handleResponseUpdate
-                                    )
+	                                    self.handleCompletionProgress(
+	                                        showPreview: showPreview,
+	                                        partialResponse: updateResponse,
+                                            conversationId: conversationId,
+	                                        handleResponseUpdate: handleResponseUpdate
+	                                    )
                                     updateResponse = ""
                                 }
                             }
@@ -607,7 +656,7 @@ Please try rephrasing your request or contact support if the issue persists.
             maxIterations -= 1
         }
         // Switch status to show stream for final answer
-        self.status = .processing
+        self.setStatus(.processing, conversationId: conversationId)
         // Get reason for finishing
         let finishReason: FinishReason = maxIterations == 0 ? .maxIterationsReached : .noFunctionCall
         if finishReason == .noFunctionCall, let response = response {
@@ -620,6 +669,7 @@ Please try rephrasing your request or contact support if the issue persists.
                     results: results,
                     functionCallRecords: functionCallRecords,
                     enableThinking: enableThinking,
+                    conversationId: conversationId,
                     showPreview: showPreview,
                     handleResponseUpdate: handleResponseUpdate,
                     increment: increment
@@ -635,6 +685,7 @@ Please try rephrasing your request or contact support if the issue persists.
                 results: results,
                 functionCallRecords: functionCallRecords,
                 enableThinking: enableThinking,
+                conversationId: conversationId,
                 showPreview: showPreview,
                 handleResponseUpdate: handleResponseUpdate,
                 increment: increment
@@ -652,6 +703,7 @@ Please try rephrasing your request or contact support if the issue persists.
         results: [FunctionCallResult],
         functionCallRecords: [FunctionCallRecord],
         enableThinking: Bool?,
+        conversationId: UUID?,
         showPreview: Bool,
         handleResponseUpdate: @escaping (
             String,
@@ -682,27 +734,34 @@ Please try rephrasing your request or contact support if the issue persists.
             }
 
             var updateResponse: String = ""
-            self.pendingMessage?.text = updateResponse
+            self.updatePendingMessage(conversationId: conversationId) { pendingMessage in
+                pendingMessage?.text = updateResponse
+            }
 
             do {
                 var response = try await self.mainModelServer.getChatCompletion(
                     mode: .default,
                     canReachRemoteServer: canReachRemoteServer,
-                    messages: messages,
-                    enableThinking: enableThinking,
-                    progressHandler: { partialResponse in
+	                    messages: messages,
+	                    enableThinking: enableThinking,
+                        requestIDHandler: self.requestIDHandler(
+                            modelType: .regular,
+                            conversationId: conversationId
+                        ),
+	                    progressHandler: { partialResponse in
                         DispatchQueue.main.async {
                             updateResponse += partialResponse
                             let shouldUpdate = updateResponse.count >= increment ||
                             (
-                                self.pendingMessage?.text.count ?? 0 < increment
-                            )
+	                                self.pendingMessage(for: conversationId)?.text.count ?? 0 < increment
+	                            )
                             if shouldUpdate {
-                                self.handleCompletionProgress(
-                                    showPreview: showPreview,
-                                    partialResponse: updateResponse,
-                                    handleResponseUpdate: handleResponseUpdate
-                                )
+	                                self.handleCompletionProgress(
+	                                    showPreview: showPreview,
+	                                    partialResponse: updateResponse,
+                                        conversationId: conversationId,
+	                                    handleResponseUpdate: handleResponseUpdate
+	                                )
                                 updateResponse = ""
                             }
                         }
@@ -766,7 +825,8 @@ Please try rephrasing your request or contact support if the issue persists.
     private func executeFunctionCalls(
         _ functionCalls: [any DecodableFunctionCall],
         using toolRegistry: ToolRegistry,
-        existingRecords: [FunctionCallRecord]
+        existingRecords: [FunctionCallRecord],
+        conversationId: UUID?
     ) async -> FunctionExecutionOutput {
         var functionCallRecords = existingRecords
         let existingRecordsCount = existingRecords.count
@@ -790,8 +850,10 @@ Please try rephrasing your request or contact support if the issue persists.
         }
 
         withAnimation(.linear) {
-            self.pendingMessage?.functionCallRecords = functionCallRecords
-            self.pendingMessage?.text = ""
+            self.updatePendingMessage(conversationId: conversationId) { pendingMessage in
+                pendingMessage?.functionCallRecords = functionCallRecords
+                pendingMessage?.text = ""
+            }
         }
         await Task.yield()
 
@@ -821,7 +883,9 @@ Please try rephrasing your request or contact support if the issue persists.
         }
 
         withAnimation(.linear) {
-            self.pendingMessage?.functionCallRecords = functionCallRecords
+            self.updatePendingMessage(conversationId: conversationId) { pendingMessage in
+                pendingMessage?.functionCallRecords = functionCallRecords
+            }
         }
 
         let orderedCalls = executedCalls.sorted(by: { $0.originalIndex < $1.originalIndex })
@@ -923,7 +987,8 @@ Please try rephrasing your request or contact support if the issue persists.
         modelType: ModelType,
         messages: [Message.MessageSubset],
         canReachRemoteServer: Bool,
-        results: [FunctionCallResult]
+        results: [FunctionCallResult],
+        conversationId: UUID? = nil
     ) async -> Bool {
         // Formulate prompt
         let resultPrompts: [String] = results.map { result in
@@ -959,18 +1024,26 @@ Respond with YES if ALL 3 criteria above have been met. Respond with YES or NO o
                             try await self.mainModelServer.getChatCompletion(
                                 mode: .`default`,
                                 canReachRemoteServer: canReachRemoteServer,
-                                messages: messages,
-                                useWebSearch: false,
-                                useFunctions: true
-                            )
+	                                messages: messages,
+	                                useWebSearch: false,
+	                                useFunctions: true,
+                                    requestIDHandler: self.requestIDHandler(
+                                        modelType: .regular,
+                                        conversationId: conversationId
+                                    )
+	                            )
                         default:
                             try await self.workerModelServer.getChatCompletion(
                                 mode: .`default`,
                                 canReachRemoteServer: canReachRemoteServer,
-                                messages: messages,
-                                useWebSearch: false,
-                                useFunctions: true
-                            )
+	                                messages: messages,
+	                                useWebSearch: false,
+	                                useFunctions: true,
+                                    requestIDHandler: self.requestIDHandler(
+                                        modelType: .worker,
+                                        conversationId: conversationId
+                                    )
+	                            )
                     }
                 }()
                 let responseText: String = response.text.reasoningRemoved
@@ -992,23 +1065,31 @@ Respond with YES if ALL 3 criteria above have been met. Respond with YES or NO o
     func handleCompletionProgress(
         showPreview: Bool = true,
         partialResponse: String,
+        conversationId: UUID? = nil,
         handleResponseUpdate: @escaping (
             String, // Full message
             String // Delta
         ) -> Void
     ) {
         // Assign if nil
-        if self.pendingMessage == nil && showPreview {
-            self.pendingMessage = Message(text: "", sender: .assistant)
+        if self.pendingMessage(for: conversationId) == nil && showPreview {
+            self.setPendingMessage(
+                Message(text: "", sender: .assistant),
+                conversationId: conversationId
+            )
         }
-        let fullMessage: String = (self.pendingMessage?.text ?? "") + partialResponse
+        let fullMessage: String = (
+            self.pendingMessage(for: conversationId)?.text ?? ""
+        ) + partialResponse
         handleResponseUpdate(
             fullMessage,
             partialResponse
         )
         if showPreview {
-            self.pendingMessage?.text = fullMessage
-            self.pendingMessage?.lastUpdated = .now
+            self.updatePendingMessage(conversationId: conversationId) { pendingMessage in
+                pendingMessage?.text = fullMessage
+                pendingMessage?.lastUpdated = .now
+            }
         }
     }
 

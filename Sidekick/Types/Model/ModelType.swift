@@ -11,6 +11,5 @@ public enum ModelType: String, CaseIterable {
 	
 	case regular // A model used for most tasks, including chat
 	case worker // A lightweight model used for most simple tasks to lower costs and raise speed
-    case completions // A foundation model used for text completion
 	
 }

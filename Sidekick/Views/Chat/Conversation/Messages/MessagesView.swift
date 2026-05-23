@@ -40,7 +40,6 @@ struct MessagesView: View {
                         self.messagesView
                         PendingMessageHost(
                             conversationId: self.selectedConversation?.id,
-                            activeConversationId: self.model.sentConversationId ?? self.promptController.sentConversation?.id,
                             isActivelyScrolling: self.isActivelyScrolling
                         ) { oldValue, newValue in
                             self.handlePreviewVisibilityChange(
@@ -150,16 +149,15 @@ private struct PendingMessageHost: View {
     @EnvironmentObject private var model: Model
 
     let conversationId: UUID?
-    let activeConversationId: UUID?
     let isActivelyScrolling: Bool
     let onVisibilityChange: (Bool, Bool) -> Void
 
     var body: some View {
-        let statusPass = self.model.status.isWorking && self.model.status != .backgroundTask
-        let conversationPass = self.activeConversationId == nil || self.conversationId == self.activeConversationId
-        let isVisible = statusPass && conversationPass
-        let contentType = self.model.displayedContentType
-        let message = self.model.displayedPendingMessage
+        let run = self.model.chatRun(for: self.conversationId)
+        let statusPass = run?.status.isWorking == true && run?.status != .backgroundTask
+        let isVisible = statusPass
+        let contentType = self.model.displayedContentType(for: self.conversationId)
+        let message = self.model.displayedPendingMessage(for: self.conversationId)
         Group {
             if isVisible {
                 switch contentType {
@@ -171,7 +169,7 @@ private struct PendingMessageHost: View {
                         )
                         .id(message.id)
                     case .preview:
-                        self.model.agent?.preview ?? AnyView(EmptyView())
+                        self.model.agent(for: self.conversationId)?.preview ?? AnyView(EmptyView())
                 }
             }
         }

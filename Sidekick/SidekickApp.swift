@@ -91,33 +91,9 @@ struct SidekickApp: App {
         .windowResizability(.contentSize)
         .windowIdealSize(.fitToContent)
         
-        // Window for Tool: Models
+        // Window for Models management
         SwiftUI.Window("Models", id: "models") {
             ModelExplorerView()
-        }
-        .modelContainer(persistenceContainer)
-        
-        // Window for Tool: Dashboard
-        SwiftUI.Window("Dashboard", id: "dashboard") {
-            DashboardView()
-        }
-        .modelContainer(persistenceContainer)
-        
-        // Window for Tool: Detector
-        SwiftUI.Window("Detector", id: "detector") {
-            DetectorView()
-        }
-        .modelContainer(persistenceContainer)
-        
-        // Window for Tool: Diagrammer
-        SwiftUI.Window("Diagrammer", id: "diagrammer") {
-            DiagrammerView()
-        }
-        .modelContainer(persistenceContainer)
-        
-        // Window for Tool: Slide Studio
-        SwiftUI.Window("Slide Studio", id: "slideStudio") {
-            SlideStudioView()
         }
         .modelContainer(persistenceContainer)
         

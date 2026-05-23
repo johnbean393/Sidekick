@@ -13,8 +13,7 @@ import Foundation
 import OSLog
 
 /// Coordinates the lifecycle of every inference-related child process spawned
-/// by Sidekick. Owners of such processes (``LlamaServer``,
-/// ``CompletionsController``, ``DetectorViewController``, ...) must
+/// by Sidekick. Owners of such processes (e.g. ``LlamaServer``) must
 /// register their PID through this coordinator. On normal quit the
 /// coordinator runs an awaited graceful shutdown; on `SIGTERM`/`SIGINT`/
 /// `SIGHUP` (e.g. `kill <pid>` or shell-initiated termination) it falls back

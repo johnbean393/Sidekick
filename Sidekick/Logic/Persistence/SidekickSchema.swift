@@ -44,7 +44,6 @@ public enum SidekickSchemaV1: VersionedSchema {
             ExpertEntity.self,
             ResourcesSetEntity.self,
             ResourceItemEntity.self,
-            CommandEntity.self,
             LocalModelFileEntity.self,
             ServerArgumentEntity.self,
             InferenceRecordEntity.self,
@@ -373,26 +372,6 @@ public final class ResourceItemEntity {
     }
 }
 
-// MARK: - Command
-
-@Model
-public final class CommandEntity {
-
-    @Attribute(.unique) public var id: UUID
-    public var name: String
-    public var prompt: String
-
-    public init(
-        id: UUID = UUID(),
-        name: String,
-        prompt: String
-    ) {
-        self.id = id
-        self.name = name
-        self.prompt = prompt
-    }
-}
-
 // MARK: - Local model file
 
 @Model
@@ -401,12 +380,59 @@ public final class LocalModelFileEntity {
     @Attribute(.unique) public var id: UUID
     public var urlString: String
 
+    /// User-chosen `n_ctx` for this model. `nil` means the legacy global
+    /// fallback is used at server start.
+    public var contextLength: Int?
+
+    /// Per-model sampling overrides. `nil` leaves the corresponding
+    /// `ModelArchitecture`-recommended default in place at request time.
+    public var temperature: Double?
+    public var topP: Double?
+    public var topK: Int?
+    public var minP: Double?
+    public var repetitionPenalty: Double?
+    public var presencePenalty: Double?
+    public var frequencyPenalty: Double?
+
+    /// Cached `GGUFEstimator` results so the config sheet can open
+    /// instantly on re-edit. `safeMaxComputedForMemoryGB` lets us
+    /// invalidate the cache when the host's unified memory changes
+    /// (e.g. user moves the file to a different Mac).
+    public var trainedContextLength: Int?
+    public var safeMaxContextLength: Int?
+    public var safeMaxComputedAt: Date?
+    public var safeMaxComputedForMemoryGB: Int?
+
     public init(
         id: UUID = UUID(),
-        urlString: String
+        urlString: String,
+        contextLength: Int? = nil,
+        temperature: Double? = nil,
+        topP: Double? = nil,
+        topK: Int? = nil,
+        minP: Double? = nil,
+        repetitionPenalty: Double? = nil,
+        presencePenalty: Double? = nil,
+        frequencyPenalty: Double? = nil,
+        trainedContextLength: Int? = nil,
+        safeMaxContextLength: Int? = nil,
+        safeMaxComputedAt: Date? = nil,
+        safeMaxComputedForMemoryGB: Int? = nil
     ) {
         self.id = id
         self.urlString = urlString
+        self.contextLength = contextLength
+        self.temperature = temperature
+        self.topP = topP
+        self.topK = topK
+        self.minP = minP
+        self.repetitionPenalty = repetitionPenalty
+        self.presencePenalty = presencePenalty
+        self.frequencyPenalty = frequencyPenalty
+        self.trainedContextLength = trainedContextLength
+        self.safeMaxContextLength = safeMaxContextLength
+        self.safeMaxComputedAt = safeMaxComputedAt
+        self.safeMaxComputedForMemoryGB = safeMaxComputedForMemoryGB
     }
 }
 

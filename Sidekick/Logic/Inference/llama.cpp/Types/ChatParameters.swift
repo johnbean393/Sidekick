@@ -365,9 +365,6 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
                     return InferenceSettings.serverModelName
                 }
                 return workerModelName
-            case .completions:
-                return InferenceSettings.completionsModelUrl?
-                    .deletingLastPathComponent().lastPathComponent
         }
     }
     

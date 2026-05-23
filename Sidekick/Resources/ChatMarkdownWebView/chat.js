@@ -822,6 +822,16 @@
         bodyEl.setAttribute("data-mode", safe);
     }
 
+    function applyAccentColors(accent, selection) {
+        var root = document.documentElement;
+        if (typeof accent === "string" && accent.length > 0) {
+            root.style.setProperty("--md-accent", accent);
+        }
+        if (typeof selection === "string" && selection.length > 0) {
+            root.style.setProperty("--md-selection", selection);
+        }
+    }
+
     function reset() {
         text = "";
         prevBlocks.length = 0;
@@ -869,6 +879,9 @@
         setMode: function (mode) {
             applyMode(mode);
             scheduleHeightReport();
+        },
+        setAccentColors: function (accent, selection) {
+            applyAccentColors(accent, selection);
         },
         flush: function () {
             // Force a synchronous render — used by the host before tearing down.

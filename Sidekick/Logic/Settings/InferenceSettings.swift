@@ -141,21 +141,6 @@ You recall the following information about the user from prior interactions:
         }
     }
     
-    /// Computed property for the location of the local worker LLM
-    static var completionsModelUrl: URL? {
-        get {
-            return UserDefaults.standard.url(
-                forKey: "completionsModelUrl"
-            )
-        }
-        set {
-            UserDefaults.standard.set(
-                newValue,
-                forKey: "completionsModelUrl"
-            )
-        }
-    }
-    
     /// Computed property for the location of the local LLM used for simple tasks
     static var workerModelUrl: URL? {
         get {
@@ -264,8 +249,6 @@ You recall the following information about the user from prior interactions:
                 return Settings.modelUrl
             case .worker:
                 return Self.workerModelUrl
-            case .completions:
-                return Self.completionsModelUrl
         }
     }
 
@@ -304,7 +287,7 @@ You recall the following information about the user from prior interactions:
         switch modelType {
             case .regular:
                 return true
-            case .worker, .completions:
+            case .worker:
                 return false
         }
     }

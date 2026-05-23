@@ -22,21 +22,22 @@ public enum FunctionSelection {
         category: "FunctionSelection"
     )
 
-    /// Currently enabled function categories. Falls back to "all
-    /// enabled" the first time the store is empty (or fails to load).
+    /// Currently enabled function categories. Falls back to
+    /// ``FunctionCategory/defaultEnabled`` the first time the store is
+    /// empty (or fails to load).
     public static var enabledCategories: Set<FunctionCategory> {
         let context = ModelContext(PersistenceController.shared.container)
         do {
             let rows = try context.fetch(FetchDescriptor<FunctionCategorySelectionEntity>())
             if rows.isEmpty {
-                let defaults = Set(FunctionCategory.allCases)
+                let defaults = FunctionCategory.defaultEnabled
                 Self.write(defaults)
                 return defaults
             }
             return Set(rows.compactMap { FunctionCategory(rawValue: $0.rawValue) })
         } catch {
             Self.logger.error("Failed to read function selection: \(error.localizedDescription, privacy: .public)")
-            return Set(FunctionCategory.allCases)
+            return FunctionCategory.defaultEnabled
         }
     }
 

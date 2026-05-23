@@ -47,7 +47,6 @@ struct GeneralSettingsView: View {
             } header: {
                 Text("Functions")
             }
-			InlineWritingAssistantSettingsView()
 		}
 		.formStyle(.grouped)
 		.task {

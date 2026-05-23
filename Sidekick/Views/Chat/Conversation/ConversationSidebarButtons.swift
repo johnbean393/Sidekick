@@ -12,10 +12,6 @@ struct ConversationSidebarButtons: View {
 	@Environment(LengthyTasksController.self) private var lengthyTasksController
 	@Environment(ConversationState.self) private var conversationState
 	
-	@State private var isViewingToolbox: Bool = false
-	
-	var tryToolsTip: TryToolsTip = .init()
-	
     var body: some View {
 		Group {
 			if self.lengthyTasksController.hasTasks {
@@ -24,21 +20,7 @@ struct ConversationSidebarButtons: View {
 					.foregroundStyle(.secondary)
 			}
 			SidebarButtonView(
-				title: String(localized: "Toolbox"),
-				systemImage: "wrench.adjustable"
-			) {
-				self.isViewingToolbox.toggle()
-			}
-			.keyboardShortcut("t", modifiers: [.command])
-			.sheet(isPresented: $isViewingToolbox) {
-				ToolboxLibraryView(
-					isPresented: $isViewingToolbox
-				)
-                .frame(maxWidth: 500, minHeight: 600)
-			}
-			.popoverTip(tryToolsTip)
-			SidebarButtonView(
-				title: String(localized: "New Conversation"),
+				title: String(localized: "New Chat"),
 				systemImage: "square.and.pencil"
 			) {
 				self.conversationState.newConversation()

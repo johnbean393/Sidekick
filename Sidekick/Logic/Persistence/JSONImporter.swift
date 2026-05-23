@@ -39,7 +39,6 @@ public enum JSONImporter {
         try importConversations(context: context)
         try importSourcesIfNeeded(context: context)
         try importMemoriesIfNeeded(context: context)
-        try importCommands(context: context)
         try importLocalModels(context: context)
         try importServerArguments(context: context)
         try importInferenceRecords(context: context)
@@ -307,28 +306,6 @@ public enum JSONImporter {
         case .indexing: return "indexing"
         case .indexed: return "indexed"
         }
-    }
-
-    // MARK: - Commands
-
-    @MainActor
-    private static func importCommands(context: ModelContext) throws {
-        let url = Settings.containerUrl
-            .appendingPathComponent("Commands")
-            .appendingPathComponent("commands.json")
-        guard let data = try? Data(contentsOf: url) else { return }
-        let commands = try JSONDecoder().decode([Command].self, from: data)
-
-        let existingIds = try existingIdSet(CommandEntity.self, in: context, keyPath: \.id)
-        for command in commands where !existingIds.contains(command.id) {
-            let entity = CommandEntity(
-                id: command.id,
-                name: command.name,
-                prompt: command.prompt
-            )
-            context.insert(entity)
-        }
-        Self.logger.info("Imported \(commands.count) commands from JSON")
     }
 
     // MARK: - Local model files

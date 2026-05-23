@@ -130,6 +130,113 @@ struct SidekickTests {
         #expect(response.requiresFunctionHandling)
     }
 
+    @Test @MainActor func chatRunStateIsScopedPerConversation() async throws {
+        let model = Model(systemPrompt: "System")
+        let firstConversationId = UUID()
+        let secondConversationId = UUID()
+
+        model.beginChatRun(conversationId: firstConversationId)
+        model.setPendingMessage(
+            Message(text: "first", sender: .assistant),
+            conversationId: firstConversationId
+        )
+        model.setStatus(.processing, conversationId: firstConversationId)
+
+        model.beginChatRun(conversationId: secondConversationId)
+        model.setPendingMessage(
+            Message(text: "second", sender: .assistant),
+            conversationId: secondConversationId
+        )
+        model.setStatus(.usingFunctions, conversationId: secondConversationId)
+
+        #expect(model.pendingMessage(for: firstConversationId)?.text == "first")
+        #expect(model.pendingMessage(for: secondConversationId)?.text == "second")
+        #expect(model.chatRun(for: firstConversationId)?.status == .processing)
+        #expect(model.chatRun(for: secondConversationId)?.status == .usingFunctions)
+        #expect(model.isGenerating(conversationId: firstConversationId))
+        #expect(model.isGenerating(conversationId: secondConversationId))
+
+        model.finishChatRun(conversationId: firstConversationId)
+
+        #expect(model.chatRun(for: firstConversationId) == nil)
+        #expect(model.pendingMessage(for: secondConversationId)?.text == "second")
+        #expect(model.chatRun(for: secondConversationId)?.status == .usingFunctions)
+    }
+
+    @Test @MainActor func requestIDsAreRegisteredWithOwningConversation() async throws {
+        let model = Model(systemPrompt: "System")
+        let firstConversationId = UUID()
+        let secondConversationId = UUID()
+        let firstRequestId = UUID()
+        let secondRequestId = UUID()
+
+        model.beginChatRun(conversationId: firstConversationId)
+        model.beginChatRun(conversationId: secondConversationId)
+
+        let firstHandler = try #require(
+            model.requestIDHandler(
+                modelType: .regular,
+                conversationId: firstConversationId
+            )
+        )
+        let secondHandler = try #require(
+            model.requestIDHandler(
+                modelType: .worker,
+                conversationId: secondConversationId
+            )
+        )
+        await firstHandler(firstRequestId)
+        await secondHandler(secondRequestId)
+
+        #expect(model.chatRun(for: firstConversationId)?.mainRequestIDs == [firstRequestId])
+        #expect(model.chatRun(for: firstConversationId)?.workerRequestIDs.isEmpty == true)
+        #expect(model.chatRun(for: secondConversationId)?.mainRequestIDs.isEmpty == true)
+        #expect(model.chatRun(for: secondConversationId)?.workerRequestIDs == [secondRequestId])
+    }
+
+    @Test func todoListsAreScopedByConversationTaskLocal() async throws {
+        TodoFunctions.clearAllTodoLists()
+        defer {
+            TodoFunctions.clearAllTodoLists()
+        }
+        let firstConversationId = UUID()
+        let secondConversationId = UUID()
+
+        let firstPayload = Data(
+            #"{"list_id":"shared","title":"First","items":["first task"]}"#.utf8
+        )
+        let secondPayload = Data(
+            #"{"list_id":"shared","title":"Second","items":["second task"]}"#.utf8
+        )
+
+        _ = try await InferenceRunContext.$conversationId.withValue(
+            firstConversationId
+        ) {
+            try await TodoFunctions.createTodoList.call(withData: firstPayload)
+        }
+        _ = try await InferenceRunContext.$conversationId.withValue(
+            secondConversationId
+        ) {
+            try await TodoFunctions.createTodoList.call(withData: secondPayload)
+        }
+
+        let firstSummary = InferenceRunContext.$conversationId.withValue(
+            firstConversationId
+        ) {
+            TodoFunctions.getIncompleteTodoSummary()
+        }
+        let secondSummary = InferenceRunContext.$conversationId.withValue(
+            secondConversationId
+        ) {
+            TodoFunctions.getIncompleteTodoSummary()
+        }
+
+        #expect(firstSummary?.contains("first task") == true)
+        #expect(firstSummary?.contains("second task") == false)
+        #expect(secondSummary?.contains("second task") == true)
+        #expect(secondSummary?.contains("first task") == false)
+    }
+
     @Test func chatParametersIncludeToolsAndAutoToolChoice() async throws {
         let defaults = UserDefaults.standard
         let originalUseFunctionsExists = defaults.exists(key: "useFunctions")
@@ -483,22 +590,21 @@ struct SidekickTests {
     @Test func inMemoryContainerSupportsBasicInsertAndFetch() async throws {
         // Exercises the in-memory ``ModelContainer`` factory so the
         // SwiftData schema is at least round-tripped end-to-end by
-        // the test suite. Insertion + fetch on `CommandEntity` is
-        // representative because the entity has no relationships,
+        // the test suite. Insertion + fetch on `LocalModelFileEntity`
+        // is representative because the entity has no relationships,
         // making the test independent of the heavier graph types.
         let container = PersistenceController.inMemoryContainer()
         let context = ModelContext(container)
-        let entity = CommandEntity(
+        let entity = LocalModelFileEntity(
             id: UUID(),
-            name: "Test",
-            prompt: "Hello"
+            urlString: "file:///tmp/test.gguf"
         )
         context.insert(entity)
         try context.save()
 
-        let fetched = try context.fetch(FetchDescriptor<CommandEntity>())
+        let fetched = try context.fetch(FetchDescriptor<LocalModelFileEntity>())
         #expect(fetched.count == 1)
-        #expect(fetched.first?.name == "Test")
+        #expect(fetched.first?.urlString == "file:///tmp/test.gguf")
     }
 
     @Test func minimaxKnownModelRoundTrip() async throws {

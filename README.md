@@ -141,46 +141,6 @@ Code is beautifully rendered with syntax highlighting, and can be exported or co
 
 ![Screenshot](https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/Features/Conversations/codeExport.png)
 
-### Toolbox
-
-Use **Tools** in Sidekick to supercharge your workflow.
-
-#### Inline Writing Assistant
-
-Press `Command + Control + I` to access Sidekick's inline writing assistant. For example, use the `Answer Question` command to do your homework without leaving Microsoft Word!
-
-![Screenshot](https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/Features/Tools/Inline%20Writing%20Assistant/inlineWritingAssistantCommands.png)
-
-Use the default keyboard shortcut `Tab` to accept suggestions for the next word, or `Shift + Tab` to accept all suggested words. View a demo [here](https://drive.google.com/file/d/1DDzdNHid7MwIDz4tgTpnqSA-fuBCajQA/preview).
-
-![Screenshot](https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/Features/Tools/Inline%20Writing%20Assistant/inlineWritingAssistantCompletions.png)
-
-#### Detector
-
-Use Detector to evaluate the AI percentage of text, and use provided suggestions to rewrite AI content.
-
-![Screenshot](https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/Features/Tools/Detector/detectorEvaluationResults.png)
-
-#### Diagrammer
-
-![Screenshot](https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/Features/Tools/Diagrammer/diagrammerPrompt.png)
-
-Diagrammer allows you to swiftly generate intricate relational diagrams all from a prompt. Take advantage of the integrated preview and editor for quick edits.
-
-![Screenshot](https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/Features/Tools/Diagrammer/diagrammerPreviewEditor2.png)
-
-#### Slide Studio
-
-![Screenshot](https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/Features/Tools/Slide%20Studio/slideStudioPrompt.png)
-
-Instead of making a PowerPoint, just write a prompt. Use AI to craft 10-minute presentations in just 5 minutes.
-
-![Screenshot](https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/Features/Tools/Slide%20Studio/slideStudioPreviewEditor.png)
-
-Export to common formats like PDF and PowerPoint.
-
-![Screenshot](https://raw.githubusercontent.com/johnbean393/Sidekick/refs/heads/main/Docs%20Images/Features/Tools/Slide%20Studio/slideStudioExport.png)
-
 ### Fast Generation
 
 Sidekick uses `llama.cpp` as its inference backend, which is optimized to deliver lightning fast generation speeds on Apple Silicon. It also supports speculative decoding, which can further improve the generation speed.
@@ -224,11 +184,7 @@ Read more about our mission [here](https://johnbean393.github.io/Sidekick/Markdo
 ### Developer Setup Instructions
 
 1. Clone this repository.
-1. Run `security find-identity -p codesigning -v` to find your signing identity.
-   - You'll see something like
-   - `1) <SIGNING IDENTITY> "Apple Development: Michael DiGovanni ( XXXXXXXXXX)"`
-1. Run `./setup.sh <TEAM_NAME> <SIGNING IDENTITY FROM STEP 2>` to change the team in the Xcode project and download and sign the `marp` binary.
-   - The `marp` binary is required for building and must be signed to create presentations.
+1. Run `./setup.sh <TEAM_NAME>` to change the team in the Xcode project.
 1. Open and run in Xcode.
 
 ## Contributing

@@ -20,6 +20,26 @@ public class TodoFunctions {
         TodoFunctions.addTodoItem,
         TodoFunctions.finishTodoItem
     ]
+
+    private static func storageKey(
+        for listId: String,
+        conversationId: UUID? = InferenceRunContext.conversationId
+    ) -> String {
+        guard let conversationId else {
+            return listId
+        }
+        return "\(conversationId.uuidString):\(listId)"
+    }
+
+    private static func belongsToCurrentScope(
+        storageKey: String,
+        conversationId: UUID? = InferenceRunContext.conversationId
+    ) -> Bool {
+        guard let conversationId else {
+            return !storageKey.contains(":")
+        }
+        return storageKey.hasPrefix("\(conversationId.uuidString):")
+    }
     
     /// A function to create a new to-do list
     static let createTodoList = Function<CreateTodoListParams, String>(
@@ -61,7 +81,7 @@ public class TodoFunctions {
                 )
                 
                 // Store the list
-                activeTodoLists[params.list_id] = todoList
+                activeTodoLists[storageKey(for: params.list_id)] = todoList
                 
                 return """
 Created to-do list '\(params.title)' with \(params.items.count) items:
@@ -97,7 +117,7 @@ Created to-do list '\(params.title)' with \(params.items.count) items:
         ],
         run: { params in
             return try todoListQueue.sync(flags: .barrier) {
-                guard var todoList = activeTodoLists[params.list_id] else {
+                guard var todoList = activeTodoLists[storageKey(for: params.list_id)] else {
                     throw TodoError.listNotFound(params.list_id)
                 }
                 
@@ -112,7 +132,7 @@ Created to-do list '\(params.title)' with \(params.items.count) items:
                 }
                 
                 todoList.items.append(contentsOf: newItems)
-                activeTodoLists[params.list_id] = todoList
+                activeTodoLists[storageKey(for: params.list_id)] = todoList
                 
                 return """
 Added \(params.items.count) new item(s) to '\(todoList.title)':
@@ -156,7 +176,7 @@ Current status:
         ],
         run: { params in
             return try todoListQueue.sync(flags: .barrier) {
-                guard var todoList = activeTodoLists[params.list_id] else {
+                guard var todoList = activeTodoLists[storageKey(for: params.list_id)] else {
                     throw TodoError.listNotFound(params.list_id)
                 }
                 
@@ -196,7 +216,7 @@ Current status:
                     throw TodoError.noItemsToFinish
                 }
                 
-                activeTodoLists[params.list_id] = todoList
+                activeTodoLists[storageKey(for: params.list_id)] = todoList
                 
                 let remainingCount = todoList.items.filter { !$0.isCompleted }.count
                 
@@ -218,8 +238,14 @@ Marked \(finishedCount) item(s) as finished:
     /// Get formatted incomplete to-do items for all active lists
     static func getIncompleteTodoSummary() -> String? {
         return todoListQueue.sync {
-            let incompleteLists = activeTodoLists.values.filter { list in
-                list.items.contains { !$0.isCompleted }
+            let incompleteLists = activeTodoLists.compactMap { entry -> TodoList? in
+                let key = entry.key
+                let list = entry.value
+                guard belongsToCurrentScope(storageKey: key),
+                      list.items.contains(where: { !$0.isCompleted }) else {
+                    return nil
+                }
+                return list
             }
             
             guard !incompleteLists.isEmpty else {
@@ -259,6 +285,7 @@ Use `finish_todo_item` to mark items as complete, or `add_todo_item` to add more
     /// Clear a specific to-do list
     static func clearTodoList(id: String) {
         let _ = todoListQueue.sync(flags: .barrier) {
+            activeTodoLists.removeValue(forKey: storageKey(for: id))
             activeTodoLists.removeValue(forKey: id)
         }
     }
@@ -308,4 +335,3 @@ enum TodoError: Error, LocalizedError {
     }
     
 }
-

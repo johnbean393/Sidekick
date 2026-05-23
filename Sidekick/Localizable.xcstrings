@@ -5,6 +5,7 @@
       "shouldTranslate" : false
     },
     " (Experimental)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -103,6 +104,7 @@
       "shouldTranslate" : false
     },
     "%lld input" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -113,6 +115,7 @@
       }
     },
     "%lld output" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -123,6 +126,7 @@
       }
     },
     "%lld uses" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -143,9 +147,6 @@
       },
       "shouldTranslate" : false
     },
-    "%lld%%" : {
-      "shouldTranslate" : false
-    },
     "0" : {
       "shouldTranslate" : false
     },
@@ -159,6 +160,7 @@
       "shouldTranslate" : false
     },
     "A file with the same name already exists. Do you want to overwrite it?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -191,6 +193,7 @@
       }
     },
     "Accept All Suggestions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -201,6 +204,7 @@
       }
     },
     "Accept Next Word" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -241,6 +245,7 @@
       }
     },
     "Add Command" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -291,6 +296,7 @@
       }
     },
     "AI Probability" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -301,6 +307,7 @@
       }
     },
     "All Models" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -311,6 +318,7 @@
       }
     },
     "All Time" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -334,6 +342,7 @@
       }
     },
     "An error occurred while exporting the slides." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -344,6 +353,7 @@
       }
     },
     "An error occurred while generating the slides." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -354,6 +364,7 @@
       }
     },
     "Analyze" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -374,6 +385,7 @@
       }
     },
     "Animal Classification" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -384,6 +396,7 @@
       }
     },
     "Answer Question" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -394,6 +407,7 @@
       }
     },
     "Answer the question below with a short response. Answer in the same language as the question below." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -540,6 +554,7 @@
       }
     },
     "Automatically generate and suggest typing suggestions based on your text." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -654,6 +669,7 @@
 
     },
     "Causes of the Renaissance" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -744,6 +760,7 @@
       }
     },
     "Chores" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -754,6 +771,7 @@
       }
     },
     "Circulatory System" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -780,16 +798,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "点击“添加”，选择“文件/文件夹”，然后点击“打开”以添加文件。"
-          }
-        }
-      }
-    },
-    "Click the button below to download a completion model." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "单击下面的按钮下载模型。"
           }
         }
       }
@@ -846,6 +854,7 @@
       "shouldTranslate" : false
     },
     "Commands" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -886,6 +895,7 @@
       }
     },
     "Completion Suggestion Threshold" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -896,6 +906,7 @@
       }
     },
     "Completions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -906,6 +917,7 @@
       }
     },
     "Completions is now ready to use!" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -915,17 +927,8 @@
         }
       }
     },
-    "Completions Model: %@" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "文本续写模型：%@"
-          }
-        }
-      }
-    },
     "Completions will be deactivated in these apps." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -946,6 +949,7 @@
       }
     },
     "Concise" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -987,6 +991,7 @@
       }
     },
     "Configuring image layout..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1211,6 +1216,7 @@
       }
     },
     "Correct Grammar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1221,6 +1227,7 @@
       }
     },
     "Correct grammar for the text below. Ensure all spelling, punctuation, and grammar are correct. Respond in the same language as the original text." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1231,6 +1238,7 @@
       }
     },
     "Could not locate model." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1241,6 +1249,7 @@
       }
     },
     "Could not obtain perplexity score." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1251,6 +1260,7 @@
       }
     },
     "Could not render the diagram within reasonable time." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1270,6 +1280,7 @@
 
     },
     "Create 10 minute presentations in 5 minutes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1280,6 +1291,7 @@
       }
     },
     "Create a kanban board for organizing household chores with 'Todo', 'In progress', and 'Done' columns." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1290,6 +1302,7 @@
       }
     },
     "Create a mindmap showing different genres of world literature." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1300,6 +1313,7 @@
       }
     },
     "Create a presentation explaining the principles of supply and demand." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1310,6 +1324,7 @@
       }
     },
     "Create a presentation explaining the Von Neumann architecture." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1386,6 +1401,7 @@
       }
     },
     "Dashboard" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1406,6 +1422,7 @@
       }
     },
     "Date" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1446,6 +1463,7 @@
       }
     },
     "Default shortcuts can be modified in `Settings -> General`." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1533,6 +1551,7 @@
 
     },
     "Describe a concept you'd like to see illustrated in a diagram" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1552,26 +1571,6 @@
         }
       }
     },
-    "Detector" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI 检测仪"
-          }
-        }
-      }
-    },
-    "Detector always uses a local model for maximum privacy. Please add a local model in \"Settings\" -> \"Inference\"." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "为了保护隐私，AI 检测仪只能使用本地模型。请前往“设置”->“推理”，添加本地模型。"
-          }
-        }
-      }
-    },
     "Diagram" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1583,21 +1582,12 @@
       }
     },
     "Diagram saved successfully" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "图表保存成功"
-          }
-        }
-      }
-    },
-    "Diagrammer" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "图表制作"
           }
         }
       }
@@ -1653,6 +1643,7 @@
       }
     },
     "Doing your job..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1763,6 +1754,7 @@
       }
     },
     "Draw a diagram of the human circulatory system." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1773,6 +1765,7 @@
       }
     },
     "Draw a diagram of the water cycle and its key components." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1783,6 +1776,7 @@
       }
     },
     "Draw a left-to-right flowchart showing the steps in the scientific method." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1806,6 +1800,7 @@
       }
     },
     "Duration" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1816,6 +1811,7 @@
       }
     },
     "e.g. Create a presentation explaining the Von Neumann architecture." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1826,6 +1822,7 @@
       }
     },
     "e.g. Draw a diagram of the eutrophication cycle and how it forms a positive feedback loop." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1846,6 +1843,7 @@
       }
     },
     "Edit text with AI without leaving your editor" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1856,6 +1854,7 @@
       }
     },
     "Editable " : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1866,6 +1865,7 @@
       }
     },
     "Elaborate" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1876,6 +1876,7 @@
       }
     },
     "Elaborate on the following content, providing additional insights, examples, detailed explanations, and related concepts. Dive deeper into the topic to offer a comprehensive understanding and explore various dimensions not covered in the original text. Respond in the same language as the original text." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1936,6 +1937,7 @@
       }
     },
     "End of the Ming Dynasty" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1946,6 +1948,7 @@
       }
     },
     "End Time" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1986,6 +1989,7 @@
       }
     },
     "Enhancing your prompt..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1996,6 +2000,7 @@
       }
     },
     "ENSO Cycle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2049,6 +2054,7 @@
       }
     },
     "Error generating presentation: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2069,6 +2075,7 @@
       }
     },
     "Evaluating your content..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2079,6 +2086,7 @@
       }
     },
     "Excluded Apps" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2299,6 +2307,7 @@
       }
     },
     "Failed to save diagram" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2389,6 +2398,7 @@
       }
     },
     "Finding images online..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2456,6 +2466,7 @@
       }
     },
     "Foods" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2476,6 +2487,7 @@
       }
     },
     "Format" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2566,6 +2578,7 @@
       }
     },
     "Generate a diagram showing the structure and functions of a neuron." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2576,6 +2589,7 @@
       }
     },
     "Generate a presentation about nucleic acids and how it carries our genetic code." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2586,6 +2600,7 @@
       }
     },
     "Generate a presentation about the causes of the Renaissance." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2596,6 +2611,7 @@
       }
     },
     "Generate a presentation about the irregular inter-annual cycle, ENSO." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2606,6 +2622,7 @@
       }
     },
     "Generate a presentation introducing the Late Ming Dynasty and the transition to the Qing Dynasty." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2626,6 +2643,7 @@
       }
     },
     "Generate diagrams with AI" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2636,6 +2654,7 @@
       }
     },
     "Generating diagram..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2646,6 +2665,7 @@
       }
     },
     "Generating presentation..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2656,6 +2676,7 @@
       }
     },
     "Generating slides..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2676,6 +2697,7 @@
       }
     },
     "Genres" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2796,6 +2818,7 @@
       }
     },
     "High" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2826,6 +2849,7 @@
       }
     },
     "human" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2856,6 +2880,7 @@
       }
     },
     "Identifying patterns..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2886,6 +2911,7 @@
       }
     },
     "In order to export to an editable PowerPoint, you must first install LibreOffice." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2971,35 +2997,11 @@
         }
       }
     },
-    "Inline Writing Assistant" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "写作助手"
-          }
-        }
-      }
-    },
     "Inline Writing Assistant Commands" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "文本改写快捷指令"
-          }
-        }
-      }
+
     },
     "Inline Writing Assistant Completions" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "文本续写"
-          }
-        }
-      }
+
     },
     "Input" : {
       "localizations" : {
@@ -3012,6 +3014,7 @@
       }
     },
     "Input Tokens" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3022,6 +3025,7 @@
       }
     },
     "Just a moment..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3076,6 +3080,7 @@
       }
     },
     "Leverage Sidekick's built-in tools to quickly generate and check content." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3117,6 +3122,7 @@
       }
     },
     "Local Inference" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3137,6 +3143,7 @@
       }
     },
     "Low" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3157,6 +3164,7 @@
       }
     },
     "Make this paragraph shorter while retaining the most important information, removing some details when needed. Respond in the same language as the original text." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3237,6 +3245,7 @@
       }
     },
     "Medium" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3297,6 +3306,7 @@
       }
     },
     "Model a binary tree representing animal classification (e.g., vertebrates and invertebrates)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3434,6 +3444,7 @@
       }
     },
     "Neuron" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3442,6 +3453,9 @@
           }
         }
       }
+    },
+    "New Chat" : {
+
     },
     "New Conversation" : {
       "localizations" : {
@@ -3454,6 +3468,7 @@
       }
     },
     "New Diagram" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3464,6 +3479,7 @@
       }
     },
     "New Slides" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3474,6 +3490,7 @@
       }
     },
     "Next" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3524,6 +3541,7 @@
       }
     },
     "No Local Model" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3584,6 +3602,7 @@
       }
     },
     "No Text Selected" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3627,6 +3646,7 @@
       }
     },
     "Nucleic Acids" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3667,6 +3687,7 @@
       }
     },
     "Outline the subject matter of your presentation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3687,6 +3708,7 @@
       }
     },
     "Output Tokens" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3786,16 +3808,6 @@
         }
       }
     },
-    "Please select text before invoking Sidekick's Inline Writing Assistant" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请先选择文本，再调用 Sidekick 的写作助手。"
-          }
-        }
-      }
-    },
     "PNG" : {
 
     },
@@ -3850,16 +3862,10 @@
       }
     },
     "Press 'Command + Control + I' to access Sidekick's inline writing assistant. For example, use the 'Answer Question' command to do your homework without leaving Microsoft Word!" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按“Command + Control + I”访问 Sidekick 的写作助手。使用“回答问题”命令，无需离开 Microsoft Word 即可完成作业！"
-          }
-        }
-      }
+
     },
     "Press `Shift + Tab` to accept a suggested phrase" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3870,6 +3876,7 @@
       }
     },
     "Press `Tab` to accept a suggested word" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3962,6 +3969,7 @@
       }
     },
     "Prompt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4055,6 +4063,7 @@
       }
     },
     "Refresh" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4078,6 +4087,7 @@
       }
     },
     "Remote Inference" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4298,6 +4308,7 @@
       }
     },
     "Retrieving knowledge..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4321,6 +4332,7 @@
       "shouldTranslate" : false
     },
     "Rewrite" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4341,6 +4353,7 @@
       }
     },
     "Rewrite the text below. Respond in the same language as the original text." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4424,6 +4437,7 @@
       }
     },
     "Scientific Method" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4560,6 +4574,7 @@
       }
     },
     "Select a Base Model" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4693,6 +4708,7 @@
       }
     },
     "Sentences driving %@ probability:" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4713,6 +4729,7 @@
       }
     },
     "Set Up" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4733,6 +4750,7 @@
       }
     },
     "Shortcut" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4743,6 +4761,7 @@
       }
     },
     "Show a line chart of average monthly temperatures in a city. Use hypothetical data." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4753,6 +4772,7 @@
       }
     },
     "Show a pie chart of favorite foods among students in a classroom. Use hypothetical data." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4881,17 +4901,8 @@
         }
       }
     },
-    "Sidekick's Inline Writing Assistant is enabled by default." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "默认启用 Sidekick 的写作助手。"
-          }
-        }
-      }
-    },
     "Simplify" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4902,6 +4913,7 @@
       }
     },
     "Simplify the text below for a general audience, removing techinical jargon and hard-to-grasp ideas. Respond in the same language as the original text." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4921,17 +4933,8 @@
         }
       }
     },
-    "Slide Studio" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "演示文稿生成"
-          }
-        }
-      }
-    },
     "Slides: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4952,6 +4955,7 @@
       }
     },
     "Speed (t/s)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4965,6 +4969,7 @@
 
     },
     "Start Time" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4985,6 +4990,7 @@
       }
     },
     "Stay one step ahead of Turnitin" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5018,6 +5024,7 @@
       }
     },
     "Supply and Demand" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5105,6 +5112,7 @@
       }
     },
     "Temperatures" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5125,6 +5133,7 @@
       }
     },
     "Text is not long enough to evaluate." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5165,6 +5174,7 @@
       }
     },
     "The file format of the exported slideshow" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5205,6 +5215,7 @@
       }
     },
     "The name of the exported slideshow" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5263,6 +5274,7 @@
 
     },
     "The shortcut used to accept the full completion suggestion." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5273,6 +5285,7 @@
       }
     },
     "The shortcut used to accept the next word in completion suggestions." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5282,17 +5295,8 @@
         }
       }
     },
-    "The shortcut used to trigger and dismiss inline writing assistant commands." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用于触发和关闭写作助手命令的快捷指令。"
-          }
-        }
-      }
-    },
     "The threshold for displayed completion suggestions." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5336,6 +5340,7 @@
       }
     },
     "This command's name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5346,6 +5351,7 @@
       }
     },
     "This command's prompt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5446,6 +5452,7 @@
       }
     },
     "This is the selected base model, which handles text completions." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5456,6 +5463,7 @@
       }
     },
     "This Month" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5466,6 +5474,7 @@
       }
     },
     "This Week" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5476,6 +5485,7 @@
       }
     },
     "This Year" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5492,6 +5502,7 @@
 
     },
     "Timetable" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5532,6 +5543,7 @@
       }
     },
     "Today" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5562,6 +5574,7 @@
       }
     },
     "Tokens" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5572,6 +5585,7 @@
       }
     },
     "tokens used%@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5594,17 +5608,8 @@
         }
       }
     },
-    "Toolbox" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "工具箱"
-          }
-        }
-      }
-    },
     "Total Tokens" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5635,6 +5640,7 @@
       }
     },
     "Try Tools" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5645,6 +5651,7 @@
       }
     },
     "Type" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5695,6 +5702,7 @@
       }
     },
     "Usage" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5715,6 +5723,7 @@
       }
     },
     "Use Completions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5855,6 +5864,7 @@
       }
     },
     "Use the default keyboard shortcut `Command 􀆔 + Control 􀆍 + I` to toggle commands." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5865,6 +5875,7 @@
       }
     },
     "Use the default keyboard shortcut `Tab` to accept suggestions for the next word, or `Shift + Tab` to accept all suggested words." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5945,6 +5956,7 @@
       }
     },
     "Uses" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5995,6 +6007,7 @@
       }
     },
     "View usage statistics and trends" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -6015,6 +6028,7 @@
       }
     },
     "Visualize a student's daily activities with a journey chart." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -6035,6 +6049,7 @@
       }
     },
     "Von Neumann Architecture" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -6045,6 +6060,7 @@
       }
     },
     "Warning" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -6055,6 +6071,7 @@
       }
     },
     "Water Cycle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -6242,6 +6259,7 @@
       }
     },
     "Your slides will be saved to this folder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

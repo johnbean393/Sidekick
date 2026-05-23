@@ -58,9 +58,9 @@ struct MessageShareMenu: View {
     }
     
     var isGenerating: Bool {
-        let statusPass: Bool = self.model.status.isWorking
-        let conversationPass: Bool = self.selectedConversation?.id == self.model.sentConversationId
-        return statusPass && conversationPass
+        return self.model.isGenerating(
+            conversationId: self.selectedConversation?.id
+        )
     }
     
     var body: some View {

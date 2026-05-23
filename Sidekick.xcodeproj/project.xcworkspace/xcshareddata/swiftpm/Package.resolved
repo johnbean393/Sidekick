@@ -1,15 +1,6 @@
 {
-  "originHash" : "9da0f6c3a9cf9e83be0bcdb86947e40a20c1fe518f2d319bd1ca7c6418b4313f",
+  "originHash" : "d8b4faeaf9d12c347c747f77f38df49adc41f0affce406791bb756aa57318029",
   "pins" : [
-    {
-      "identity" : "axswift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/tmandry/AXSwift/",
-      "state" : {
-        "revision" : "81dcc36aced905d6464cc25e35f8d13184bbf21c",
-        "version" : "0.3.2"
-      }
-    },
     {
       "identity" : "codeeditorview",
       "kind" : "remoteSourceControl",
@@ -80,15 +71,6 @@
       "state" : {
         "revision" : "bcf2d0590f32ac2528feb72d7e34f5b463801a47",
         "version" : "2.2.1"
-      }
-    },
-    {
-      "identity" : "keyboardshortcuts",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sindresorhus/KeyboardShortcuts",
-      "state" : {
-        "revision" : "7ecc38bb6edf7d087d30e737057b8d8a9b7f51eb",
-        "version" : "2.2.4"
       }
     },
     {

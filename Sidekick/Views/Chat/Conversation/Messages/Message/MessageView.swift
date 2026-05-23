@@ -107,7 +107,9 @@ struct MessageView: View {
             if self.isGenerating {
                 StopGenerationButton {
                     Task { @MainActor in
-                        await self.model.interrupt()
+                        await self.model.interrupt(
+                            conversationId: self.selectedConversation?.id
+                        )
                     }
                 }
             }

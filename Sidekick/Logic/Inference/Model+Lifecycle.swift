@@ -120,7 +120,26 @@ extension Model {
         self.status = .cold
     }
     
-    func interrupt() async {
+    func interrupt(
+        conversationId: UUID? = nil
+    ) async {
+        let targetConversationId = conversationId ?? InferenceRunContext.conversationId
+        if let targetConversationId {
+            guard let run = self.chatRuns[targetConversationId],
+                  run.status.isWorking else {
+                return
+            }
+            run.task?.cancel()
+            for requestID in run.mainRequestIDs {
+                await self.mainModelServer.interrupt(requestID: requestID)
+            }
+            for requestID in run.workerRequestIDs {
+                await self.workerModelServer.interrupt(requestID: requestID)
+            }
+            self.finishChatRun(conversationId: targetConversationId)
+            return
+        }
+
         if !self.status.isWorking {
             return
         }
@@ -184,4 +203,3 @@ extension Model {
     }
     
 }
-
