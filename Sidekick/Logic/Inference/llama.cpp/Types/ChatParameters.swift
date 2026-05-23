@@ -384,8 +384,21 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
         guard isOpenRouter else { return nil }
         // Get the model name
         guard let modelName = getModelName(modelType: modelType) else { return nil }
-        // Check if the model is Claude 4+
-        if let knownModel = KnownModel(identifier: modelName), knownModel.requiresExplicitReasoning {
+        guard let knownModel = KnownModel(identifier: modelName) else {
+            return nil
+        }
+        // Gemini 3+ thinking models silently leak their thought summaries
+        // into `delta.content` unless we explicitly opt-in to reasoning,
+        // which moves the summaries into the structured `reasoning_details`
+        // array where our parser can lift them into the reasoning panel.
+        // `enabled: true` is the lightest-touch way to flip that switch
+        // without forcing a specific thinkingLevel.
+        if knownModel.requiresExplicitReasoningOptIn {
+            return ReasoningOptions(enabled: true)
+        }
+        // Claude 4+ / GLM 4.5+ refuse to emit reasoning at all without a
+        // budget, so we keep the legacy max_tokens hint for them.
+        if knownModel.requiresExplicitReasoning {
             return ReasoningOptions(max_tokens: 8_000)
         }
         return nil
@@ -547,10 +560,27 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
     }
     
     struct ReasoningOptions: Codable {
-        var max_tokens: Int
-        
+        var max_tokens: Int?
+        var enabled: Bool?
+
+        init(max_tokens: Int? = nil, enabled: Bool? = nil) {
+            self.max_tokens = max_tokens
+            self.enabled = enabled
+        }
+
         enum CodingKeys: String, CodingKey {
             case max_tokens
+            case enabled
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            if let max_tokens {
+                try container.encode(max_tokens, forKey: .max_tokens)
+            }
+            if let enabled {
+                try container.encode(enabled, forKey: .enabled)
+            }
         }
     }
     

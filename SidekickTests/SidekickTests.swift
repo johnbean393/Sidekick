@@ -218,6 +218,146 @@ struct SidekickTests {
         #expect(result == "5.0")
     }
 
+    @Test func streamMessageDecodesGeminiReasoningDetails() async throws {
+        // Mirrors the streaming chunk shape OpenRouter sends for Gemini 3+
+        // thought summaries. The reasoning text lives inside the
+        // `reasoning_details` array with `type: "reasoning.summary"`, and
+        // the chunk's top-level `content` is null. The combined
+        // ``reasoningContent`` accessor must surface the summary so the
+        // chat parser can wrap it in `<think>...</think>`.
+        let data = Data(
+            """
+            {
+              "choices": [
+                {
+                  "delta": {
+                    "content": null,
+                    "reasoning_details": [
+                      {
+                        "type": "reasoning.summary",
+                        "summary": "Adjusting the Focus\\nI'm detailing Silas's risky manual adjustment.",
+                        "format": "google-gemini-v1",
+                        "index": 0
+                      }
+                    ]
+                  },
+                  "finish_reason": null
+                }
+              ],
+              "created": 0
+            }
+            """.utf8
+        )
+
+        let response = try JSONDecoder().decode(
+            LlamaServer.StreamResponse.self,
+            from: data
+        )
+        let delta = response.choices.first?.delta
+        let reasoning = delta?.reasoningContent
+
+        #expect(reasoning?.contains("Adjusting the Focus") == true)
+        #expect(reasoning?.contains("risky manual adjustment") == true)
+        #expect(delta?.content == nil)
+    }
+
+    @Test func streamMessageReasoningDetailsSkipsEncryptedBlobs() async throws {
+        // OpenRouter forwards encrypted reasoning chunks (e.g. Anthropic's
+        // redacted_thinking) as `type: "reasoning.encrypted"` with the
+        // payload in `data`. We intentionally drop these so the reasoning
+        // panel doesn't render opaque base64.
+        let data = Data(
+            """
+            {
+              "choices": [
+                {
+                  "delta": {
+                    "content": null,
+                    "reasoning_details": [
+                      {
+                        "type": "reasoning.encrypted",
+                        "data": "eyJlbmNyeXB0ZWQiOiJ0cnVlIn0=",
+                        "format": "anthropic-claude-v1",
+                        "index": 0
+                      }
+                    ]
+                  },
+                  "finish_reason": null
+                }
+              ],
+              "created": 0
+            }
+            """.utf8
+        )
+
+        let response = try JSONDecoder().decode(
+            LlamaServer.StreamResponse.self,
+            from: data
+        )
+        #expect(response.choices.first?.delta.reasoningContent == nil)
+    }
+
+    @Test func streamMessageFallsBackToLegacyReasoningField() async throws {
+        // Older OpenRouter chunks (and Bailian / DeepSeek) use the plain
+        // string `reasoning` field. Make sure we still pick it up when
+        // `reasoning_details` is absent so the legacy path keeps working.
+        let data = Data(
+            """
+            {
+              "choices": [
+                {
+                  "delta": {
+                    "content": null,
+                    "reasoning": "Let me think about this..."
+                  },
+                  "finish_reason": null
+                }
+              ],
+              "created": 0
+            }
+            """.utf8
+        )
+
+        let response = try JSONDecoder().decode(
+            LlamaServer.StreamResponse.self,
+            from: data
+        )
+        #expect(
+            response.choices.first?.delta.reasoningContent
+            == "Let me think about this..."
+        )
+    }
+
+    @Test func gemini3FlashRequiresExplicitReasoningOptIn() async throws {
+        let geminiFlash = KnownModel(
+            primaryName: "gemini-3.5-flash",
+            organization: .google,
+            capabilities: [.reasoning]
+        )
+        let geminiPro = KnownModel(
+            primaryName: "gemini-3.1-pro-preview",
+            organization: .google,
+            capabilities: [.reasoning]
+        )
+        let gemini25 = KnownModel(
+            primaryName: "gemini-2.5-flash",
+            organization: .google,
+            capabilities: [.reasoning]
+        )
+        let claude45 = KnownModel(
+            primaryName: "claude-sonnet-4.5",
+            organization: .anthropic,
+            capabilities: [.reasoning]
+        )
+
+        #expect(geminiFlash.requiresExplicitReasoningOptIn == true)
+        #expect(geminiPro.requiresExplicitReasoningOptIn == true)
+        // Gemini 2.5 uses the older thinkingBudget API and doesn't need
+        // the opt-in flag; reasoning still arrives by default.
+        #expect(gemini25.requiresExplicitReasoningOptIn == false)
+        #expect(claude45.requiresExplicitReasoningOptIn == false)
+    }
+
     @Test func nativeToolCallDecoderUnwrapsStringifiedArguments() async throws {
         let decodedCall = LlamaServer.StreamMessage.OpenAIToolCall.Function.getFunctionCall(
             name: "sum",

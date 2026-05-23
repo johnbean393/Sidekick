@@ -64,6 +64,13 @@ body {
 .markdown-body > .md-block:last-child {
     margin-bottom: 0;
 }
+/* In full-render mode the .markdown-body has direct children like
+   <p>, <h1>, <pre>, <ul>, etc. instead of `.md-block` wrappers. Trim
+   the last element's bottom margin so the unified post-stream layout
+   has the same height as the incremental streaming layout. */
+.markdown-body > *:last-child {
+    margin-bottom: 0;
+}
 
 .markdown-body p {
     margin: 0 0 12px 0;

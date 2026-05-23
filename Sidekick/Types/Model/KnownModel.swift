@@ -286,6 +286,24 @@ public struct KnownModel: Identifiable, Codable {
         }
         return false
     }
+
+    /// Models that hide their reasoning behind an opt-in flag on
+    /// OpenRouter — without it, their thought summaries either don't
+    /// arrive or, worse, leak into `delta.content` as if they were the
+    /// model's final answer. Currently this covers Gemini 3+ Flash/Pro
+    /// (which emit thought summaries via `reasoning_details` only when
+    /// reasoning is explicitly enabled).
+    public var requiresExplicitReasoningOptIn: Bool {
+        guard organization == .google else { return false }
+        let lowerName = primaryName.lowercased()
+        // Match "gemini-3", "gemini-3.1-flash", "gemini-3-pro", etc., but
+        // not "gemini-2.5-flash" which uses the older thinkingBudget API.
+        let geminiThinkingPattern = #"gemini-[3-9](\.|-|$)"#
+        return lowerName.range(
+            of: geminiThinkingPattern,
+            options: .regularExpression
+        ) != nil
+    }
     
     /// Organizations that train models
     public enum Organization: String, Codable, CaseIterable {

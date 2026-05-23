@@ -309,36 +309,57 @@ extension LlamaServer {
                                     throw LlamaServerError.errorResponse(error.message)
                                 }
                             }
-                            // Run completion handler for update
+                            // Run completion handler for update.
+                            //
+                            // A single chunk can carry reasoning, content, or
+                            // both (OpenRouter occasionally emits a flush
+                            // chunk with both fields when transitioning from
+                            // thinking to answering). We therefore handle
+                            // each field independently rather than picking
+                            // one via `if/else if` — the old logic would drop
+                            // `content` whenever a chunk also carried
+                            // reasoning, which is how Gemini 3+ thought
+                            // summaries were silently swallowing the final
+                            // answer.
                             let fragment: String = responseObj.choices.map { choice in
-                                // Init variable
-                                var choiceContent: String = choice.delta.content ?? ""
-                                if let content: String = choice.delta.content,
-                                   !content.isEmpty, wasReasoningToken {
-                                    // Handle answer token
-                                    // If previous token was reasoning token, add end of reasoning token
-                                    let hasEndReasoningToken: Bool = String.specialReasoningTokens.contains (where: { tokens in
-                                        guard let endReasoningToken: String = tokens.last else {
-                                            return false
-                                        }
-                                        return pendingMessage
-                                            .trimmingCharacters(in: .whitespacesAndNewlines)
-                                            .contains(
-                                                endReasoningToken
-                                            )
-                                    })
-                                    choiceContent = (!hasEndReasoningToken ? "\n</think>\n" : "") + content
-                                    wasReasoningToken = false
-                                } else if let reasoningContent: String = choice.delta.reasoningContent {
-                                    // Handle reasoning token
-                                    // If previous token was not reasoning token, add reasoning special token
-                                    choiceContent = (
-                                        wasReasoningToken ? "" : "<think>\n"
-                                    ) + reasoningContent
+                                var fragment: String = ""
+                                // 1. Reasoning fragment, if any.
+                                if let reasoningContent: String = choice.delta.reasoningContent {
+                                    // Open a `<think>` block on the first
+                                    // reasoning token only.
+                                    if !wasReasoningToken {
+                                        fragment += "<think>\n"
+                                    }
+                                    fragment += reasoningContent
                                     wasReasoningToken = true
                                 }
-                                // Return result
-                                return choiceContent
+                                // 2. Answer fragment, if any.
+                                if let content: String = choice.delta.content,
+                                   !content.isEmpty {
+                                    if wasReasoningToken {
+                                        // Close the `<think>` block before
+                                        // we start streaming the answer, but
+                                        // only if the model itself hasn't
+                                        // already emitted an end-of-reason
+                                        // marker (some llama.cpp templates
+                                        // inline `</think>` themselves).
+                                        let alreadyClosed: Bool = String.specialReasoningTokens.contains(where: { tokens in
+                                            guard let endReasoningToken: String = tokens.last else {
+                                                return false
+                                            }
+                                            let combined = pendingMessage + fragment
+                                            return combined
+                                                .trimmingCharacters(in: .whitespacesAndNewlines)
+                                                .contains(endReasoningToken)
+                                        })
+                                        if !alreadyClosed {
+                                            fragment += "\n</think>\n"
+                                        }
+                                        wasReasoningToken = false
+                                    }
+                                    fragment += content
+                                }
+                                return fragment
                             }.joined()
                             pendingMessage.append(fragment)
                             progressHandler?(fragment)
@@ -407,6 +428,29 @@ extension LlamaServer {
         if context.isCancelled {
             Self.logger.notice("Generation was cancelled, not processing tool calls")
             throw LlamaServerError.cancelled
+        }
+        // If the stream ended while we were still inside a `<think>` block,
+        // synthesise the closing tag so `Message.reasoningText` /
+        // `.responseText` can still locate the trace once `outputEnded` flips
+        // to true. Without this, models that emit only thought summaries and
+        // no final answer (e.g. Gemini 3+ when the answer budget is
+        // exhausted by thinking) would drop the reasoning entirely from the
+        // UI.
+        if wasReasoningToken {
+            let alreadyClosed: Bool = String.specialReasoningTokens.contains(where: { tokens in
+                guard let endReasoningToken: String = tokens.last else {
+                    return false
+                }
+                return pendingMessage
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .contains(endReasoningToken)
+            })
+            if !alreadyClosed {
+                let closer = "\n</think>\n"
+                pendingMessage.append(closer)
+                progressHandler?(closer)
+            }
+            wasReasoningToken = false
         }
         // Decode all accumulated tool calls AFTER streaming is done
         var malformedToolCalls: [MalformedToolCall] = []
@@ -782,11 +826,34 @@ extension LlamaServer {
 
         /// The new reasoning token generated, decoded to type `String?`, for OpenRouter
         let reasoning: String?
-        /// The new reasoning token generated, decoded to type `String?`, for Bailian
+        /// The new reasoning token generated, decoded to type `String?`, for Bailian / DeepSeek / Gemini OpenAI compat
         let reasoning_content: String?
+        /// Structured reasoning chunks emitted by OpenRouter's new
+        /// `reasoning_details` API. Gemini 3+ surfaces its thought summaries
+        /// here (as `type: "reasoning.summary"`) rather than in the legacy
+        /// `reasoning` string field, which is why thought summaries were
+        /// previously leaking through as if they were the final answer.
+        let reasoning_details: [ReasoningDetail]?
 
-        /// The new reasoning token generated, if available
+        /// The new reasoning token generated, if available. Aggregates every
+        /// shape we've seen in the wild: the legacy `reasoning` string field
+        /// (older OpenRouter / Anthropic), `reasoning_content` (DeepSeek /
+        /// Bailian / Gemini OpenAI compat), and `reasoning_details` (current
+        /// OpenRouter shape, used by Gemini 3+).
         var reasoningContent: String? {
+            // Prefer the structured `reasoning_details` array when present —
+            // for Gemini 3+ thought summaries this is the *only* place the
+            // text appears, so falling back to `reasoning` first would miss
+            // it entirely.
+            if let details = self.reasoning_details,
+               !details.isEmpty {
+                let combined = details
+                    .compactMap { $0.visibleText }
+                    .joined()
+                if !combined.isEmpty {
+                    return combined
+                }
+            }
             if let reasoning = self.reasoning,
                !reasoning.isEmpty {
                 return reasoning
@@ -794,6 +861,33 @@ extension LlamaServer {
                       !reasoning_content.isEmpty {
                 return reasoning_content
             } else {
+                return nil
+            }
+        }
+
+        /// A single entry in OpenRouter's `reasoning_details` stream. The
+        /// payload key holding the human-readable text differs by `type`:
+        ///   - `reasoning.summary`  → `summary` (Gemini 3 thought summaries)
+        ///   - `reasoning.text`     → `text`    (Claude raw thinking)
+        ///   - `reasoning.encrypted`→ `data`    (skipped — opaque blob)
+        ///
+        /// See https://openrouter.ai/docs/guides/best-practices/reasoning-tokens
+        struct ReasoningDetail: Codable {
+            let type: String?
+            let summary: String?
+            let text: String?
+            let data: String?
+
+            /// The text we want to surface to the user, if any. Encrypted
+            /// blobs are intentionally dropped so they don't render as
+            /// random base64 inside the reasoning panel.
+            var visibleText: String? {
+                if let summary = self.summary, !summary.isEmpty {
+                    return summary
+                }
+                if let text = self.text, !text.isEmpty {
+                    return text
+                }
                 return nil
             }
         }

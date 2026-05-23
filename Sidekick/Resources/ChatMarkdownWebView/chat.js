@@ -69,6 +69,24 @@
     var heightScheduled = false;
     var lastReportedHeight = -1;
 
+    // Incremental-parse bookkeeping. While streaming, we only parse the
+    // tail of `text` past `settledLineCount`: every line before it is
+    // already represented by a "settled" entry in `prevBlocks` whose
+    // source can never change again. This keeps per-token work O(slice)
+    // rather than O(text).
+    var settledLineCount = 0;
+
+    // Which rendering strategy currently owns the DOM:
+    //   "idle":        nothing has been rendered yet.
+    //   "incremental": block-by-block tree built up during streaming.
+    //   "full":        single unified render produced from md.render(text)
+    //                  once streaming has finished.
+    var renderMode = "idle";
+
+    // Cache of the most recent `text` rendered in full mode so a no-op
+    // setStreaming(false) re-entry doesn't pay for another full re-render.
+    var lastFullRenderedText = null;
+
     // ---- Block segmentation ----------------------------------------------
 
     // Walk a flat token stream and yield groups corresponding to top-level
@@ -156,158 +174,226 @@
         });
     }
 
+    // Dispatch entry-point. Two distinct rendering paths:
+    //   - while streaming, we use the *incremental* path that only
+    //     re-parses the tail of `text` past the settled boundary.
+    //   - once streaming has finished, we tear that scaffolding down
+    //     and produce a single unified render via `md.render(text)` so
+    //     the message reads as one cohesive block and the user can
+    //     select / copy the whole thing without artificial seams.
     function performRender() {
         renderRunning = true;
         try {
-            var env = {};
-            var tokens = md.parse(text, env);
-            var groups = groupTopLevel(tokens);
-            var srcLines = text.split("\n");
-
-            // Build the new block list.
-            var newBlocks = [];
-            for (var g = 0; g < groups.length; g++) {
-                var group = groups[g];
-                var source = groupSource(group, tokens, srcLines);
-                var type = classifyBlockType(tokens, group);
-                newBlocks.push({ source: source, type: type, group: group });
-            }
-
-            // Find longest common prefix of unchanged blocks (compare by
-            // source). During streaming this is almost the entire document
-            // minus the trailing block.
-            var commonLen = 0;
-            var maxCommon = Math.min(newBlocks.length, prevBlocks.length);
-            while (commonLen < maxCommon &&
-                   newBlocks[commonLen].source === prevBlocks[commonLen].source) {
-                commonLen++;
-            }
-
-            // Reuse the DOM node at index commonLen across renders when
-            // possible. This is the streaming hot path: the trailing block
-            // grows by a few characters per token and we want to update its
-            // innerHTML in place instead of destroying and re-creating the
-            // wrapper (which causes the .md-new fade-in to re-fire every
-            // frame and produces visible flicker at the end of the message).
-            var reuseStart = commonLen;
-            var changedNodes = []; // wrappers we touched this render
-            if (commonLen < newBlocks.length && commonLen < prevBlocks.length) {
-                var oldBlock = prevBlocks[commonLen];
-                var nextNewBlock = newBlocks[commonLen];
-                var nextHtml = renderTokensToHTML(tokens, nextNewBlock.group, env);
-                // Only mutate the *type* class if it actually changed —
-                // overwriting className would yank md-trailing off the
-                // element each render, restarting the caret CSS animation
-                // and producing a visible jitter.
-                if (oldBlock.type !== nextNewBlock.type) {
-                    oldBlock.node.classList.remove("md-" + oldBlock.type);
-                    oldBlock.node.classList.add("md-" + nextNewBlock.type);
+            if (streaming) {
+                if (renderMode === "full") {
+                    // We were displaying a finished message and just got
+                    // told we're streaming again — drop the unified DOM
+                    // and start a fresh incremental tree.
+                    resetIncrementalState();
                 }
-                // The md-new fade-in only ever applies to the first paint
-                // of a freshly-created wrapper — drop it now so a reused
-                // wrapper doesn't keep restarting its animation.
-                oldBlock.node.classList.remove("md-new");
-                oldBlock.node.innerHTML = nextHtml;
-                // The wrapper is reused — clear KaTeX's "already rendered"
-                // marker because the inner DOM was replaced. hljs's marker
-                // lives on the <code> element so it's already gone.
-                if (oldBlock.node.dataset) {
-                    delete oldBlock.node.dataset.katex;
-                }
-                nextNewBlock.node = oldBlock.node;
-                nextNewBlock.fullyDecorated = false;
-                prevBlocks[commonLen] = nextNewBlock;
-                changedNodes.push(nextNewBlock);
-                reuseStart = commonLen + 1;
-            }
-
-            // Drop any old blocks past the reused range.
-            while (prevBlocks.length > reuseStart) {
-                var dead = prevBlocks.pop();
-                if (dead.node && dead.node.parentNode) {
-                    dead.node.parentNode.removeChild(dead.node);
-                }
-            }
-
-            // Reset transient classes on the unchanged prefix (the old
-            // trailing block, if any, is no longer trailing once we've
-            // pushed something past it).
-            for (var p = 0; p < commonLen; p++) {
-                var pb = prevBlocks[p];
-                pb.node.classList.remove("md-trailing", "md-new");
-            }
-
-            // Render and append the remaining new blocks. These are
-            // genuinely new wrappers — they get .md-new so we fade them in.
-            for (var k = reuseStart; k < newBlocks.length; k++) {
-                var b = newBlocks[k];
-                var html = renderTokensToHTML(tokens, b.group, env);
-                var node = document.createElement("div");
-                node.className = "md-block md-" + b.type + " md-new";
-                node.innerHTML = html;
-                root.appendChild(node);
-                b.node = node;
-                prevBlocks.push(b);
-                changedNodes.push(b);
-            }
-
-            // Mark the trailing block (only meaningful when streaming).
-            // We clear md-trailing from every non-last block first; we do
-            // NOT touch the last block's classList if it already has the
-            // class so we avoid restarting the caret animation each frame.
-            if (prevBlocks.length > 0) {
-                for (var t = 0; t < prevBlocks.length - 1; t++) {
-                    prevBlocks[t].node.classList.remove("md-trailing");
-                }
-                var trailingNode = prevBlocks[prevBlocks.length - 1].node;
-                if (!trailingNode.classList.contains("md-trailing")) {
-                    trailingNode.classList.add("md-trailing");
-                }
-            }
-
-            // Post-process the blocks we just touched.
-            for (var n = 0; n < changedNodes.length; n++) {
-                var pb2 = changedNodes[n];
-                var isLast = (pb2 === prevBlocks[prevBlocks.length - 1]);
-                // Don't fully highlight or KaTeX-render the trailing block
-                // while still streaming — that block can mutate further.
-                if (streaming && isLast) {
-                    softHighlightInside(pb2.node);
-                } else {
-                    fullHighlightInside(pb2.node);
-                    renderMathInside(pb2.node);
-                }
-            }
-
-            // After a non-streaming render (or after a chunk that pushed a
-            // brand new block past the previously-trailing one), make sure
-            // older blocks are fully decorated. Anything in the prefix only
-            // needs decoration if we hadn't fully processed it yet.
-            if (!streaming) {
-                for (var f = 0; f < prevBlocks.length; f++) {
-                    var fb = prevBlocks[f];
-                    if (!fb.fullyDecorated) {
-                        fullHighlightInside(fb.node);
-                        renderMathInside(fb.node);
-                        fb.fullyDecorated = true;
-                    }
-                }
+                renderMode = "incremental";
+                renderIncremental();
             } else {
-                // Streaming: blocks that have moved out of trailing position
-                // become "settled" — decorate them once.
-                for (var f2 = 0; f2 < prevBlocks.length - 1; f2++) {
-                    var fb2 = prevBlocks[f2];
-                    if (!fb2.fullyDecorated) {
-                        fullHighlightInside(fb2.node);
-                        renderMathInside(fb2.node);
-                        fb2.fullyDecorated = true;
-                    }
+                if (renderMode === "full" && lastFullRenderedText === text) {
+                    // No content change since the last full render —
+                    // skip the costly innerHTML rebuild.
+                    scheduleHeightReport();
+                    return;
                 }
+                renderFull();
+                renderMode = "full";
+                lastFullRenderedText = text;
             }
-
-            scheduleHeightReport();
         } finally {
             renderRunning = false;
+        }
+    }
+
+    // Wipes the per-block scaffolding used by the incremental renderer.
+    // Safe to call repeatedly — it's a no-op when the DOM is already
+    // empty.
+    function resetIncrementalState() {
+        root.innerHTML = "";
+        if (root.dataset) delete root.dataset.katex;
+        prevBlocks.length = 0;
+        settledLineCount = 0;
+    }
+
+    // Full re-render of the entire message — used on streaming end and
+    // whenever a non-streaming caller pushes text. Produces a single
+    // contiguous tree (no `.md-block` wrappers) so selection and copy
+    // behave like an ordinary article.
+    function renderFull() {
+        // Drop any incremental bookkeeping; the unified DOM doesn't
+        // need it and we want the next streaming session to start clean.
+        prevBlocks.length = 0;
+        settledLineCount = 0;
+        if (root.dataset) delete root.dataset.katex;
+
+        var source = text || "";
+        // Single atomic innerHTML replacement — the browser swaps trees
+        // in one shot, so the transition from incremental → full is
+        // visually a single frame.
+        root.innerHTML = source ? md.render(source) : "";
+
+        if (source) {
+            fullHighlightInside(root);
+            renderMathInside(root);
+        }
+
+        scheduleHeightReport();
+    }
+
+    // Incremental render: re-parse only the slice of `text` past the
+    // settled boundary, then update/extend the trailing block in place.
+    // Promotes settled blocks (everything except the last group in the
+    // slice) into the immutable prefix as soon as we see a new block
+    // start after them.
+    function renderIncremental() {
+        var srcLines = text.split("\n");
+        var sliceLines = srcLines.slice(settledLineCount);
+        var sliceText = sliceLines.join("\n");
+
+        if (sliceText.length === 0) {
+            markTrailingBlock();
+            scheduleHeightReport();
+            return;
+        }
+
+        var env = {};
+        var tokens = md.parse(sliceText, env);
+        var groups = groupTopLevel(tokens);
+
+        if (groups.length === 0) {
+            markTrailingBlock();
+            scheduleHeightReport();
+            return;
+        }
+
+        // Pre-compute everything we need from each group up front.
+        var parsed = [];
+        for (var g = 0; g < groups.length; g++) {
+            parsed.push({
+                group: groups[g],
+                source: groupSource(groups[g], tokens, sliceLines),
+                type: classifyBlockType(tokens, groups[g]),
+                html: renderTokensToHTML(tokens, groups[g], env)
+            });
+        }
+
+        // Map the first group in the slice onto the currently-trailing
+        // block (or create a fresh trailing block if there isn't one).
+        var prevTrailing = prevBlocks.length > 0 ? prevBlocks[prevBlocks.length - 1] : null;
+        var p0 = parsed[0];
+        if (prevTrailing) {
+            // Only swap the type class if it actually changed — overwriting
+            // className would also drop md-trailing and re-fire the caret
+            // animation each token.
+            if (prevTrailing.type !== p0.type) {
+                prevTrailing.node.classList.remove("md-" + prevTrailing.type);
+                prevTrailing.node.classList.add("md-" + p0.type);
+            }
+            prevTrailing.node.classList.remove("md-new");
+            prevTrailing.node.innerHTML = p0.html;
+            // hljs's marker lives on the <code> elements (now replaced);
+            // KaTeX's lives on the wrapper, so we have to clear it
+            // explicitly to allow re-rendering if math arrived.
+            if (prevTrailing.node.dataset) {
+                delete prevTrailing.node.dataset.katex;
+            }
+            prevTrailing.source = p0.source;
+            prevTrailing.type = p0.type;
+            prevTrailing.fullyDecorated = false;
+        } else {
+            var firstNode = document.createElement("div");
+            firstNode.className = "md-block md-" + p0.type + " md-new";
+            firstNode.innerHTML = p0.html;
+            root.appendChild(firstNode);
+            prevBlocks.push({
+                source: p0.source,
+                type: p0.type,
+                node: firstNode,
+                fullyDecorated: false
+            });
+        }
+
+        // No new blocks — we just grew the trailing block.
+        if (parsed.length === 1) {
+            markTrailingBlock();
+            scheduleHeightReport();
+            return;
+        }
+
+        // We saw at least one new block start past the old trailing,
+        // which means the old trailing has finished. Decorate it once
+        // now and treat it as settled.
+        var justSettled = prevBlocks[prevBlocks.length - 1];
+        if (!justSettled.fullyDecorated) {
+            fullHighlightInside(justSettled.node);
+            renderMathInside(justSettled.node);
+            justSettled.fullyDecorated = true;
+        }
+
+        // Append intermediate, fully-closed blocks (everything between
+        // the freshly-settled head and the new trailing tail).
+        for (var i = 1; i < parsed.length - 1; i++) {
+            var mid = parsed[i];
+            var midNode = document.createElement("div");
+            midNode.className = "md-block md-" + mid.type;
+            midNode.innerHTML = mid.html;
+            root.appendChild(midNode);
+            var midBlock = {
+                source: mid.source,
+                type: mid.type,
+                node: midNode,
+                fullyDecorated: false
+            };
+            prevBlocks.push(midBlock);
+            fullHighlightInside(midNode);
+            renderMathInside(midNode);
+            midBlock.fullyDecorated = true;
+        }
+
+        // Append the new trailing block.
+        var last = parsed[parsed.length - 1];
+        var lastNode = document.createElement("div");
+        lastNode.className = "md-block md-" + last.type + " md-new";
+        lastNode.innerHTML = last.html;
+        root.appendChild(lastNode);
+        prevBlocks.push({
+            source: last.source,
+            type: last.type,
+            node: lastNode,
+            fullyDecorated: false
+        });
+
+        // Advance the settled boundary: any line strictly before the new
+        // trailing block's first line is now immutable. Use the token map
+        // (relative to the slice) to find that line.
+        var lastStartLine = Infinity;
+        for (var k = last.group.start; k < last.group.end; k++) {
+            var m = tokens[k].map;
+            if (m && m[0] < lastStartLine) lastStartLine = m[0];
+        }
+        if (lastStartLine !== Infinity) {
+            settledLineCount += lastStartLine;
+        }
+
+        markTrailingBlock();
+        scheduleHeightReport();
+    }
+
+    // Idempotent: ensures only the last block carries `.md-trailing`
+    // and that we don't restart the caret animation by toggling the
+    // class needlessly on the same node.
+    function markTrailingBlock() {
+        if (prevBlocks.length === 0) return;
+        for (var t = 0; t < prevBlocks.length - 1; t++) {
+            prevBlocks[t].node.classList.remove("md-trailing");
+        }
+        var trailingNode = prevBlocks[prevBlocks.length - 1].node;
+        if (!trailingNode.classList.contains("md-trailing")) {
+            trailingNode.classList.add("md-trailing");
         }
     }
 
@@ -740,7 +826,11 @@
         text = "";
         prevBlocks.length = 0;
         root.innerHTML = "";
+        if (root.dataset) delete root.dataset.katex;
         lastReportedHeight = -1;
+        settledLineCount = 0;
+        renderMode = "idle";
+        lastFullRenderedText = null;
     }
 
     window.sk = {
