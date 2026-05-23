@@ -87,9 +87,13 @@ struct ConversationView: View {
 			return
 		}
 		let _ = currentConversation.addMessage(message)
-		// Save
+		// Save. If this image landed in the in-memory blank chat,
+		// promote it into the persisted store; otherwise update in
+		// place as before.
 		withAnimation(.linear) {
-			self.conversationManager.update(currentConversation)
+			if !self.conversationState.commitDraftIfNeeded(currentConversation) {
+				self.conversationManager.update(currentConversation)
+			}
 		}
 	}
 	

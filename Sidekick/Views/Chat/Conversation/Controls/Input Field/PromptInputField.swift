@@ -330,7 +330,13 @@ struct PromptInputField: View {
             return
         }
         conversation = updatedConversation
-        conversationManager.update(updatedConversation)
+        // If this is the in-memory blank chat, promote it into the
+        // persisted store now that the user has actually sent
+        // something. Otherwise fall back to the regular update path
+        // (which would silently no-op on an unpersisted draft).
+        if !self.conversationState.commitDraftIfNeeded(updatedConversation) {
+            conversationManager.update(updatedConversation)
+        }
         self.promptController.sentConversation = updatedConversation
         self.promptController.sentExpertId = self.conversationState.selectedExpertId
         let enableThinking: Bool? = self.resolvedEnableThinking()

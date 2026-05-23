@@ -13,7 +13,7 @@ struct ContentView: View {
 	@Environment(DownloadManager.self) private var downloadManager
 		@Environment(ConversationManager.self) private var conversationManager
 	
-	@State private var conversationState: ConversationState = ConversationState()
+	@State private var conversationState: ConversationState = ConversationState.shared
 	
 	@State private var showSetup: Bool = Settings.showSetup
 	

@@ -140,20 +140,13 @@ struct ConversationManagerView: View {
         ) { output in
             self.refreshModel()
         }
-        .onReceive(
-            NotificationCenter.default.publisher(
-                for: Notifications.newConversation.name
-            )
-        ) { output in
-            withAnimation(.linear) {
-                self.conversationState.selectedExpertId = ExpertManager.default?.id
-            }
-            if let recentConversationId = conversationManager.recentConversation?.id {
-                withAnimation(.linear) {
-                    self.conversationState.selectedConversationId = recentConversationId
-                }
-            }
-        }
+        // ``ConversationState.newConversation`` now handles
+        // expert reset + selection directly because the new chat
+        // is an in-memory draft that isn't surfaced by
+        // ``ConversationManager.recentConversation`` until the
+        // user sends the first message. The previous listener
+        // would have clobbered the draft selection with the
+        // most-recent persisted conversation, so it's gone.
         .onReceive(
             NotificationCenter.default.publisher(
                 for: Notifications.switchToConversation.name

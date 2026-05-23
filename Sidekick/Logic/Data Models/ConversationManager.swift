@@ -94,25 +94,6 @@ public final class ConversationManager {
         return self.backupDatastoreUrl.fileExists
     }
 
-    /// Function to create a new conversation
-    public func newConversation() {
-        let defaultTitle: String = Date.now.formatted(
-            date: .abbreviated,
-            time: .shortened
-        )
-        let newConversation: Conversation = Conversation(
-            title: defaultTitle,
-            createdAt: .now,
-            messages: []
-        )
-        self.conversations = [newConversation] + self.conversations
-        NotificationCenter.default.post(
-            name: Notifications.newConversation.name,
-            object: nil
-        )
-        Self.logger.notice("Created a new conversation")
-    }
-
     /// Coalesces back-to-back `didSet` notifications (which happen
     /// every streaming token) into a single SwiftData write per
     /// ``MessageStreamCoordinator.debounceInterval``.
@@ -186,10 +167,18 @@ public final class ConversationManager {
         }
     }
 
-    /// Function returning a conversation with the given ID
+    /// Function returning a conversation with the given ID.
+    /// Falls back to the in-memory draft tracked by
+    /// ``ConversationState`` so views that resolve the active
+    /// conversation by id continue to work for blank chats that
+    /// have not yet been persisted.
     public func getConversation(
         id conversationId: UUID
     ) -> Conversation? {
+        if let draft = ConversationState.shared.draftConversation,
+           draft.id == conversationId {
+            return draft
+        }
         return self.conversations.filter({ $0.id == conversationId }).first
     }
 

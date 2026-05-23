@@ -11,11 +11,14 @@ import SwiftUI
 @MainActor
 public class ConversationCommands {
 	
-	/// The `New Conversation` command replacing the new file command
+	/// The `New Conversation` command replacing the new file command.
+	/// Routed through ``ConversationState`` so the blank chat stays
+	/// in memory until the user actually sends a message - hitting
+	/// Cmd+N never adds a persisted entry to the sidebar.
 	static var commands: some Commands {
 		CommandGroup(replacing: .newItem) {
 			Button {
-				ConversationManager.shared.newConversation()
+				ConversationState.shared.newConversation()
 			} label: {
 				Text("New Conversation")
 			}
