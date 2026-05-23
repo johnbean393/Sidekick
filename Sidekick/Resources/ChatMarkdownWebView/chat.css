@@ -283,7 +283,13 @@ body[data-mode="reasoning"] .md-block.md-new {
     background: transparent;
     border: 1px solid transparent;
     border-radius: 5px;
-    padding: 2px 8px;
+    /* Square hit area sized so 14px icons look balanced. */
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: var(--md-fg-muted);
     font: inherit;
     cursor: pointer;
@@ -297,8 +303,21 @@ body[data-mode="reasoning"] .md-block.md-new {
 .markdown-body .sk-codeblock-actions button:active {
     transform: translateY(0.5px);
 }
+.markdown-body .sk-codeblock-actions button:focus {
+    outline: none;
+}
+.markdown-body .sk-codeblock-actions button:focus-visible {
+    outline: 1.5px solid var(--md-link);
+    outline-offset: 1px;
+}
 .markdown-body .sk-codeblock-actions button.sk-copied {
     color: var(--md-link);
+}
+.markdown-body .sk-codeblock-actions .sk-icon {
+    width: 14px;
+    height: 14px;
+    display: block;
+    pointer-events: none;
 }
 .markdown-body .sk-codeblock-body {
     position: relative;

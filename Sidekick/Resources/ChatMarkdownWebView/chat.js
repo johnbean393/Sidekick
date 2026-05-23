@@ -355,6 +355,44 @@
     // Number of source lines at which a code block becomes collapsible.
     var COLLAPSE_THRESHOLD = 30;
 
+    // Inline SVGs used for the code-block action buttons. Stroke-based so
+    // they inherit `currentColor` and stay crisp at any size. Sizes are
+    // governed by the wrapping button via `width`/`height` properties on
+    // `svg.sk-icon` (see chat.css).
+    var ICONS = {
+        // "Duplicate" glyph similar in spirit to SF Symbols' doc.on.doc.
+        copy: ''
+            + '<svg class="sk-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"'
+            + ' stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<rect x="5" y="5" width="8" height="9" rx="1.6"/>'
+            + '<path d="M3.5 11V3.6A1.6 1.6 0 0 1 5.1 2H10"/>'
+            + '</svg>',
+        // Two arrows pointing apart — "expand".
+        expand: ''
+            + '<svg class="sk-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"'
+            + ' stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<path d="M9.5 2.5h4v4"/>'
+            + '<path d="M13.5 2.5 9.2 6.8"/>'
+            + '<path d="M6.5 13.5h-4v-4"/>'
+            + '<path d="m2.5 13.5 4.3-4.3"/>'
+            + '</svg>',
+        // Two arrows pointing inward — "collapse".
+        collapse: ''
+            + '<svg class="sk-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"'
+            + ' stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<path d="M13.5 6.5h-4v-4"/>'
+            + '<path d="M9.5 6.5 13.8 2.2"/>'
+            + '<path d="M2.5 9.5h4v4"/>'
+            + '<path d="m6.5 9.5-4.3 4.3"/>'
+            + '</svg>',
+        // Checkmark used as transient "copied" feedback.
+        check: ''
+            + '<svg class="sk-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"'
+            + ' stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<path d="M3 8.5 6.4 12 13 5"/>'
+            + '</svg>'
+    };
+
     // Wrap each <pre> in a chrome container with a header (language label,
     // copy button, and — when the block is >= COLLAPSE_THRESHOLD lines —
     // an expand/collapse toggle). Idempotent: each <pre> is enhanced at
@@ -399,16 +437,23 @@
                 var toggleBtn = document.createElement("button");
                 toggleBtn.type = "button";
                 toggleBtn.className = "sk-codeblock-toggle";
-                toggleBtn.setAttribute("data-collapsed-label", "Show all " + lineCount + " lines");
-                toggleBtn.setAttribute("data-expanded-label", "Show less");
-                toggleBtn.textContent = "Show all " + lineCount + " lines";
+                var expandTitle = "Show all " + lineCount + " lines";
+                var collapseTitle = "Show less";
+                toggleBtn.setAttribute("data-expand-title", expandTitle);
+                toggleBtn.setAttribute("data-collapse-title", collapseTitle);
+                toggleBtn.setAttribute("data-state", "collapsed");
+                toggleBtn.setAttribute("title", expandTitle);
+                toggleBtn.setAttribute("aria-label", expandTitle);
+                toggleBtn.innerHTML = ICONS.expand;
                 actions.appendChild(toggleBtn);
             }
 
             var copyBtn = document.createElement("button");
             copyBtn.type = "button";
             copyBtn.className = "sk-codeblock-copy";
-            copyBtn.textContent = "Copy";
+            copyBtn.setAttribute("title", "Copy");
+            copyBtn.setAttribute("aria-label", "Copy code");
+            copyBtn.innerHTML = ICONS.copy;
             actions.appendChild(copyBtn);
 
             header.appendChild(actions);
@@ -540,13 +585,21 @@
 
     function showCopyFeedback(btn) {
         if (btn.__skCopyTimer) clearTimeout(btn.__skCopyTimer);
-        var original = btn.dataset.originalLabel || btn.textContent;
-        btn.dataset.originalLabel = original;
-        btn.textContent = "Copied";
+        // Stash the original glyph so we can restore it after the
+        // "copied" flash.
+        if (!btn.dataset.originalHtml) {
+            btn.dataset.originalHtml = btn.innerHTML;
+        }
+        btn.innerHTML = ICONS.check;
         btn.classList.add("sk-copied");
+        btn.setAttribute("aria-label", "Copied");
+        btn.setAttribute("title", "Copied");
         btn.__skCopyTimer = setTimeout(function () {
-            btn.textContent = original;
+            btn.innerHTML = btn.dataset.originalHtml || ICONS.copy;
             btn.classList.remove("sk-copied");
+            btn.setAttribute("aria-label", "Copy code");
+            btn.setAttribute("title", "Copy");
+            delete btn.dataset.originalHtml;
             btn.__skCopyTimer = null;
         }, 1100);
     }
@@ -557,10 +610,18 @@
         var wasCollapsed = wrapper.getAttribute("data-collapsed") === "true";
         if (wasCollapsed) {
             wrapper.removeAttribute("data-collapsed");
-            btn.textContent = btn.getAttribute("data-expanded-label") || "Show less";
+            var collapseTitle = btn.getAttribute("data-collapse-title") || "Show less";
+            btn.setAttribute("data-state", "expanded");
+            btn.setAttribute("title", collapseTitle);
+            btn.setAttribute("aria-label", collapseTitle);
+            btn.innerHTML = ICONS.collapse;
         } else {
             wrapper.setAttribute("data-collapsed", "true");
-            btn.textContent = btn.getAttribute("data-collapsed-label") || "Show all";
+            var expandTitle = btn.getAttribute("data-expand-title") || "Show all";
+            btn.setAttribute("data-state", "collapsed");
+            btn.setAttribute("title", expandTitle);
+            btn.setAttribute("aria-label", expandTitle);
+            btn.innerHTML = ICONS.expand;
         }
         scheduleHeightReport();
     }
