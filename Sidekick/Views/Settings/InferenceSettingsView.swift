@@ -25,13 +25,10 @@ struct InferenceSettingsView: View {
     
     @State private var isConfiguringServerArguments: Bool = false
     
-    @AppStorage("temperature") private var temperature: Double = InferenceSettings.temperature
-    @AppStorage("useGPUAcceleration") private var useGPUAcceleration: Bool = InferenceSettings.useGPUAcceleration
     @AppStorage("useSpeculativeDecoding") private var useSpeculativeDecoding: Bool = InferenceSettings.useSpeculativeDecoding
     
     @AppStorage("localModelUseVision") private var localModelUseVision: Bool = InferenceSettings.localModelUseVision
     
-    @AppStorage("contextLength") private var contextLength: Int = InferenceSettings.contextLength
     @AppStorage("enableContextCompression") private var enableContextCompression: Bool = InferenceSettings.enableContextCompression
     @AppStorage("compressionTokenThreshold") private var compressionTokenThreshold: Int = InferenceSettings.compressionTokenThreshold
     
@@ -281,12 +278,8 @@ struct InferenceSettingsView: View {
     var parameters: some View {
         Group {
             systemPromptEditor
-            temperatureEditor
-            contextLengthEditor
             contextCompressionToggle
             contextCompressionThresholdEditor
-            useGPUAccelerationToggle
-            advancedParameters
         }
     }
     
@@ -303,123 +296,6 @@ struct InferenceSettingsView: View {
             } label: {
                 Text("Customise")
             }
-        }
-    }
-    
-    var contextLengthEditor: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading) {
-                Text("Context Length")
-                    .font(.title3)
-                    .bold()
-                Text("Context length is the maximum amount of information it can take as input for a query. A larger context length allows an LLM to recall more information, at the cost of slower output and more memory usage.")
-                    .font(.caption)
-            }
-            Spacer()
-            TextField(
-                "",
-                value: $contextLength,
-                formatter: NumberFormatter()
-            )
-            .textFieldStyle(.plain)
-        }
-    }
-    
-    var temperatureEditor: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading) {
-                HStack {
-                    Text("Temperature")
-                        .font(.title3)
-                        .bold()
-                    PopoverButton {
-                        Image(systemName: "questionmark.circle")
-                            .foregroundStyle(.secondary)
-                    } content: {
-                        temperaturePopup
-                    }
-                    .buttonStyle(.plain)
-                }
-                Text("Temperature is a parameter that influences LLM output, determining whether it is more random and creative or more predictable. The lower the setting the more predictable the model acts.")
-                    .font(.caption)
-            }
-            .frame(minWidth: 250)
-            Spacer()
-            Slider(
-                value: $temperature,
-                in: 0...2,
-                step: 0.1
-            )
-            .frame(minWidth: 280)
-            .overlay(alignment: .leading) {
-                Text(String(format: "%g", self.temperature))
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .padding(.leading, 100)
-            }
-        }
-    }
-    
-    var temperaturePopup: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Recommended values:")
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
-            HStack {
-                Text("Coding / Math")
-                Spacer()
-                Text("0")
-            }
-            HStack {
-                Text("Data Cleaning / Data Analysis")
-                Spacer()
-                Text("0.6")
-            }
-            HStack {
-                Text("General Conversation")
-                Spacer()
-                Text("0.8")
-            }
-            HStack {
-                Text("Translation")
-                Spacer()
-                Text("0.8")
-            }
-            HStack {
-                Text("Creative Writing / Poetry")
-                Spacer()
-                Text("1.3")
-            }
-        }
-        .font(.system(size: 11))
-        .padding(10)
-    }
-    
-    var useGPUAccelerationToggle: some View {
-        VStack {
-            HStack(
-                alignment: .center
-            ) {
-                VStack(
-                    alignment: .leading
-                ) {
-                    Text("Use GPU Acceleration")
-                        .font(.title3)
-                        .bold()
-                    Text("Controls whether the GPU is used for inference.")
-                        .font(.caption)
-                }
-                Spacer()
-                Toggle("", isOn: $useGPUAcceleration)
-            }
-            .onChange(of: useGPUAcceleration) {
-                // Send notification to reload model
-                NotificationCenter.default.post(
-                    name: Notifications.changedInferenceConfig.name,
-                    object: nil
-                )
-            }
-            PerformanceGaugeView()
         }
     }
     
@@ -457,40 +333,6 @@ struct InferenceSettingsView: View {
         }
         .disabled(!enableContextCompression)
         .opacity(enableContextCompression ? 1.0 : 0.5)
-    }
-    
-    var advancedParameters: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading) {
-                Text("Advanced Parameters")
-                    .font(.title3)
-                    .bold()
-                Text("""
-Configure the inference server directly by injecting flags and arguments. Arguments configured here will override other settings if needed.
-
-Find more information [here](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md).
-""")
-                .font(.caption)
-            }
-            Spacer()
-            Button {
-                self.isConfiguringServerArguments.toggle()
-            } label: {
-                Text("Configure")
-            }
-        }
-        .sheet(isPresented: $isConfiguringServerArguments) {
-            ServerArgumentsEditor(
-                isPresented: self.$isConfiguringServerArguments
-            )
-            .frame(
-                minWidth: 575,
-                maxWidth: 600,
-                minHeight: 350,
-                maxHeight: 400
-            )
-        }
-        .interactiveDismissDisabled(true)
     }
     
 }

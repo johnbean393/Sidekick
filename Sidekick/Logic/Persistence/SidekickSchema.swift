@@ -117,6 +117,10 @@ public final class MessageEntity {
 
     public var startTime: Date
     public var lastUpdated: Date
+    /// Captured the moment the assistant's reasoning phase ended
+    /// during streaming. `nil` for messages saved before this column
+    /// existed (and for messages that have no reasoning block).
+    public var reasoningEndTime: Date?
     public var responseStartSeconds: Double?
     public var tokensPerSecond: Double?
     public var outputEnded: Bool
@@ -124,6 +128,12 @@ public final class MessageEntity {
     /// JSON-encoded `[FunctionCallRecord]?` — small payload, low
     /// cardinality, written once when a function call completes.
     public var functionCallRecordsData: Data?
+    /// JSON-encoded `[MessageStep]` — per-iteration reasoning,
+    /// explainer text, and tool calls captured during the agent
+    /// loop. Encoded inline because steps are read in lockstep with
+    /// the parent message; a relationship would force a join on
+    /// every conversation load.
+    public var stepsData: Data?
     /// JSON-encoded `[ReferencedURL]` — small, rewritten once per
     /// streaming response when the assistant emits a reference list.
     public var referencedURLsData: Data?
@@ -148,10 +158,12 @@ public final class MessageEntity {
         imageUrl: URL? = nil,
         startTime: Date = .now,
         lastUpdated: Date = .now,
+        reasoningEndTime: Date? = nil,
         responseStartSeconds: Double? = nil,
         tokensPerSecond: Double? = nil,
         outputEnded: Bool = false,
         functionCallRecordsData: Data? = nil,
+        stepsData: Data? = nil,
         referencedURLsData: Data? = nil
     ) {
         self.id = id
@@ -162,10 +174,12 @@ public final class MessageEntity {
         self.imageUrl = imageUrl
         self.startTime = startTime
         self.lastUpdated = lastUpdated
+        self.reasoningEndTime = reasoningEndTime
         self.responseStartSeconds = responseStartSeconds
         self.tokensPerSecond = tokensPerSecond
         self.outputEnded = outputEnded
         self.functionCallRecordsData = functionCallRecordsData
+        self.stepsData = stepsData
         self.referencedURLsData = referencedURLsData
     }
 }

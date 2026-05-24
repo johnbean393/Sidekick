@@ -90,6 +90,16 @@
       },
       "shouldTranslate" : false
     },
+    "%@ / %@ free" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ / %2$@ free"
+          }
+        }
+      }
+    },
     "%@ %@…" : {
       "localizations" : {
         "en" : {
@@ -147,17 +157,8 @@
       },
       "shouldTranslate" : false
     },
-    "0" : {
-      "shouldTranslate" : false
-    },
-    "0.6" : {
-      "shouldTranslate" : false
-    },
-    "0.8" : {
-      "shouldTranslate" : false
-    },
-    "1.3" : {
-      "shouldTranslate" : false
+    "2,048" : {
+
     },
     "A file with the same name already exists. Do you want to overwrite it?" : {
       "extractionState" : "stale",
@@ -759,6 +760,9 @@
         }
       }
     },
+    "Choosing a model for your Mac…" : {
+
+    },
     "Chores" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -823,6 +827,7 @@
       }
     },
     "Coding / Math" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -969,6 +974,9 @@
         }
       }
     },
+    "Configure load parameters for this model" : {
+
+    },
     "Configure the inference server directly by injecting flags and arguments. Arguments configured here will override other settings if needed.\n\nFind more information [here](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)." : {
       "localizations" : {
         "zh-Hans" : {
@@ -989,6 +997,9 @@
           }
         }
       }
+    },
+    "Configure…" : {
+
     },
     "Configuring image layout..." : {
       "extractionState" : "stale",
@@ -1032,6 +1043,7 @@
       }
     },
     "Context length is the maximum amount of information it can take as input for a query. A larger context length allows an LLM to recall more information, at the cost of slower output and more memory usage." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1133,6 +1145,7 @@
       }
     },
     "Controls whether the GPU is used for inference." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1375,6 +1388,7 @@
       }
     },
     "Creative Writing / Poetry" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1412,6 +1426,7 @@
       }
     },
     "Data Cleaning / Data Analysis" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1461,6 +1476,9 @@
           }
         }
       }
+    },
+    "Default Model" : {
+
     },
     "Default shortcuts can be modified in `Settings -> General`." : {
       "extractionState" : "stale",
@@ -1673,6 +1691,19 @@
         }
       }
     },
+    "Download %@" : {
+
+    },
+    "Download %@ (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Download %1$@ (%2$@)"
+          }
+        }
+      }
+    },
     "Download Default Model" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1682,6 +1713,9 @@
           }
         }
       }
+    },
+    "Download failed" : {
+
     },
     "Download Model" : {
       "localizations" : {
@@ -1722,6 +1756,9 @@
           }
         }
       }
+    },
+    "Downloading %@…" : {
+
     },
     "Downloading model %@" : {
       "localizations" : {
@@ -2073,6 +2110,12 @@
           }
         }
       }
+    },
+    "Estimated memory" : {
+
+    },
+    "Estimating…" : {
+
     },
     "Evaluating your content..." : {
       "extractionState" : "stale",
@@ -2568,6 +2611,7 @@
       }
     },
     "General Conversation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3234,6 +3278,9 @@
         }
       }
     },
+    "Maximum information the model can consider per query. The slider stops at the largest context that comfortably fits in your Mac's memory." : {
+
+    },
     "Maximum number of entities to extract per expert. Higher values provide more detail but slower indexing." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3274,6 +3321,12 @@
           }
         }
       }
+    },
+    "Memory estimate unavailable" : {
+
+    },
+    "Memory estimate unavailable; using defaults." : {
+
     },
     "Memory updated" : {
       "localizations" : {
@@ -3748,6 +3801,12 @@
         }
       }
     },
+    "Pause" : {
+
+    },
+    "Paused — %@" : {
+
+    },
     "PDF" : {
 
     },
@@ -4043,6 +4102,7 @@
       }
     },
     "Recommended values:" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4287,6 +4347,9 @@
         }
       }
     },
+    "Resume" : {
+
+    },
     "Resuming indexing \"%@\"" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4365,6 +4428,19 @@
     },
     "Run Functions Without Approval" : {
 
+    },
+    "Safe max: %@" : {
+
+    },
+    "Safe max: %@ (trained: %@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Safe max: %1$@ (trained: %2$@)"
+          }
+        }
+      }
     },
     "Save" : {
       "localizations" : {
@@ -4825,6 +4901,9 @@
         }
       }
     },
+    "Show Onboarding Wizard" : {
+
+    },
     "Sidekick can call functions to obtain information from other applications and perform tasks. For example, when asked to reschedule a meeting, Sidekick can get all events from your calendar, find an available time slot, and then reschedule the meeting by creating a calendar event and drafting an email." : {
       "localizations" : {
         "zh-Hans" : {
@@ -4979,6 +5058,9 @@
         }
       }
     },
+    "Starting…" : {
+
+    },
     "Stats for Nerds" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4999,6 +5081,9 @@
           }
         }
       }
+    },
+    "Step Reasoning Process" : {
+
     },
     "Stop Reading" : {
 
@@ -5092,6 +5177,7 @@
       }
     },
     "Temperature" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5102,6 +5188,7 @@
       }
     },
     "Temperature is a parameter that influences LLM output, determining whether it is more random and creative or more predictable. The lower the setting the more predictable the model acts." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5501,6 +5588,9 @@
     "Thought for %.2f seconds" : {
 
     },
+    "Thought for %@" : {
+
+    },
     "Timetable" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5620,6 +5710,7 @@
       }
     },
     "Translation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -5638,6 +5729,9 @@
           }
         }
       }
+    },
+    "Try Again" : {
+
     },
     "Try Tools" : {
       "extractionState" : "stale",
@@ -5774,6 +5868,7 @@
       }
     },
     "Use GPU Acceleration" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

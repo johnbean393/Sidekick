@@ -236,13 +236,31 @@ DO NOT reference sources outside of those provided below. If you did not referen
 	/// A `URL` for an image generated, if any
 	public var imageUrl: URL?
     
-    /// An array of ``FunctionCallRecord`` used in the response
+    /// An array of ``FunctionCallRecord`` used in the response.
+    ///
+    /// Holds the flat union of every tool call across every iteration
+    /// of the agent loop. Kept for backward compatibility with code
+    /// (and persisted messages) written before ``steps`` existed —
+    /// when ``steps`` is non-empty the per-step records are the
+    /// canonical source for rendering.
     public var functionCallRecords: [FunctionCallRecord]? = nil
 	/// A `Bool` representing whether the message did execute function calls
     public var hasFunctionCallRecords: Bool {
         guard let functionCallRecords else { return false }
         return !functionCallRecords.isEmpty
     }
+    
+    /// Per-iteration breakdown of the assistant's tool-calling loop.
+    ///
+    /// One entry per iteration that ended in tool calls; the final
+    /// iteration (the answer the user sees) lives in ``text`` and
+    /// its derived properties. Empty for messages that didn't go
+    /// through the agent loop or were persisted before this field
+    /// existed.
+    public var steps: [MessageStep] = []
+    /// `true` when this message has captured per-step reasoning /
+    /// explainer / tool call history.
+    public var hasSteps: Bool { !self.steps.isEmpty }
     
 	/// An array for `URL` of sources referenced in a response
 	public var referencedURLs: [ReferencedURL] = []
@@ -256,6 +274,13 @@ DO NOT reference sources outside of those provided below. If you did not referen
 	public var startTime: Date
 	/// Stored property for the most recent update time
 	public var lastUpdated: Date
+	/// Stored property for the moment the assistant's reasoning phase
+	/// ended — i.e. when `responseText` first became non-empty.
+	///
+	/// Captured during streaming so the "Thought for …" duration shown
+	/// in the UI freezes the instant the model finishes thinking,
+	/// rather than continuing to climb while the final answer streams.
+	public var reasoningEndTime: Date?
 	
 	/// Stored property for the time taken for a response to start
 	public var responseStartSeconds: Double?
@@ -265,6 +290,47 @@ DO NOT reference sources outside of those provided below. If you did not referen
 	
 	/// A ``Snapshot`` of canvas content
 	public var snapshot: Snapshot? = nil
+	
+	/// `true` once the assistant has emitted a closing reasoning
+	/// token (`</think>` / `</thought>`), regardless of whether any
+	/// post-reasoning text follows.
+	///
+	/// Distinct from ``hasReasoning``, which becomes `true` the
+	/// instant the opening token appears. Used to stamp
+	/// ``reasoningEndTime`` even for tool-calling iterations where
+	/// the model emits a thought and then jumps straight into a
+	/// native tool call with no narration text in between.
+	public var isReasoningClosed: Bool {
+		guard self.sender == .assistant else { return false }
+		for tokenSet in String.specialReasoningTokens {
+			let openToken: String = tokenSet.first!
+			let closeToken: String = tokenSet.last!
+			if self.text.contains(openToken) && self.text.contains(closeToken) {
+				return true
+			}
+		}
+		return false
+	}
+
+	/// Stamp ``reasoningEndTime`` the first time the assistant has
+	/// closed its chain-of-thought block.
+	///
+	/// Safe to call repeatedly — subsequent calls are no-ops once the
+	/// timestamp has been recorded. Call from streaming code paths
+	/// every time the message's `text` changes so the duration shown
+	/// in the reasoning banner reflects only the reasoning phase.
+	public mutating func markReasoningEndIfNeeded(at date: Date = .now) {
+		guard self.reasoningEndTime == nil else { return }
+		guard self.sender == .assistant else { return }
+		// Stamp as soon as the reasoning block is closed. Earlier
+		// versions also required `!responseText.isEmpty`, but that
+		// missed iterations where the model emits a thought followed
+		// directly by a native tool call (no user-facing text), which
+		// left the per-step "Thought for …" pill stuck without a
+		// duration in the persisted history.
+		guard self.hasReasoning, self.isReasoningClosed else { return }
+		self.reasoningEndTime = date
+	}
 	
 	/// Function to update message
 	@MainActor
@@ -334,6 +400,11 @@ DO NOT reference sources outside of those provided below. If you did not referen
 		}
 		// Try to extract snapshot
 		self.updateSnapshot()
+		// Safety net: if streaming didn't get a chance to stamp the
+		// reasoning end time (e.g. non-streaming code paths), fall
+		// back to "now" so the duration shown isn't `lastUpdated -
+		// startTime` (which would include response generation time).
+		self.markReasoningEndIfNeeded()
 	}
 	
 	/// Function to extract snapshots if available
@@ -664,10 +735,12 @@ extension Message {
         imageUrl: URL?,
         startTime: Date,
         lastUpdated: Date,
+        reasoningEndTime: Date?,
         responseStartSeconds: Double?,
         tokensPerSecond: Double?,
         outputEnded: Bool,
         functionCallRecords: [FunctionCallRecord]?,
+        steps: [MessageStep],
         referencedURLs: [ReferencedURL],
         snapshot: Snapshot?
     ) {
@@ -679,10 +752,12 @@ extension Message {
         self.imageUrl = imageUrl
         self.startTime = startTime
         self.lastUpdated = lastUpdated
+        self.reasoningEndTime = reasoningEndTime
         self.responseStartSeconds = responseStartSeconds
         self.tokensPerSecond = tokensPerSecond
         self.outputEnded = outputEnded
         self.functionCallRecords = functionCallRecords
+        self.steps = steps
         self.referencedURLs = referencedURLs
         self.snapshot = snapshot
     }

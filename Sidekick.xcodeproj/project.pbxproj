@@ -203,6 +203,8 @@
 		206AB9672DB09BB800385510 /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = 206AB9662DB09BB800385510 /* Location.swift */; };
 		206E95452EBC0BDC008C49B4 /* ModelSelectorDropdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 206E95442EBC0BDC008C49B4 /* ModelSelectorDropdown.swift */; };
 		206FBB212D54B40700A045FF /* MessageReasoningProcessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 206FBB202D54B40700A045FF /* MessageReasoningProcessView.swift */; };
+		20BEEF020000000000000009 /* MessageStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF020000000000000008 /* MessageStep.swift */; };
+		20BEEF02000000000000000B /* MessageStepsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20BEEF02000000000000000A /* MessageStepsView.swift */; };
 		2075220B2D7FDF6C00A1CA60 /* Extension+SecureDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2075220A2D7FDF6C00A1CA60 /* Extension+SecureDefaults.swift */; };
 		2075FE922EBAC06100EA6131 /* llama-server in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE912EBAC06100EA6131 /* llama-server */; };
 		2075FE932EBAC06100EA6131 /* llama-perplexity in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE902EBAC06100EA6131 /* llama-perplexity */; };
@@ -212,9 +214,6 @@
 		2075FE982EBAC06100EA6131 /* libggml-cpu.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE8B2EBAC06100EA6131 /* libggml-cpu.0.dylib */; };
 		2075FE992EBAC06100EA6131 /* libllama.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE8E2EBAC06100EA6131 /* libllama.0.dylib */; };
 		2075FE9A2EBAC06100EA6131 /* libmtmd.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE8F2EBAC06100EA6131 /* libmtmd.0.dylib */; };
-		2FB0A0010000000DEADBEE2 /* libllama-common.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */; };
-		2FB0A0020000000DEADBEE2 /* libllama-server-impl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */; };
-		2FB0A0030000000DEADBEE2 /* libllama-perplexity-impl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */; };
 		2075FE9B2EBAC06100EA6131 /* libggml-metal.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2075FE8C2EBAC06100EA6131 /* libggml-metal.0.dylib */; };
 		2075FE9C2EBAC2D600EA6131 /* libggml.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE882EBAC06100EA6131 /* libggml.0.dylib */; };
 		2075FE9D2EBAC2D600EA6131 /* libggml-base.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE892EBAC06100EA6131 /* libggml-base.0.dylib */; };
@@ -223,9 +222,6 @@
 		2075FEA02EBAC2D600EA6131 /* libggml-metal.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE8C2EBAC06100EA6131 /* libggml-metal.0.dylib */; };
 		2075FEA22EBAC2D600EA6131 /* libllama.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE8E2EBAC06100EA6131 /* libllama.0.dylib */; };
 		2075FEA32EBAC2D600EA6131 /* libmtmd.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2075FE8F2EBAC06100EA6131 /* libmtmd.0.dylib */; };
-		2FB0A0010000000DEADBEE3 /* libllama-common.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */; };
-		2FB0A0020000000DEADBEE3 /* libllama-server-impl.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */; };
-		2FB0A0030000000DEADBEE3 /* libllama-perplexity-impl.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */; };
 		2075FEAE2EBAC37B00EA6131 /* libggml.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE882EBAC06100EA6131 /* libggml.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEAF2EBAC37B00EA6131 /* libggml-base.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE892EBAC06100EA6131 /* libggml-base.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEB02EBAC37B00EA6131 /* libggml-blas.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE8A2EBAC06100EA6131 /* libggml-blas.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -233,9 +229,6 @@
 		2075FEB22EBAC37B00EA6131 /* libggml-metal.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE8C2EBAC06100EA6131 /* libggml-metal.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEB42EBAC37B00EA6131 /* libllama.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE8E2EBAC06100EA6131 /* libllama.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEB52EBAC37B00EA6131 /* libmtmd.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE8F2EBAC06100EA6131 /* libmtmd.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		2FB0A0010000000DEADBEE4 /* libllama-common.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		2FB0A0020000000DEADBEE4 /* libllama-server-impl.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		2FB0A0030000000DEADBEE4 /* libllama-perplexity-impl.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEC72EBAC5F100EA6131 /* llama-server in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE912EBAC06100EA6131 /* llama-server */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2075FEC82EBAC5F100EA6131 /* llama-perplexity in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2075FE902EBAC06100EA6131 /* llama-perplexity */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		207A9F532CB82D9600E727DE /* SymbolPicker in Frameworks */ = {isa = PBXBuildFile; productRef = 207A9F522CB82D9600E727DE /* SymbolPicker */; };
@@ -364,7 +357,6 @@
 		20C5CBC62DA3D7310071F5F7 /* Function.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5CBC52DA3D7310071F5F7 /* Function.swift */; };
 		20C5CBC92DA3D82E0071F5F7 /* DefaultFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5CBC82DA3D82E0071F5F7 /* DefaultFunctions.swift */; };
 		20C5CBCB2DA4F3BA0071F5F7 /* KnownModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5CBCA2DA4F3BA0071F5F7 /* KnownModel.swift */; };
-		2FA01EAF00000000DEADBEE2 /* ModelArchitecture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA01EAF00000000DEADBEE1 /* ModelArchitecture.swift */; };
 		20C5CBCD2DA52AB40071F5F7 /* FunctionCallRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5CBCC2DA52AB40071F5F7 /* FunctionCallRecord.swift */; };
 		20C5CBD52DA5F7640071F5F7 /* FunctionCallsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C5CBD42DA5F7640071F5F7 /* FunctionCallsView.swift */; };
 		20CB50382D828CB60064D460 /* LaTeXSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 20CB50372D828CB60064D460 /* LaTeXSwiftUI */; };
@@ -374,6 +366,8 @@
 		20D65DD52CC0CC6C0052D826 /* StopGenerationButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D65DD42CC0CC6C0052D826 /* StopGenerationButton.swift */; };
 		20D9A9732CD2769300171FDE /* MessageShareMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D9A9722CD2769300171FDE /* MessageShareMenu.swift */; };
 		20DAC4422DADF01F0039208E /* WebFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DAC4412DADF01F0039208E /* WebFunctions.swift */; };
+		20DD98F32FC21BF800BE1F8C /* ModelLoadConfigSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DD98F22FC21BF800BE1F8C /* ModelLoadConfigSheet.swift */; };
+		20DD98F52FC21C1500BE1F8C /* GGUFEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DD98F42FC21C1500BE1F8C /* GGUFEstimator.swift */; };
 		20DEABED2CC4D68A0046447C /* Extension+CGImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DEABEC2CC4D68A0046447C /* Extension+CGImage.swift */; };
 		20DFF47F2DB7187C00F3F76C /* Markdown in Resources */ = {isa = PBXBuildFile; fileRef = 20DFF47E2DB7187C00F3F76C /* Markdown */; };
 		20DFF4842DB73C9000F3F76C /* mermaid-cli in Resources */ = {isa = PBXBuildFile; fileRef = 20DFF4832DB73C9000F3F76C /* mermaid-cli */; };
@@ -405,6 +399,18 @@
 		2EBEEF0200000000DEADBEE2 /* ChatMarkdownWebView in Resources */ = {isa = PBXBuildFile; fileRef = 2EBEEF0200000000DEADBEE1 /* ChatMarkdownWebView */; };
 		2EBEEF0300000000DEADBEE2 /* ChatMarkdownAssetSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBEEF0300000000DEADBEE1 /* ChatMarkdownAssetSchemeHandler.swift */; };
 		2FA01EAD00000000DEADBEE2 /* GGUFMetadataReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA01EAD00000000DEADBEE1 /* GGUFMetadataReader.swift */; };
+		2FA01EAF00000000DEADBEE2 /* ModelArchitecture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA01EAF00000000DEADBEE1 /* ModelArchitecture.swift */; };
+		2FB0A0010000000DEADBEE2 /* libllama-common.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */; };
+		2FB0A0010000000DEADBEE3 /* libllama-common.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */; };
+		2FB0A0010000000DEADBEE4 /* libllama-common.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		2FB0A0020000000DEADBEE2 /* libllama-server-impl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */; };
+		2FB0A0020000000DEADBEE3 /* libllama-server-impl.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */; };
+		2FB0A0020000000DEADBEE4 /* libllama-server-impl.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		2FB0A0030000000DEADBEE2 /* libllama-perplexity-impl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */; };
+		2FB0A0030000000DEADBEE3 /* libllama-perplexity-impl.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */; };
+		2FB0A0030000000DEADBEE4 /* libllama-perplexity-impl.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		2FB0A0040000000DEADBEE2 /* gguf-parser in Resources */ = {isa = PBXBuildFile; fileRef = 2FB0A0040000000DEADBEE1 /* gguf-parser */; };
+		2FB0A0040000000DEADBEE3 /* gguf-parser in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 2FB0A0040000000DEADBEE1 /* gguf-parser */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -480,6 +486,7 @@
 				2FB0A0030000000DEADBEE4 /* libllama-perplexity-impl.dylib in Embed Libraries */,
 				2075FEC72EBAC5F100EA6131 /* llama-server in Embed Libraries */,
 				2075FEC82EBAC5F100EA6131 /* llama-perplexity in Embed Libraries */,
+				2FB0A0040000000DEADBEE3 /* gguf-parser in Embed Libraries */,
 			);
 			name = "Embed Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -673,6 +680,8 @@
 		206AB9662DB09BB800385510 /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
 		206E95442EBC0BDC008C49B4 /* ModelSelectorDropdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelSelectorDropdown.swift; sourceTree = "<group>"; };
 		206FBB202D54B40700A045FF /* MessageReasoningProcessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageReasoningProcessView.swift; sourceTree = "<group>"; };
+		20BEEF020000000000000008 /* MessageStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageStep.swift; sourceTree = "<group>"; };
+		20BEEF02000000000000000A /* MessageStepsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageStepsView.swift; sourceTree = "<group>"; };
 		2075220A2D7FDF6C00A1CA60 /* Extension+SecureDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+SecureDefaults.swift"; sourceTree = "<group>"; };
 		2075FE882EBAC06100EA6131 /* libggml.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libggml.0.dylib; sourceTree = "<group>"; };
 		2075FE892EBAC06100EA6131 /* libggml-base.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-base.0.dylib"; sourceTree = "<group>"; };
@@ -681,9 +690,6 @@
 		2075FE8C2EBAC06100EA6131 /* libggml-metal.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-metal.0.dylib"; sourceTree = "<group>"; };
 		2075FE8E2EBAC06100EA6131 /* libllama.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libllama.0.dylib; sourceTree = "<group>"; };
 		2075FE8F2EBAC06100EA6131 /* libmtmd.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmtmd.0.dylib; sourceTree = "<group>"; };
-		2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libllama-common.0.dylib"; sourceTree = "<group>"; };
-		2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libllama-server-impl.dylib"; sourceTree = "<group>"; };
-		2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libllama-perplexity-impl.dylib"; sourceTree = "<group>"; };
 		2075FE902EBAC06100EA6131 /* llama-perplexity */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "llama-perplexity"; sourceTree = "<group>"; };
 		2075FE912EBAC06100EA6131 /* llama-server */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "llama-server"; sourceTree = "<group>"; };
 		207A9F542CB8A96F00E727DE /* ExpertNavigationRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpertNavigationRowView.swift; sourceTree = "<group>"; };
@@ -804,7 +810,6 @@
 		20C5CBC52DA3D7310071F5F7 /* Function.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Function.swift; sourceTree = "<group>"; };
 		20C5CBC82DA3D82E0071F5F7 /* DefaultFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultFunctions.swift; sourceTree = "<group>"; };
 		20C5CBCA2DA4F3BA0071F5F7 /* KnownModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownModel.swift; sourceTree = "<group>"; };
-		2FA01EAF00000000DEADBEE1 /* ModelArchitecture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelArchitecture.swift; sourceTree = "<group>"; };
 		20C5CBCC2DA52AB40071F5F7 /* FunctionCallRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionCallRecord.swift; sourceTree = "<group>"; };
 		20C5CBD42DA5F7640071F5F7 /* FunctionCallsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionCallsView.swift; sourceTree = "<group>"; };
 		20CE5E572D5C85D10000A2EC /* LengthyTasksNavigationButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LengthyTasksNavigationButton.swift; sourceTree = "<group>"; };
@@ -814,6 +819,8 @@
 		20D65DD42CC0CC6C0052D826 /* StopGenerationButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopGenerationButton.swift; sourceTree = "<group>"; };
 		20D9A9722CD2769300171FDE /* MessageShareMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageShareMenu.swift; sourceTree = "<group>"; };
 		20DAC4412DADF01F0039208E /* WebFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebFunctions.swift; sourceTree = "<group>"; };
+		20DD98F22FC21BF800BE1F8C /* ModelLoadConfigSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelLoadConfigSheet.swift; sourceTree = "<group>"; };
+		20DD98F42FC21C1500BE1F8C /* GGUFEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGUFEstimator.swift; sourceTree = "<group>"; };
 		20DEABEC2CC4D68A0046447C /* Extension+CGImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+CGImage.swift"; sourceTree = "<group>"; };
 		20DFF47E2DB7187C00F3F76C /* Markdown */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Markdown; sourceTree = "<group>"; };
 		20DFF4832DB73C9000F3F76C /* mermaid-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "mermaid-cli"; sourceTree = "<group>"; };
@@ -845,6 +852,11 @@
 		2EBEEF0200000000DEADBEE1 /* ChatMarkdownWebView */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ChatMarkdownWebView; sourceTree = "<group>"; };
 		2EBEEF0300000000DEADBEE1 /* ChatMarkdownAssetSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMarkdownAssetSchemeHandler.swift; sourceTree = "<group>"; };
 		2FA01EAD00000000DEADBEE1 /* GGUFMetadataReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGUFMetadataReader.swift; sourceTree = "<group>"; };
+		2FA01EAF00000000DEADBEE1 /* ModelArchitecture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelArchitecture.swift; sourceTree = "<group>"; };
+		2FB0A0010000000DEADBEE1 /* libllama-common.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libllama-common.0.dylib"; sourceTree = "<group>"; };
+		2FB0A0020000000DEADBEE1 /* libllama-server-impl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libllama-server-impl.dylib"; sourceTree = "<group>"; };
+		2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libllama-perplexity-impl.dylib"; sourceTree = "<group>"; };
+		2FB0A0040000000DEADBEE1 /* gguf-parser */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "gguf-parser"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1205,6 +1217,7 @@
 		200FBFD62CB627B100A92A74 /* llama.cpp */ = {
 			isa = PBXGroup;
 			children = (
+				20DD98F42FC21C1500BE1F8C /* GGUFEstimator.swift */,
 				200FBFED2CB6477400A92A74 /* LlamaServer.swift */,
 				208E34A72EC1C62B009B75C9 /* LlamaServer+Chat.swift */,
 				208E34A92EC1C634009B75C9 /* LlamaServer+Networking.swift */,
@@ -1360,6 +1373,7 @@
 		20457D242D924C0B00954892 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				20DD98F22FC21BF800BE1F8C /* ModelLoadConfigSheet.swift */,
 				204AEDAA2D81A7B4004028FF /* ServerModelSettingsView.swift */,
 				204AEDA82D8170D0004028FF /* ServerModelNameEditor.swift */,
 				208844302CDDE33F003BCB6F /* ModelListView.swift */,
@@ -1502,6 +1516,7 @@
 			children = (
 				20B97CDC2CAFFE06009A0A5D /* Message.swift */,
 				20BEEF020000000000000005 /* MessageViewHelpers.swift */,
+				20BEEF020000000000000008 /* MessageStep.swift */,
 				20B97CDE2CAFFE6A009A0A5D /* Sender.swift */,
 				20C221012CC4A9E800A99796 /* Source.swift */,
 				202E3EDC2CBB8F7B00AF86C8 /* ReferencedURL.swift */,
@@ -1582,6 +1597,7 @@
 				2FB0A0030000000DEADBEE1 /* libllama-perplexity-impl.dylib */,
 				2075FE902EBAC06100EA6131 /* llama-perplexity */,
 				2075FE912EBAC06100EA6131 /* llama-server */,
+				2FB0A0040000000DEADBEE1 /* gguf-parser */,
 			);
 			path = bin;
 			sourceTree = "<group>";
@@ -1929,6 +1945,7 @@
 				2025E67E2D894DFC00289E3F /* MessageCopyButton.swift */,
 				2051FEDC2D8E5601001B1E0D /* MessageReadAloudButton.swift */,
 				206FBB202D54B40700A045FF /* MessageReasoningProcessView.swift */,
+				20BEEF02000000000000000A /* MessageStepsView.swift */,
 				20C5CBD42DA5F7640071F5F7 /* FunctionCallsView.swift */,
 				2000EF442DCCADAB006F9A95 /* MessageWrapperView.swift */,
 				202D4E712EBC30EA005D6F74 /* CollapsibleUserMessageView.swift */,
@@ -2219,6 +2236,7 @@
 				2FB0A0030000000DEADBEE3 /* libllama-perplexity-impl.dylib in Resources */,
 				2075FE922EBAC06100EA6131 /* llama-server in Resources */,
 				2075FE932EBAC06100EA6131 /* llama-perplexity in Resources */,
+				2FB0A0040000000DEADBEE2 /* gguf-parser in Resources */,
 				20ADCEC42DBE1CBA00B13C98 /* mermaidCheatsheet.md in Resources */,
 				20DFF47F2DB7187C00F3F76C /* Markdown in Resources */,
 				20DFF4842DB73C9000F3F76C /* mermaid-cli in Resources */,
@@ -2381,10 +2399,12 @@
 				204AEDAB2D81A7B4004028FF /* ServerModelSettingsView.swift in Sources */,
 				20B97CD02CAFEC37009A0A5D /* Model.swift in Sources */,
 				208E34AC2EC1C644009B75C9 /* LlamaServer+ServerLifecycle.swift in Sources */,
+				20DD98F32FC21BF800BE1F8C /* ModelLoadConfigSheet.swift in Sources */,
 				2FA01EAD00000000DEADBEE2 /* GGUFMetadataReader.swift in Sources */,
 				20ADCEC62DBE390B00B13C98 /* ZoomablePannableView.swift in Sources */,
 				200AADFE2EC2B1B3000995B7 /* EntityExtractor.swift in Sources */,
 				200AAE0F2EC43906000995B7 /* UserMessageAttachmentView.swift in Sources */,
+				20DD98F52FC21C1500BE1F8C /* GGUFEstimator.swift in Sources */,
 				200AADFF2EC2B1B3000995B7 /* GraphDatabase.swift in Sources */,
 				200AAE002EC2B1B3000995B7 /* GraphRetriever.swift in Sources */,
 				200AAE012EC2B1B3000995B7 /* CommunityDetector.swift in Sources */,
@@ -2451,6 +2471,8 @@
 				208388DA2CBF4DF500C2A9F8 /* Tavily.swift in Sources */,
 				2099BDA52CB8069800E02732 /* ConversationNameEditor.swift in Sources */,
 				206FBB212D54B40700A045FF /* MessageReasoningProcessView.swift in Sources */,
+				20BEEF020000000000000009 /* MessageStep.swift in Sources */,
+				20BEEF02000000000000000B /* MessageStepsView.swift in Sources */,
 				208AA3F12CC9E42F00A0891F /* ScrollMask.swift in Sources */,
 				20571F722CBCEDD8004F3344 /* LengthyTasksList.swift in Sources */,
 				20AA5A542CC89AAA003E5519 /* MessageBackgroundView.swift in Sources */,

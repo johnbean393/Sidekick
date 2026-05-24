@@ -10,27 +10,27 @@ import SwiftUI
 
 struct ContentView: View {
 	
+	@Environment(AppState.self) private var appState
 	@Environment(DownloadManager.self) private var downloadManager
 		@Environment(ConversationManager.self) private var conversationManager
 	
 	@State private var conversationState: ConversationState = ConversationState.shared
 	
-	@State private var showSetup: Bool = Settings.showSetup
-	
     var body: some View {
+		@Bindable var appState = self.appState
 		@Bindable var conversationState = self.conversationState
 		Group {
-			if !showSetup {
+			if !appState.isShowingSetup {
 				ConversationManagerView()
 			} else {
 				EmptyView()
 			}
 		}
 		.sheet(
-			isPresented: $showSetup
+			isPresented: $appState.isShowingSetup
 		) {
 			SetupView(
-				showSetup: $showSetup
+				showSetup: $appState.isShowingSetup
 			)
 		}
 		.sheet(

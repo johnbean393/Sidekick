@@ -247,11 +247,78 @@ body {
     background: var(--sk-fn-pending-dot);
 }
 
+/* Function call result body — rendered under each pill so the
+   screenshot carries the tool output, not just the name. Mirrors
+   FunctionCallsView.FunctionCallView.details (which lives inside
+   the pill's expanded state in the live UI but is always visible
+   here so a still image is self-contained). */
+.fn-call {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.fn-call .fn-result {
+    font-size: calc(var(--md-font-size) - 1px);
+    color: var(--md-fg);
+    opacity: 0.9;
+    padding: 0 12px 2px 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.fn-call .fn-result-prefix { font-weight: 700; }
+.fn-call .fn-result-text   { font-style: italic; }
+
 /* Reasoning — purple-tinted, with the brain.fill icon between
    the dot and the label. */
 .status-pill.reasoning-pill {
     background: var(--sk-reasoning-fill);
+}
+/* Default spacing for a standalone reasoning banner (no body). */
+.reasoning-block {
     margin: 0 0 10px 0;
+}
+.reasoning-block .reasoning-body {
+    margin: 6px 0 0 0;
+    padding: 8px 12px;
+    border-radius: 7px;
+    background: var(--sk-reasoning-fill);
+    /* Slightly subdued copy mirrors the SwiftUI reasoning mode
+       (chat.css `body[data-mode="reasoning"]`). */
+    color: var(--md-fg-muted, var(--md-fg));
+    font-size: calc(var(--md-font-size) - 1px);
+    line-height: var(--md-line-height);
+}
+.reasoning-block .reasoning-body > :first-child { margin-top: 0; }
+.reasoning-block .reasoning-body > :last-child  { margin-bottom: 0; }
+
+/* Per-iteration agent loop steps. Each step stacks its reasoning
+   block, an explainer body, and the tools invoked at the end. */
+.steps {
+    margin: 0 0 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.step .step-explainer {
+    font-size: var(--md-font-size);
+    line-height: var(--md-line-height);
+}
+.step .step-explainer > :first-child { margin-top: 0; }
+.step .step-explainer > :last-child  { margin-bottom: 0; }
+
+.step .reasoning-block,
+.step .function-calls {
+    margin: 0;
 }
 .status-pill.reasoning-pill .status-dot {
     background: var(--sk-reasoning-dot);

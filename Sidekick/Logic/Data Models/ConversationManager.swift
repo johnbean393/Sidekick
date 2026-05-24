@@ -401,12 +401,16 @@ extension ConversationManager {
         entity.imageUrl = message.imageUrl
         entity.startTime = message.startTime
         entity.lastUpdated = message.lastUpdated
+        entity.reasoningEndTime = message.reasoningEndTime
         entity.responseStartSeconds = message.responseStartSeconds
         entity.tokensPerSecond = message.tokensPerSecond
         entity.outputEnded = message.outputEnded
         entity.functionCallRecordsData = message.functionCallRecords.flatMap {
             try? encoder.encode($0)
         }
+        entity.stepsData = message.steps.isEmpty
+            ? nil
+            : (try? encoder.encode(message.steps))
         entity.referencedURLsData = try? encoder.encode(message.referencedURLs)
 
         // Snapshot is 1:1 with cascade delete.
@@ -447,6 +451,10 @@ extension ConversationManager {
         let functionCallRecords: [FunctionCallRecord]? = entity.functionCallRecordsData.flatMap {
             try? decoder.decode([FunctionCallRecord].self, from: $0)
         }
+        let steps: [MessageStep] = {
+            guard let data = entity.stepsData else { return [] }
+            return (try? decoder.decode([MessageStep].self, from: data)) ?? []
+        }()
         let referencedURLs: [ReferencedURL] = {
             guard let data = entity.referencedURLsData else { return [] }
             return (try? decoder.decode([ReferencedURL].self, from: data)) ?? []
@@ -478,10 +486,12 @@ extension ConversationManager {
             imageUrl: entity.imageUrl,
             startTime: entity.startTime,
             lastUpdated: entity.lastUpdated,
+            reasoningEndTime: entity.reasoningEndTime,
             responseStartSeconds: entity.responseStartSeconds,
             tokensPerSecond: entity.tokensPerSecond,
             outputEnded: entity.outputEnded,
             functionCallRecords: functionCallRecords,
+            steps: steps,
             referencedURLs: referencedURLs,
             snapshot: snapshot
         )

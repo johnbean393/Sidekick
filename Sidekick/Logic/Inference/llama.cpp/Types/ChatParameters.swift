@@ -425,10 +425,12 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
     ///      Parameters (e.g. `--top-k`), the field is left `nil` here so
     ///      the server-side default (set at process launch) remains
     ///      authoritative.
-    ///   2. Otherwise, if the model's GGUF filename matches a known
+    ///   2. Otherwise, if the user has set a per-model override via the
+    ///      load-config sheet (``LocalModelFileEntity``), that wins.
+    ///   3. Otherwise, if the model's GGUF filename matches a known
     ///      ``ModelArchitecture``, that family's publisher-recommended
     ///      value is used.
-    ///   3. For `temperature`, an unknown architecture falls back to the
+    ///   4. For `temperature`, an unknown architecture falls back to the
     ///      user's global ``InferenceSettings.temperature`` slider.
     ///
     /// Skipped entirely for remote models so the upstream provider's own
@@ -471,16 +473,36 @@ The `\(expert.name)` is currently active. Use `query_database` to query the `\(e
             // temperature behaviour and leave everything else to llama.cpp.
             temperature: InferenceSettings.temperature
         )
+        // Layer per-model overrides (from the load-config sheet) over the
+        // architecture defaults. Each field with a non-nil per-model
+        // value wins; anything left nil falls through to the architecture
+        // preset above. `recommended.merging(overrides)` only overrides
+        // where overrides has a value.
+        let perModelOverrides: SamplingParameters
+        if let modelUrl, let config = ModelManager.loadConfig(for: modelUrl) {
+            perModelOverrides = SamplingParameters(
+                temperature: config.temperature,
+                topP: config.topP,
+                topK: config.topK,
+                minP: config.minP,
+                presencePenalty: config.presencePenalty,
+                frequencyPenalty: config.frequencyPenalty,
+                repetitionPenalty: config.repetitionPenalty
+            )
+        } else {
+            perModelOverrides = SamplingParameters()
+        }
+        let resolved = recommended.merging(perModelOverrides)
         // Write fields that the user has *not* taken over via Advanced
         // Parameters. Otherwise leave them `nil` so the JSON request body
         // omits them, and the server-side CLI flag wins.
-        self.temperature       = suppressedKeys.contains(.temperature)       ? nil : recommended.temperature
-        self.top_p             = suppressedKeys.contains(.top_p)             ? nil : recommended.topP
-        self.top_k             = suppressedKeys.contains(.top_k)             ? nil : recommended.topK
-        self.min_p             = suppressedKeys.contains(.min_p)             ? nil : recommended.minP
-        self.presence_penalty  = suppressedKeys.contains(.presence_penalty)  ? nil : recommended.presencePenalty
-        self.frequency_penalty = suppressedKeys.contains(.frequency_penalty) ? nil : recommended.frequencyPenalty
-        self.repetition_penalty = suppressedKeys.contains(.repetition_penalty) ? nil : recommended.repetitionPenalty
+        self.temperature       = suppressedKeys.contains(.temperature)       ? nil : resolved.temperature
+        self.top_p             = suppressedKeys.contains(.top_p)             ? nil : resolved.topP
+        self.top_k             = suppressedKeys.contains(.top_k)             ? nil : resolved.topK
+        self.min_p             = suppressedKeys.contains(.min_p)             ? nil : resolved.minP
+        self.presence_penalty  = suppressedKeys.contains(.presence_penalty)  ? nil : resolved.presencePenalty
+        self.frequency_penalty = suppressedKeys.contains(.frequency_penalty) ? nil : resolved.frequencyPenalty
+        self.repetition_penalty = suppressedKeys.contains(.repetition_penalty) ? nil : resolved.repetitionPenalty
     }
     
     /// Picks the right "thinking vs non-thinking" sampling preset.

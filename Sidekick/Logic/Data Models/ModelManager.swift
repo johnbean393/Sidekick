@@ -153,6 +153,160 @@ public enum ModelManager {
         return true
     }
 
+    /// Presents an open-file dialog and returns the picked URL after
+    /// inserting it into the model table. Used by the new add-model
+    /// flow that needs to follow up with a load-config sheet.
+    @discardableResult
+    public static func pickAndAdd() -> URL? {
+        guard
+            let modelUrls = try? FileManager.selectFile(
+                dialogTitle: String(localized: "Select a Model"),
+                canSelectDirectories: false,
+                allowedContentTypes: [Self.ggufType],
+                allowMultipleSelection: false,
+                persistPermissions: true
+            ),
+            let modelUrl = modelUrls.first
+        else {
+            return nil
+        }
+        Self.add(modelUrl)
+        return modelUrl
+    }
+
+    /// Look up the persisted entity for a given model URL.
+    public static func entity(for url: URL) -> LocalModelFileEntity? {
+        let context = ModelContext(PersistenceController.shared.container)
+        let urlString = url.absoluteString
+        do {
+            return try context.fetch(
+                FetchDescriptor<LocalModelFileEntity>(
+                    predicate: #Predicate { $0.urlString == urlString }
+                )
+            ).first
+        } catch {
+            Self.logger.error(
+                "Failed to fetch model entity: \(error.localizedDescription, privacy: .public)"
+            )
+            return nil
+        }
+    }
+
+    /// A value snapshot of a model entity's load + sampling fields.
+    /// We hand snapshots to non-MainActor code (e.g. ``LlamaServer``)
+    /// because `LocalModelFileEntity` is itself bound to a
+    /// `ModelContext` and not safe to share across actors.
+    public struct LoadConfig: Equatable {
+
+        public var contextLength: Int?
+        public var temperature: Double?
+        public var topP: Double?
+        public var topK: Int?
+        public var minP: Double?
+        public var repetitionPenalty: Double?
+        public var presencePenalty: Double?
+        public var frequencyPenalty: Double?
+
+        public var trainedContextLength: Int?
+        public var safeMaxContextLength: Int?
+        public var safeMaxComputedAt: Date?
+        public var safeMaxComputedForMemoryGB: Int?
+
+        public init(
+            contextLength: Int? = nil,
+            temperature: Double? = nil,
+            topP: Double? = nil,
+            topK: Int? = nil,
+            minP: Double? = nil,
+            repetitionPenalty: Double? = nil,
+            presencePenalty: Double? = nil,
+            frequencyPenalty: Double? = nil,
+            trainedContextLength: Int? = nil,
+            safeMaxContextLength: Int? = nil,
+            safeMaxComputedAt: Date? = nil,
+            safeMaxComputedForMemoryGB: Int? = nil
+        ) {
+            self.contextLength = contextLength
+            self.temperature = temperature
+            self.topP = topP
+            self.topK = topK
+            self.minP = minP
+            self.repetitionPenalty = repetitionPenalty
+            self.presencePenalty = presencePenalty
+            self.frequencyPenalty = frequencyPenalty
+            self.trainedContextLength = trainedContextLength
+            self.safeMaxContextLength = safeMaxContextLength
+            self.safeMaxComputedAt = safeMaxComputedAt
+            self.safeMaxComputedForMemoryGB = safeMaxComputedForMemoryGB
+        }
+    }
+
+    /// Snapshot the persisted load configuration for `url`. Safe to
+    /// call from any actor; returns `nil` when the model isn't
+    /// registered.
+    nonisolated public static func loadConfig(for url: URL) -> LoadConfig? {
+        let context = ModelContext(PersistenceController.shared.container)
+        let urlString = url.absoluteString
+        do {
+            guard let row = try context.fetch(
+                FetchDescriptor<LocalModelFileEntity>(
+                    predicate: #Predicate { $0.urlString == urlString }
+                )
+            ).first else {
+                return nil
+            }
+            return LoadConfig(
+                contextLength: row.contextLength,
+                temperature: row.temperature,
+                topP: row.topP,
+                topK: row.topK,
+                minP: row.minP,
+                repetitionPenalty: row.repetitionPenalty,
+                presencePenalty: row.presencePenalty,
+                frequencyPenalty: row.frequencyPenalty,
+                trainedContextLength: row.trainedContextLength,
+                safeMaxContextLength: row.safeMaxContextLength,
+                safeMaxComputedAt: row.safeMaxComputedAt,
+                safeMaxComputedForMemoryGB: row.safeMaxComputedForMemoryGB
+            )
+        } catch {
+            return nil
+        }
+    }
+
+    /// Mutate the persisted entity for `url`. The closure receives the
+    /// live `LocalModelFileEntity` so callers can write multiple fields
+    /// in one save. Inserts a new entity if none exists yet.
+    public static func updateConfig(
+        for url: URL,
+        mutating mutation: (LocalModelFileEntity) -> Void
+    ) {
+        let context = ModelContext(PersistenceController.shared.container)
+        let urlString = url.absoluteString
+        do {
+            let entity: LocalModelFileEntity
+            if let existing = try context.fetch(
+                FetchDescriptor<LocalModelFileEntity>(
+                    predicate: #Predicate { $0.urlString == urlString }
+                )
+            ).first {
+                entity = existing
+            } else {
+                entity = LocalModelFileEntity(
+                    id: UUID(),
+                    urlString: urlString
+                )
+                context.insert(entity)
+            }
+            mutation(entity)
+            try context.save()
+        } catch {
+            Self.logger.error(
+                "Failed to update model config: \(error.localizedDescription, privacy: .public)"
+            )
+        }
+    }
+
     /// Legacy `models.json` location, kept for one-shot migration.
     public static var legacyDatastoreUrl: URL {
         return Settings.containerUrl

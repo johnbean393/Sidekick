@@ -21,6 +21,11 @@ public class HelpCommands {
 			} label: {
 				Text("Report an Issue")
 			}
+			Button {
+				AppState.showOnboardingWizard()
+			} label: {
+				Text("Show Onboarding Wizard")
+			}
 		}
 	}
     

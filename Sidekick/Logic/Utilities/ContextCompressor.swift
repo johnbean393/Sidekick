@@ -58,7 +58,14 @@ enum ContextCompressor {
     
     // MARK: - Private helpers
     
-    /// Summarises a single tool result using the worker model. Ensures the final summary stays under the token threshold.
+    /// Summarises a single tool result using the main model. Ensures the final summary stays under the token threshold.
+    ///
+    /// Compression deliberately runs on the **main** model rather than
+    /// the worker: tool outputs can be many thousands of tokens long
+    /// (e.g. fetched web pages), and the worker server is pinned to a
+    /// 4K context for memory efficiency. Routing through the main
+    /// model guarantees we have enough headroom to fit the raw output,
+    /// the compression prompt, and the produced summary in one go.
     private static func summarizeToolResult(
         call: String,
         result: String,
@@ -93,7 +100,7 @@ Requirements:
             message: message
         )
         
-        var summaryResponse = try await Model.shared.workerModelServer.getChatCompletion(
+        var summaryResponse = try await Model.shared.mainModelServer.getChatCompletion(
             mode: .default,
             canReachRemoteServer: canReachRemoteServer,
             messages: [messageSubset]

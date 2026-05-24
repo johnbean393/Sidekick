@@ -183,8 +183,18 @@
         pill.appendChild(chev);
     }
 
-    function buildReasoningBanner(row) {
-        if (!row.reasoning) return null;
+    // Render a Markdown body the same way buildMessageBody does for
+    // the main response. Reused for the reasoning trace and the
+    // per-step explainer text so they get the same typography +
+    // syntax highlighting + math support.
+    function buildMarkdownBlock(src, extraClass) {
+        var node = makeEl("div", "message-text markdown-body" + (extraClass ? " " + extraClass : ""));
+        node.innerHTML = md.render(src || "");
+        decorateText(node);
+        return node;
+    }
+
+    function buildReasoningPill(reasoning) {
         // Mirrors SwiftUI MessageReasoningProcessView's collapsed
         // header: purple dot + brain.fill + "Thought for …" +
         // disclosure chevron, wrapped in a purple-tinted pill.
@@ -194,16 +204,35 @@
         icon.innerHTML = symbolSVG("brain.fill");
         banner.appendChild(icon);
         banner.appendChild(
-            makeEl("span", "pill-label", row.reasoning.durationLabel || "Thought")
+            makeEl("span", "pill-label", reasoning.durationLabel || "Thought")
         );
         appendChevron(banner);
         return banner;
     }
 
-    function buildFunctionCalls(row) {
-        if (!row.functionCalls || !row.functionCalls.length) return null;
+    // Render a reasoning block (pill header + optional Markdown
+    // body). Mirrors SwiftUI MessageReasoningProcessView's expanded
+    // state so the screenshot always carries the full trace, not
+    // just the collapsed banner.
+    function buildReasoningBlock(reasoning) {
+        if (!reasoning) return null;
+        var wrap = makeEl("div", "reasoning-block");
+        wrap.appendChild(buildReasoningPill(reasoning));
+        if (reasoning.body) {
+            wrap.appendChild(buildMarkdownBlock(reasoning.body, "reasoning-body"));
+        }
+        return wrap;
+    }
+
+    function buildReasoningBanner(row) {
+        if (!row.reasoning) return null;
+        return buildReasoningBlock(row.reasoning);
+    }
+
+    function buildFunctionCalls(calls) {
+        if (!calls || !calls.length) return null;
         var wrap = makeEl("div", "function-calls");
-        row.functionCalls.forEach(function (call) {
+        calls.forEach(function (call) {
             // Mirrors SwiftUI FunctionCallView.label: colored dot
             // + "Function: <name>" (bold prefix, italic name) +
             // disclosure chevron when the call has executed.
@@ -211,6 +240,7 @@
             var status = (rawStatus === "succeeded" || rawStatus === "failed" || rawStatus === "executing")
                 ? rawStatus
                 : "succeeded";
+            var pillWrap = makeEl("div", "fn-call");
             var pill = makeEl("div", "status-pill fn-pill status-" + status);
             pill.appendChild(makeEl("span", "status-dot"));
             var label = makeEl("span", "pill-label");
@@ -222,7 +252,35 @@
             if (call.didExecute !== false) {
                 appendChevron(pill);
             }
-            wrap.appendChild(pill);
+            pillWrap.appendChild(pill);
+            if (call.result) {
+                var result = makeEl("div", "fn-result");
+                result.appendChild(makeEl("span", "fn-result-prefix", "Result: "));
+                result.appendChild(makeEl("span", "fn-result-text", call.result));
+                pillWrap.appendChild(result);
+            }
+            wrap.appendChild(pillWrap);
+        });
+        return wrap;
+    }
+
+    // Per-iteration agent loop block: reasoning + user-facing
+    // explainer text + the tool calls invoked at the end of the
+    // step. One of these is rendered per `row.steps[i]`, in order,
+    // before the final reasoning banner / response text.
+    function buildSteps(row) {
+        if (!row.steps || !row.steps.length) return null;
+        var wrap = makeEl("div", "steps");
+        row.steps.forEach(function (step) {
+            var stepEl = makeEl("div", "step");
+            var reasoning = buildReasoningBlock(step.reasoning);
+            if (reasoning) stepEl.appendChild(reasoning);
+            if (step.explainerText) {
+                stepEl.appendChild(buildMarkdownBlock(step.explainerText, "step-explainer"));
+            }
+            var calls = buildFunctionCalls(step.functionCalls);
+            if (calls) stepEl.appendChild(calls);
+            wrap.appendChild(stepEl);
         });
         return wrap;
     }
@@ -271,10 +329,19 @@
         col.appendChild(buildHeader(row));
 
         var bubble = makeEl("div", "message-bubble");
-        // Order matches SwiftUI MessageContentView: function calls
-        // first, then the reasoning banner, then the response text.
-        var fns = buildFunctionCalls(row);
-        if (fns) bubble.appendChild(fns);
+        // Order matches SwiftUI MessageContentView:
+        // 1. Per-iteration agent loop steps (reasoning + explainer
+        //    text + tool calls) when present — otherwise the
+        //    legacy flat function call list.
+        // 2. The final reasoning banner.
+        // 3. The final response text.
+        var steps = buildSteps(row);
+        if (steps) {
+            bubble.appendChild(steps);
+        } else {
+            var fns = buildFunctionCalls(row.functionCalls);
+            if (fns) bubble.appendChild(fns);
+        }
         var reasoning = buildReasoningBanner(row);
         if (reasoning) bubble.appendChild(reasoning);
 

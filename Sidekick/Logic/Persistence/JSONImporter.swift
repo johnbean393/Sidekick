@@ -127,6 +127,9 @@ public enum JSONImporter {
         let functionCallData = message.functionCallRecords.flatMap {
             try? encoder.encode($0)
         }
+        let stepsData: Data? = message.steps.isEmpty
+            ? nil
+            : (try? encoder.encode(message.steps))
         let referencedURLsData = try? encoder.encode(message.referencedURLs)
 
         let entity = MessageEntity(
@@ -138,10 +141,12 @@ public enum JSONImporter {
             imageUrl: message.imageUrl,
             startTime: message.startTime,
             lastUpdated: message.lastUpdated,
+            reasoningEndTime: message.reasoningEndTime,
             responseStartSeconds: message.responseStartSeconds,
             tokensPerSecond: message.tokensPerSecond,
             outputEnded: message.outputEnded,
             functionCallRecordsData: functionCallData,
+            stepsData: stepsData,
             referencedURLsData: referencedURLsData
         )
         if let snapshot = message.snapshot {

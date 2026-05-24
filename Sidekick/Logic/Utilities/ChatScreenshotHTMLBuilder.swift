@@ -120,23 +120,52 @@ struct ChatScreenshotHTMLBuilder {
             row["text"] = message.responseText
         }
         
-        // Reasoning banner — collapsed view only.
+        // Reasoning banner — body included so the screenshot shows
+        // the full chain of thought (matches the expanded SwiftUI
+        // view a user would take a screenshot of).
         if message.hasReasoning {
-            row["reasoning"] = [
+            var reasoning: [String: Any] = [
                 "durationLabel": Self.reasoningDurationLabel(message),
-            ] as [String: Any]
+            ]
+            if let body = message.reasoningText, !body.isEmpty {
+                reasoning["body"] = body
+            }
+            row["reasoning"] = reasoning
         }
         
-        // Function calls — collapsed banner per call.
-        if let calls = message.functionCallRecords, !calls.isEmpty {
-            row["functionCalls"] = calls.map { call -> [String: Any] in
-                let status: String = call.status.map { $0.jsKey } ?? "executing"
-                return [
-                    "name": call.name,
-                    "status": status,
-                    "didExecute": call.status?.didExecute ?? false,
+        // Per-iteration agent loop steps: reasoning + explainer text
+        // + the tool calls invoked at the end of the step. Rendered
+        // before the final reasoning banner / answer so the export
+        // mirrors the chronological "think → narrate → call → …"
+        // trail shown in the live UI.
+        if !message.steps.isEmpty {
+            row["steps"] = message.steps.map { step -> [String: Any] in
+                var stepRow: [String: Any] = [
+                    "id": step.id.uuidString,
                 ]
+                if step.hasReasoning, let reasoning = step.reasoningText {
+                    var reasoningPayload: [String: Any] = [:]
+                    if let label = step.formattedReasoningDuration {
+                        reasoningPayload["durationLabel"] = String(
+                            format: String(localized: "Thought for %@"), label
+                        )
+                    }
+                    reasoningPayload["body"] = reasoning
+                    stepRow["reasoning"] = reasoningPayload
+                }
+                if step.hasExplainerText {
+                    stepRow["explainerText"] = step.explainerText
+                }
+                if !step.functionCallRecords.isEmpty {
+                    stepRow["functionCalls"] = Self.encodeFunctionCalls(step.functionCallRecords)
+                }
+                return stepRow
             }
+        } else if let calls = message.functionCallRecords, !calls.isEmpty {
+            // Legacy single-bubble path: no per-step breakdown
+            // available, so render the flat function call list the
+            // way older messages have always been exported.
+            row["functionCalls"] = Self.encodeFunctionCalls(calls)
         }
         
         // Attachments are a user-side concept; references are an
@@ -160,6 +189,46 @@ struct ChatScreenshotHTMLBuilder {
         return row
     }
     
+    /// Serialize a flat list of ``FunctionCallRecord`` into the
+    /// payload shape the JS renderer expects.
+    private static func encodeFunctionCalls(
+        _ calls: [FunctionCallRecord]
+    ) -> [[String: Any]] {
+        return calls.map { call -> [String: Any] in
+            let status: String = call.status.map { $0.jsKey } ?? "executing"
+            var payload: [String: Any] = [
+                "name": call.name,
+                "status": status,
+                "didExecute": call.status?.didExecute ?? false,
+            ]
+            // Include the result so the export carries enough
+            // context to make sense of the call; mirrors
+            // ``FunctionCallsView.FunctionCallView.details`` which
+            // truncates to ~1000 chars to keep the bubble compact.
+            if let result = call.result, !result.isEmpty {
+                payload["result"] = Self.truncateMiddle(result)
+            }
+            return payload
+        }
+    }
+
+    /// Mirrors ``FunctionCallsView.FunctionCallView.truncateMiddle``
+    /// so the screenshot and the live chat clip results the same way.
+    private static func truncateMiddle(
+        _ text: String,
+        maxLength: Int = 1000,
+        indicator: String = "..."
+    ) -> String {
+        guard text.count > maxLength else { return text }
+        guard maxLength >= indicator.count + 2 else {
+            return String(text.prefix(maxLength))
+        }
+        let availableLength = maxLength - indicator.count
+        let leftLength = (availableLength + 1) / 2
+        let rightLength = availableLength / 2
+        return String(text.prefix(leftLength)) + indicator + String(text.suffix(rightLength))
+    }
+
     // MARK: - Theming + formatting
     
     /// Picks `"dark"` or `"light"` from the requested ``ColorScheme``,
@@ -193,9 +262,13 @@ struct ChatScreenshotHTMLBuilder {
     }
     
     private static func reasoningDurationLabel(_ message: Message) -> String {
+        // Mirror MessageReasoningProcessView: freeze the duration at
+        // the moment reasoning ended so screenshots match what the
+        // user sees in the chat.
+        let endTime: Date = message.reasoningEndTime ?? message.lastUpdated
         let seconds: Double = max(
             0,
-            message.lastUpdated.timeIntervalSince(message.startTime)
+            endTime.timeIntervalSince(message.startTime)
         )
         if seconds < 10 {
             return String(format: String(localized: "Thought for %.2f seconds"), seconds)

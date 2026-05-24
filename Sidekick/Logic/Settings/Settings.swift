@@ -320,30 +320,37 @@ public class Settings {
 		}
 	}
 	
-	/// Function to select a model
+	/// Function to select a model. Activates it as the main local
+	/// model and adds it to the model list. Returns `true` when a model
+	/// was successfully chosen.
 	@MainActor
 	static func selectModel() -> Bool {
-		if let modelUrls = try? FileManager.selectFile(
-			dialogTitle: String(
-				localized: "Select a Model"
-			),
+		guard let modelUrl = Self.selectAndAddModel() else {
+			return false
+		}
+		Self.selectMainLocalModel(modelUrl)
+		return true
+	}
+
+	/// Variant of ``selectModel()`` that adds the picked `.gguf` to the
+	/// model list but does **not** activate it as the main model. Used
+	/// by entry points that want to present the per-model load-config
+	/// sheet before committing to the new model.
+	@MainActor
+	@discardableResult
+	static func selectAndAddModel() -> URL? {
+		guard let modelUrls = try? FileManager.selectFile(
+			dialogTitle: String(localized: "Select a Model"),
 			canSelectDirectories: false,
 			allowedContentTypes: [Self.ggufType],
 			allowMultipleSelection: false,
 			persistPermissions: true
-		) {
-			guard let modelUrl = modelUrls.first else {
-				return false
-			}
-			// Set and signal success
-			Self.selectMainLocalModel(modelUrl)
-			// Add to model list
-			ModelManager.add(modelUrl)
-			return true
-		} else {
-			// Signal failure
-			return false
+		),
+		      let modelUrl = modelUrls.first else {
+			return nil
 		}
+		ModelManager.add(modelUrl)
+		return modelUrl
 	}
 	
 	/// Function to clear user defaults (for debug uses)

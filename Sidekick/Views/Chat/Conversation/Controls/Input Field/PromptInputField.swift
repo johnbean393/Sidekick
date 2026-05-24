@@ -682,6 +682,18 @@ struct PromptInputField: View {
                 expertId: expertId
             )
             responseMessage.startTime = response.startTime
+            // Preserve the moment the model finished its chain of
+            // thought (captured during streaming on the pending
+            // message and snapshotted onto the response). The fresh
+            // `responseMessage` would otherwise lose this stamp and
+            // the reasoning duration would include the entire
+            // response generation time.
+            responseMessage.reasoningEndTime = response.reasoningEndTime
+            // Carry the per-iteration reasoning + explainer + tool
+            // records that were captured during the agent loop so
+            // the saved message can render the full think → narrate
+            // → call → … → answer trail, not just the final turn.
+            responseMessage.steps = response.steps
             responseMessage.update(
                 response: response,
                 includeReferences: didUseSources
@@ -797,40 +809,65 @@ A user is chatting with an assistant and they have sent the message below. Gener
         _ error: LlamaServerError,
         originalConversation: Conversation
     ) {
-        // Display error message
-        let errorDescription: String = error.errorDescription ?? "Unknown Error"
-        let recoverySuggestion: String = error.recoverySuggestion
-        Dialogs.showAlert(
-            title: errorDescription,
-            message: recoverySuggestion
-        )
+        let shouldRestorePrompt = self.shouldRestorePrompt(for: originalConversation)
+        if shouldRestorePrompt {
+            // Display error message
+            let errorDescription: String = error.errorDescription ?? "Unknown Error"
+            let recoverySuggestion: String = error.recoverySuggestion
+            Dialogs.showAlert(
+                title: errorDescription,
+                message: recoverySuggestion
+            )
+        }
         // Restore prompt if nothing new has been typed and we restored the conversation
         let didRevert: Bool = self.revertConversationAfterFailure(originalConversation)
         if didRevert,
+           shouldRestorePrompt,
            self.promptController.prompt.isEmpty,
            let prompt: String = originalConversation.messages.last?.text {
             self.promptController.prompt = prompt
         }
         // Reset model status
         self.model.finishChatRun(conversationId: originalConversation.id)
-        self.promptController.sentConversation = nil
+        self.clearSentConversationIfNeeded(for: originalConversation.id)
     }
     
     @MainActor
     private func handleCancellation(
         originalConversation: Conversation
     ) {
+        let shouldRestorePrompt = self.shouldRestorePrompt(for: originalConversation)
         // Don't show error dialog for user-initiated cancellation
-        // Just clean up the state silently
-        let didRevert: Bool = self.revertConversationAfterFailure(originalConversation)
-        if didRevert,
-           self.promptController.prompt.isEmpty,
-           let prompt: String = originalConversation.messages.last?.text {
-            self.promptController.prompt = prompt
+        // Just clean up the state silently. Only restore the prompt for the
+        // currently visible conversation; inactive cancellation can otherwise
+        // clobber the shared prompt bar while the user is typing elsewhere.
+        if shouldRestorePrompt {
+            let didRevert: Bool = self.revertConversationAfterFailure(originalConversation)
+            if didRevert,
+               self.promptController.prompt.isEmpty,
+               let prompt: String = originalConversation.messages.last?.text {
+                self.promptController.prompt = prompt
+            }
         }
         // Reset model status
         self.model.finishChatRun(conversationId: originalConversation.id)
-        self.promptController.sentConversation = nil
+        self.clearSentConversationIfNeeded(for: originalConversation.id)
+    }
+
+    @MainActor
+    private func shouldRestorePrompt(
+        for conversation: Conversation
+    ) -> Bool {
+        return self.conversationState.selectedConversationId == conversation.id
+    }
+
+    @MainActor
+    private func clearSentConversationIfNeeded(
+        for conversationId: UUID
+    ) {
+        if self.promptController.sentConversation?.id == conversationId {
+            self.promptController.sentConversation = nil
+        }
     }
     
     @MainActor

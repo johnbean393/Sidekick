@@ -50,9 +50,15 @@ struct MessageReasoningProcessView: View {
     }
 
     private var formattedReasoningDuration: String {
+        // Prefer the moment the assistant finished its chain of
+        // thought. Falls back to `lastUpdated` for messages persisted
+        // before `reasoningEndTime` existed (or while reasoning is
+        // still streaming, in which case `isThinking` is true and
+        // this string isn't shown anyway).
+        let endTime: Date = self.message.reasoningEndTime ?? self.message.lastUpdated
         let duration = max(
             0,
-            self.message.lastUpdated.timeIntervalSince(self.message.startTime)
+            endTime.timeIntervalSince(self.message.startTime)
         )
         if duration < 10 {
             return String(format: "%.2f seconds", duration)

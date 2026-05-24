@@ -66,8 +66,22 @@ struct MessageContentView: View {
                     alignment: .leading,
                     spacing: 4
                 ) {
-                    // Show function calls if availible
-                    if self.message.hasFunctionCallRecords {
+                    // Captured per-iteration history (reasoning +
+                    // explainer + tool calls between steps) renders
+                    // before the final reasoning banner so the user
+                    // can scroll the full think → narrate → call →
+                    // answer trail in chronological order.
+                    //
+                    // No extra bottom padding here: the parent VStack
+                    // already provides a 4-pt gap, matching the gaps
+                    // between the step pills themselves so the whole
+                    // trail reads as a single evenly-spaced timeline.
+                    if self.message.hasSteps {
+                        MessageStepsView(message: self.message)
+                    } else if self.message.hasFunctionCallRecords {
+                        // Legacy path: messages saved before steps
+                        // existed, plus single-iteration responses,
+                        // continue to render a flat pill stack.
                         FunctionCallsView(message: self.message)
                             .if(
                                 !self.message.text

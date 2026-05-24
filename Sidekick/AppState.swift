@@ -22,7 +22,21 @@ public final class AppState {
 
     var commandSelectedExpertId: UUID? = nil
 
+    /// Controls presentation of the onboarding ``SetupView`` sheet from
+    /// ``ContentView``. Initialized from ``Settings/showSetup`` so the
+    /// usual first-run behavior is preserved, but can be toggled at any
+    /// time (e.g. from the Help menu) to re-run the onboarding wizard
+    /// for debugging the setup flow.
+    var isShowingSetup: Bool = Settings.showSetup
+
     static func setCommandSelectedExpertId(_ id: UUID) {
         Self.shared.commandSelectedExpertId = id
+    }
+
+    /// Re-presents the onboarding wizard, regardless of whether setup
+    /// has already been completed. Used by the Help menu's
+    /// "Show Onboarding Wizard" item.
+    static func showOnboardingWizard() {
+        Self.shared.isShowingSetup = true
     }
 }

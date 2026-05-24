@@ -51,6 +51,110 @@ public struct GGUFMetadataReader {
         /// `tokenizer.chat_template.<name>`.
         public let namedTemplates: [String: String]
     }
+
+    /// Snapshot of the architecture-dependent fields useful for sizing
+    /// the KV cache without invoking an external estimator. Populated
+    /// from `general.architecture` and `{arch}.*` keys.
+    public struct ArchitectureInfo {
+        public let architecture: String?
+        public let contextLength: Int?
+    }
+
+    /// Read the trained context length and architecture name from a
+    /// GGUF file. Falls back to `nil` for any field that is missing or
+    /// has an unexpected type.
+    public static func readArchitectureInfo(
+        from url: URL
+    ) -> ArchitectureInfo? {
+        guard let stream = GGUFStream(url: url) else {
+            return nil
+        }
+        defer { stream.close() }
+
+        do {
+            var magicBytes = [UInt8](repeating: 0, count: 4)
+            try stream.read(into: &magicBytes, count: 4)
+            guard magicBytes == magic else {
+                return nil
+            }
+            let version: UInt32 = try stream.readUInt32()
+            guard version >= 1 && version <= 3 else {
+                return nil
+            }
+            let useWideCounts = version >= 2
+            _ = try stream.readCount(wide: useWideCounts)
+            let kvCount = try stream.readCount(wide: useWideCounts)
+            guard kvCount <= maxKvCount else {
+                return nil
+            }
+            var architecture: String? = nil
+            // First pass: scan for `general.architecture` and any
+            // `*.context_length`. Since GGUF metadata can be in any
+            // order, we collect every `*.context_length` we see and
+            // resolve at the end against the architecture we found.
+            var contextLengthByKey: [String: Int] = [:]
+            for _ in 0..<kvCount {
+                let key = try stream.readString(wide: useWideCounts)
+                let valueType = try stream.readValueType()
+                if key == "general.architecture" {
+                    guard valueType == .string else {
+                        try stream.skipValue(of: valueType, wide: useWideCounts)
+                        continue
+                    }
+                    architecture = try stream.readString(wide: useWideCounts)
+                } else if key.hasSuffix(".context_length") {
+                    if let value = try Self.readIntegerValue(stream: stream, type: valueType, wide: useWideCounts) {
+                        contextLengthByKey[key] = value
+                    }
+                } else {
+                    try stream.skipValue(of: valueType, wide: useWideCounts)
+                }
+            }
+            let contextLength: Int? = {
+                if let arch = architecture,
+                   let value = contextLengthByKey["\(arch).context_length"] {
+                    return value
+                }
+                // Fallback: take the first `.context_length` we found.
+                // GGUFs that name the field with the wrong architecture
+                // prefix do exist in the wild.
+                return contextLengthByKey.values.first
+            }()
+            return ArchitectureInfo(
+                architecture: architecture,
+                contextLength: contextLength
+            )
+        } catch {
+            Self.logger.warning(
+                "Failed to parse GGUF architecture info for \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
+            return nil
+        }
+    }
+
+    /// Decode an integer-typed GGUF value into a signed `Int`,
+    /// returning `nil` (and skipping the value) for incompatible types.
+    private static func readIntegerValue(
+        stream: GGUFStream,
+        type: ValueType,
+        wide: Bool
+    ) throws -> Int? {
+        switch type {
+            case .uint8: return Int(try stream.readUInt8())
+            case .int8:  return Int(try stream.readInt8())
+            case .uint16: return Int(try stream.readUInt16())
+            case .int16: return Int(try stream.readInt16())
+            case .uint32: return Int(try stream.readUInt32())
+            case .int32: return Int(try stream.readInt32())
+            case .uint64:
+                let value = try stream.readUInt64()
+                return value > UInt64(Int.max) ? nil : Int(value)
+            case .int64: return Int(try stream.readInt64())
+            default:
+                try stream.skipValue(of: type, wide: wide)
+                return nil
+        }
+    }
     
     /// Read the chat-template family of metadata keys from the given GGUF
     /// file. Returns `nil` when the file is missing, unreadable, or not a
@@ -297,16 +401,46 @@ private final class GGUFStream {
         try handle.seek(toOffset: pos + UInt64(remaining))
     }
     
+    func readUInt8() throws -> UInt8 {
+        var byte: UInt8 = 0
+        try withUnsafeMutablePointer(to: &byte) { ptr in
+            try read(into: ptr, count: 1)
+        }
+        return byte
+    }
+
+    func readInt8() throws -> Int8 {
+        return Int8(bitPattern: try readUInt8())
+    }
+
+    func readUInt16() throws -> UInt16 {
+        var bytes = [UInt8](repeating: 0, count: 2)
+        try read(into: &bytes, count: 2)
+        return bytes.withUnsafeBytes { $0.load(as: UInt16.self).littleEndian }
+    }
+
+    func readInt16() throws -> Int16 {
+        return Int16(bitPattern: try readUInt16())
+    }
+
     func readUInt32() throws -> UInt32 {
         var bytes = [UInt8](repeating: 0, count: 4)
         try read(into: &bytes, count: 4)
         return bytes.withUnsafeBytes { $0.load(as: UInt32.self).littleEndian }
     }
-    
+
+    func readInt32() throws -> Int32 {
+        return Int32(bitPattern: try readUInt32())
+    }
+
     func readUInt64() throws -> UInt64 {
         var bytes = [UInt8](repeating: 0, count: 8)
         try read(into: &bytes, count: 8)
         return bytes.withUnsafeBytes { $0.load(as: UInt64.self).littleEndian }
+    }
+
+    func readInt64() throws -> Int64 {
+        return Int64(bitPattern: try readUInt64())
     }
     
     func readCount(wide: Bool) throws -> UInt64 {

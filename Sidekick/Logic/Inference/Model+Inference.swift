@@ -205,6 +205,16 @@ extension Model {
             self.pendingMessage(for: runConversationId)?.text ?? "",
             response!.usage?.total_tokens
         )
+        // Snapshot the per-iteration agent loop history captured on
+        // the live pending message before we tear it down. The
+        // pending message holds the full think → narrate → call
+        // trail produced during streaming; the persisted assistant
+        // `Message` is built fresh by the caller and would otherwise
+        // lose this history once `setPendingMessage(nil, …)` runs.
+        if let livePending = self.pendingMessage(for: runConversationId) {
+            response!.steps = livePending.steps
+            response!.reasoningEndTime = livePending.reasoningEndTime
+        }
         // Update display
         if showPreview && self.agent(for: runConversationId) == nil {
             self.setPendingMessage(nil, conversationId: runConversationId)
@@ -451,6 +461,19 @@ extension Model {
                     functionCalls[index].toolCallID = UUID().uuidString
                 }
 
+                // Snapshot the reasoning + explainer text the model
+                // produced this iteration BEFORE we execute the tool
+                // calls. The step's `functionCallRecords` are filled
+                // in after execution so the persisted history shows
+                // each iteration's "think → narrate → call" sequence.
+                let stepId: UUID = UUID()
+                self.appendPendingStep(
+                    id: stepId,
+                    responseText: response?.text ?? "",
+                    conversationId: conversationId
+                )
+                let preExecutionRecordCount: Int = functionCallRecords.count
+
                 let executionOutput = await self.executeFunctionCalls(
                     functionCalls,
                     using: toolRegistry,
@@ -459,6 +482,18 @@ extension Model {
                 )
                 functionCallRecords = executionOutput.functionCallRecords
                 results += executionOutput.results
+
+                // Back-fill the step with the executed records that
+                // belong to this iteration (everything appended past
+                // `preExecutionRecordCount`).
+                let upperBound: Int = min(
+                    functionCallRecords.count,
+                    max(preExecutionRecordCount, 0)
+                )
+                let stepRecords: [FunctionCallRecord] = upperBound < functionCallRecords.count
+                    ? Array(functionCallRecords[upperBound..<functionCallRecords.count])
+                    : []
+                self.attachRecords(stepRecords, toStep: stepId, conversationId: conversationId)
 
                 let assistantToolCallMessage = Message.MessageSubset.assistantToolCalls(
                     functionCalls: functionCalls
@@ -538,7 +573,13 @@ Call another tool to obtain more information or execute more actions. Try breaki
 
                 var updateResponse: String = ""
                 self.updatePendingMessage(conversationId: conversationId) { pendingMessage in
+                    // Reset per-iteration timing so the next live
+                    // "Thought for …" pill measures only the next
+                    // iteration's reasoning, not the cumulative
+                    // wall-clock since the message started.
                     pendingMessage?.text = updateResponse
+                    pendingMessage?.startTime = .now
+                    pendingMessage?.reasoningEndTime = nil
                 }
 
                 do {
@@ -736,6 +777,8 @@ Please try rephrasing your request or contact support if the issue persists.
             var updateResponse: String = ""
             self.updatePendingMessage(conversationId: conversationId) { pendingMessage in
                 pendingMessage?.text = updateResponse
+                pendingMessage?.startTime = .now
+                pendingMessage?.reasoningEndTime = nil
             }
 
             do {
@@ -1089,7 +1132,79 @@ Respond with YES if ALL 3 criteria above have been met. Respond with YES or NO o
             self.updatePendingMessage(conversationId: conversationId) { pendingMessage in
                 pendingMessage?.text = fullMessage
                 pendingMessage?.lastUpdated = .now
+                // Freeze the "Thought for …" duration the moment the
+                // reasoning block closes and the model starts emitting
+                // its final answer.
+                pendingMessage?.markReasoningEndIfNeeded()
             }
+        }
+    }
+
+    // MARK: - Per-iteration step capture
+
+    /// Snapshot the chain of thought + user-facing explainer text the
+    /// model emitted during the current agent-loop iteration into a
+    /// new ``MessageStep`` on the pending message.
+    ///
+    /// Called right before tool calls execute, so the persisted
+    /// history preserves the "think → narrate → call" sequence even
+    /// though the live `pendingMessage.text` gets reset to make room
+    /// for the next iteration's stream.
+    fileprivate func appendPendingStep(
+        id: UUID,
+        responseText: String,
+        conversationId: UUID?
+    ) {
+        let reasoning: String? = {
+            guard let extracted = responseText.reasoningProcess else { return nil }
+            let trimmed = extracted.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }()
+        let explainer: String = responseText
+            .reasoningRemoved
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let pending = self.pendingMessage(for: conversationId)
+        // Resolve the reasoning end time. The streaming progress
+        // handler stamps `pending.reasoningEndTime` the moment the
+        // model closes its `</think>` token. If that never landed —
+        // for example, the closing token arrived in a final delta
+        // that didn't cross the flush threshold — fall back to the
+        // last streaming update (or, failing that, "now") so the
+        // step's "Thought for …" pill still has a usable duration
+        // instead of appearing as a bare "Thought" forever.
+        let resolvedReasoningEndTime: Date? = {
+            if let end = pending?.reasoningEndTime {
+                return end
+            }
+            guard reasoning != nil else { return nil }
+            return pending?.lastUpdated ?? .now
+        }()
+        let step = MessageStep(
+            id: id,
+            reasoningText: reasoning,
+            explainerText: explainer,
+            functionCallRecords: [],
+            startTime: pending?.startTime ?? .now,
+            reasoningEndTime: resolvedReasoningEndTime
+        )
+        self.updatePendingMessage(conversationId: conversationId) { pendingMessage in
+            pendingMessage?.steps.append(step)
+        }
+    }
+
+    /// Fill in a step's tool call records once execution finishes.
+    /// No-op if the step has been dropped (e.g. cancellation between
+    /// the append and the back-fill).
+    fileprivate func attachRecords(
+        _ records: [FunctionCallRecord],
+        toStep stepId: UUID,
+        conversationId: UUID?
+    ) {
+        self.updatePendingMessage(conversationId: conversationId) { pendingMessage in
+            guard let index = pendingMessage?.steps.firstIndex(where: { $0.id == stepId }) else {
+                return
+            }
+            pendingMessage?.steps[index].functionCallRecords = records
         }
     }
 

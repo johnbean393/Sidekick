@@ -80,19 +80,20 @@ extension LlamaServer {
         let startTime: Date = Date.now
         process.executableURL = Bundle.main.privateFrameworksURL?.appendingPathComponent("llama-server")
         
-        let gpuLayers: Int = 99
+        // GPU acceleration is always on. The legacy CPU-only toggle has
+        // been removed; users who genuinely need CPU-only inference can
+        // override `--gpu-layers 0` via Advanced Parameters.
         let processors: Int = ProcessInfo.processInfo.activeProcessorCount
-        let threadsToUseIfGPU: Int = max(1, Int(ceil(Double(processors) / 3.0 * 2.0)))
-        let threadsToUseIfCPU: Int = processors
-        let threadsToUse: Int = InferenceSettings.useGPUAcceleration ? threadsToUseIfGPU : threadsToUseIfCPU
-        let gpuLayersToUse: String = InferenceSettings.useGPUAcceleration ? "\(gpuLayers)" : "0"
-        
+        let threadsToUse: Int = max(1, Int(ceil(Double(processors) / 3.0 * 2.0)))
+        let gpuLayersToUse: String = "99"
+
         // Formulate arguments
         var arguments: [String: String] = [
             "--model": modelPath,
             "--threads": "\(threadsToUse)",
             "--threads-batch": "\(threadsToUse)",
-            "--ctx-size": "\(self.contextLength)",
+            "--ctx-size": "\(self.totalContextLength)",
+            "--parallel": "\(self.parallelSlots)",
             "--port": self.port,
             "--gpu-layers": gpuLayersToUse
         ]

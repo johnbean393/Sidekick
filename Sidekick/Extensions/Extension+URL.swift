@@ -69,6 +69,13 @@ public extension URL {
     }
 	
 	/// Function to verify if url is reachable
+	///
+	/// Treats any 2xx/3xx HTTP response as reachable (HuggingFace's
+	/// download endpoints commonly issue 302 redirects via `HEAD`).
+	/// `completion` is guaranteed to be invoked exactly once even when
+	/// the request fails or returns a non-HTTP response, which prevents
+	/// callers (e.g. the model downloader) from hanging on unreachable
+	/// hosts.
 	static func verifyURL(
 		url: URL,
 		timeoutInterval: Double = 3,
@@ -82,13 +89,16 @@ public extension URL {
 		let task = URLSession.shared.dataTask(
 			with: request
 		) { _, response, error in
-			if let httpResponse = response as? HTTPURLResponse {
-				if httpResponse.statusCode == 200 {
-					completion(true)
-				}
-			} else {
+			if error != nil {
 				completion(false)
+				return
 			}
+			guard let httpResponse = response as? HTTPURLResponse else {
+				completion(false)
+				return
+			}
+			let isValid: Bool = (200..<400).contains(httpResponse.statusCode)
+			completion(isValid)
 		}
 		task.resume()
 	}

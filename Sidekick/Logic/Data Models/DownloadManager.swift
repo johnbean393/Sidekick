@@ -41,6 +41,36 @@ public final class DownloadManager: NSObject {
 	var lastUpdatedAt = Date()
 	/// Observable property for whether the model was downloaded
 	var didFinishDownloadingModel: Bool = false
+	/// The recommended default model for the current device. Surfaces
+	/// model details (name, parameter count, family) to the setup UI so
+	/// users can see what "Download Default Model" actually refers to
+	/// *before* they commit to the download.
+	var recommendedModel: HuggingFaceModel?
+	/// The on-disk download size of ``recommendedModel`` in bytes, when
+	/// known. Resolved by a lightweight `HEAD` request and used purely
+	/// for display.
+	var recommendedModelDownloadSize: Int64?
+	/// `true` while the recommended model is being resolved (network
+	/// fetch for the live catalog plus an optional `HEAD` for the file
+	/// size). Lets the UI show a loading state instead of a stale or
+	/// empty preview.
+	var isResolvingRecommendedModel: Bool = false
+	/// The most recent download failure, if any. Cleared at the start
+	/// of each new download attempt so retrying hides the error.
+	var downloadError: String?
+	/// Mirrors whether the active download tasks have been suspended.
+	/// `URLSessionTask.state` isn't observable through Swift's
+	/// `@Observable` macro, so we track the user-initiated pause
+	/// state ourselves to drive the play/pause toggle in the UI.
+	var isPaused: Bool = false
+	/// Live byte counter for the active download. Driven by
+	/// ``URLSessionDownloadDelegate``'s `didWriteData` so the UI can
+	/// render text like `"1.2 GB of 4.7 GB"` without needing to KVO
+	/// into ``URLSessionTask.progress`` from SwiftUI.
+	var bytesWritten: Int64 = 0
+	/// Expected total bytes for the active download. `0` while
+	/// unknown (e.g. before the server reports `Content-Length`).
+	var bytesExpected: Int64 = 0
 	
 	override private init() {
 		super.init()
@@ -70,6 +100,14 @@ public final class DownloadManager: NSObject {
 	public func downloadModel(
 		url: URL
 	) async {
+		// Reset transient state so the UI can react to a fresh attempt
+		// (e.g. clearing a previous error, allowing the completion sheet
+		// to fire again on subsequent successes).
+		self.downloadError = nil
+		self.didFinishDownloadingModel = false
+		self.bytesWritten = 0
+		self.bytesExpected = 0
+		self.isPaused = false
 		// Check if accessible
 		URL.verifyURL(
 			url: url
@@ -104,13 +142,110 @@ public final class DownloadManager: NSObject {
 	public func downloadDefaultModel() async {
 		// Set to add model
 		self.shouldAddModel = true
-		// Get default model
-		let model: HuggingFaceModel = await DefaultModels.recommendedModel
-        Self.logger.info("Trying to download \(model.name, privacy: .public)")
+		// Resolve the recommended model up front so we surface the same
+		// thing in the preview and in the actual download. Falls back to
+		// the cached preview if the live catalog can't be re-fetched.
+		let model: HuggingFaceModel
+		if let cached = self.recommendedModel {
+			model = cached
+		} else {
+			model = await DefaultModels.recommendedModel
+			self.recommendedModel = model
+		}
+		Self.logger.info("Trying to download \(model.name, privacy: .public)")
 		// Download model
 		await self.downloadModel(model: model)
 	}
+
+	/// Resolve the default-model recommendation for the current device
+	/// and probe its download size, populating ``recommendedModel`` and
+	/// ``recommendedModelDownloadSize``. Safe to call repeatedly; while
+	/// in flight, ``isResolvingRecommendedModel`` is `true`.
+	///
+	/// Intended for the setup screen so the user sees *which* model the
+	/// "Download Default Model" button refers to before they click it.
+	@MainActor
+	public func prepareRecommendedModel() async {
+		if self.isResolvingRecommendedModel { return }
+		self.isResolvingRecommendedModel = true
+		defer { self.isResolvingRecommendedModel = false }
+		let model: HuggingFaceModel = await DefaultModels.recommendedModel
+		self.recommendedModel = model
+		self.recommendedModelDownloadSize = await Self.fetchDownloadSize(for: model.url)
+	}
+
+	/// Issues a `HEAD` request against the model's download URL to
+	/// recover the `Content-Length`. Returns `nil` if the host cannot
+	/// be reached or the header is absent so the UI can degrade
+	/// gracefully (e.g. omit the size from the button label).
+	private static func fetchDownloadSize(for url: URL) async -> Int64? {
+		var request: URLRequest = URLRequest(url: url, timeoutInterval: 5)
+		request.httpMethod = "HEAD"
+		let configuration: URLSessionConfiguration = .default
+		configuration.timeoutIntervalForRequest = 5
+		configuration.timeoutIntervalForResource = 5
+		let session: URLSession = URLSession(configuration: configuration)
+		do {
+			let (_, response) = try await session.data(for: request)
+			if let httpResponse = response as? HTTPURLResponse,
+			   let lengthString = httpResponse.value(forHTTPHeaderField: "Content-Length"),
+			   let length = Int64(lengthString),
+			   length > 0 {
+				return length
+			}
+			return nil
+		} catch {
+			return nil
+		}
+	}
 	
+	/// Suspends every active download. Background-session tasks
+	/// support `suspend()`, so this keeps the partial data on disk and
+	/// resumes from the same byte offset when ``resumeAllDownloads()``
+	/// is called.
+	@MainActor
+	public func pauseAllDownloads() {
+		guard !self.tasks.isEmpty else { return }
+		for task in self.tasks where task.state == .running {
+			task.suspend()
+		}
+		self.isPaused = true
+	}
+
+	/// Resumes every suspended download. Counterpart to
+	/// ``pauseAllDownloads()``.
+	@MainActor
+	public func resumeAllDownloads() {
+		guard !self.tasks.isEmpty else { return }
+		for task in self.tasks where task.state == .suspended {
+			task.resume()
+		}
+		self.isPaused = false
+	}
+
+	/// Cancels every active download. Tasks fire
+	/// `didCompleteWithError` with `NSURLErrorCancelled`, which the
+	/// delegate explicitly treats as a clean stop (no error surfaced
+	/// to the UI). Returns `true` if any task was actually cancelled.
+	@discardableResult
+	@MainActor
+	public func cancelAllDownloads() -> Bool {
+		guard !self.tasks.isEmpty else { return false }
+		for task in self.tasks {
+			task.cancel()
+		}
+		// Optimistically clear local state so the UI flips back to
+		// the picker immediately, rather than waiting for the
+		// delegate callback to fire.
+		self.tasks = []
+		self.isPaused = false
+		self.bytesWritten = 0
+		self.bytesExpected = 0
+		self.didFinishDownloadingModel = false
+		self.downloadError = nil
+		return true
+	}
+
 	private func startDownload(
         url: URL
     ) {
@@ -145,12 +280,22 @@ extension DownloadManager: URLSessionDelegate, URLSessionDownloadDelegate {
 		_: URLSession,
 		downloadTask: URLSessionDownloadTask,
 		didWriteData _: Int64,
-		totalBytesWritten _: Int64,
-		totalBytesExpectedToWrite _: Int64
+		totalBytesWritten: Int64,
+		totalBytesExpectedToWrite: Int64
 	) {
 		DispatchQueue.main.async {
+			// Coalesce updates to ~10/s so we don't churn observers
+			// during high-throughput chunks. (The original check had
+			// the operands reversed and effectively never fired.)
+			// `URLSession` reports `NSURLSessionTransferSizeUnknown`
+			// (-1) when no `Content-Length` is available; clamp to 0
+			// so the UI can treat it as "indeterminate".
 			let now: Date = Date()
-			if self.lastUpdatedAt.timeIntervalSince(now) > 10 {
+			let isComplete: Bool = totalBytesExpectedToWrite > 0
+				&& totalBytesWritten >= totalBytesExpectedToWrite
+			if isComplete || now.timeIntervalSince(self.lastUpdatedAt) > 0.1 {
+				self.bytesWritten = totalBytesWritten
+				self.bytesExpected = max(0, totalBytesExpectedToWrite)
 				self.lastUpdatedAt = now
 			}
 		}
@@ -166,10 +311,47 @@ extension DownloadManager: URLSessionDelegate, URLSessionDownloadDelegate {
 		} else {
 			os_log("Task finished: %@", type: .info, task)
 		}
-		
+
 		let taskId = task.taskIdentifier
+		let fileName: String = task.originalRequest?.url?.lastPathComponent ?? ""
+		// Treat user-initiated cancellation as a normal stop, not a
+		// failure to surface. Without this guard, hitting Cancel would
+		// flash a "Download failed: cancelled" message.
+		let wasCancelled: Bool = {
+			guard let nsError = error as NSError? else { return false }
+			return nsError.domain == NSURLErrorDomain
+				&& nsError.code == NSURLErrorCancelled
+		}()
+		let errorDescription: String? = wasCancelled ? nil : error?.localizedDescription
 		DispatchQueue.main.async {
 			self.tasks.removeAll(where: { $0.taskIdentifier == taskId })
+			// Surface failures to the UI so the setup screen can show
+			// an error + retry affordance rather than appearing to hang.
+			if let errorDescription {
+				self.downloadError = errorDescription
+				self.didFinishDownloadingModel = false
+			}
+			// Reset transient progress + pause state once nothing is
+			// in flight, so a fresh attempt starts from a clean slate.
+			if self.tasks.isEmpty {
+				self.bytesWritten = 0
+				self.bytesExpected = 0
+				self.isPaused = false
+			}
+			// Clear the matching lengthy-task entry when a download
+			// stops for any reason (success is handled in
+			// `didFinishDownloadingTo`, but failure/cancellation needs
+			// to be cleaned up here too).
+			if !fileName.isEmpty {
+				let pending = LengthyTasksController.shared.tasks.contains {
+					$0.name == "Downloading model \(fileName)"
+				}
+				if pending {
+					LengthyTasksController.shared.tasks = LengthyTasksController.shared.tasks.filter {
+						$0.name != "Downloading model \(fileName)"
+					}
+				}
+			}
 		}
 	}
 	
@@ -212,6 +394,11 @@ extension DownloadManager: URLSessionDelegate, URLSessionDownloadDelegate {
 			}
 		} catch {
 			os_log("FileManager copy error at %@ to %@ error: %@", type: .error, location.absoluteString, destinationURL.absoluteString, error.localizedDescription)
+			let errorDescription: String = error.localizedDescription
+			Task { @MainActor in
+				self.downloadError = errorDescription
+				self.didFinishDownloadingModel = false
+			}
 			return
 		}
 		// Remove lengthy task

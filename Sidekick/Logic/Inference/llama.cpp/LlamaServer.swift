@@ -23,7 +23,6 @@ public actor LlamaServer {
     
     var modelType: ModelType
     var systemPrompt: String
-    var contextLength: Int
     
     // MARK: - Connection Details
     
@@ -52,12 +51,10 @@ public actor LlamaServer {
     
     init(
         modelType: ModelType,
-        systemPrompt: String = InferenceSettings.systemPrompt,
-        contextLength: Int = InferenceSettings.contextLength
+        systemPrompt: String = InferenceSettings.systemPrompt
     ) {
         self.modelType = modelType
         self.systemPrompt = systemPrompt
-        self.contextLength = contextLength
         self.port = {
             switch modelType {
                 case .regular:
@@ -66,6 +63,41 @@ public actor LlamaServer {
                     return "9830"
             }
         }()
+    }
+
+    /// Fixed context length used when this server is hosting the
+    /// worker model. The worker exists to handle short, well-bounded
+    /// tasks (memory extraction, prompt suggestions, canvas ops);
+    /// growing its context to match the main model wastes a lot of
+    /// KV-cache memory for no benefit, so it's hard-pinned here and
+    /// intentionally ignores per-model overrides and the
+    /// device-scaled ``InferenceSettings/contextLength`` default.
+    static let workerContextLength: Int = 4096
+    static let localParallelSlots: Int = 2
+
+    /// Context length to use when launching `llama-server` for this
+    /// model. Worker servers are pinned to ``workerContextLength``;
+    /// regular servers prefer the per-model override saved by
+    /// ``ModelLoadConfigSheet`` and fall back to the legacy global
+    /// default for models that haven't been configured yet.
+    var contextLength: Int {
+        if self.modelType == .worker {
+            return Self.workerContextLength
+        }
+        if let url = self.modelUrl,
+           let config = ModelManager.loadConfig(for: url),
+           let perModel = config.contextLength {
+            return perModel
+        }
+        return InferenceSettings.contextLength
+    }
+
+    var parallelSlots: Int {
+        return Self.localParallelSlots
+    }
+
+    var totalContextLength: Int {
+        return self.contextLength * self.parallelSlots
     }
     
     // MARK: - Model Metadata

@@ -54,9 +54,18 @@ public class DeepResearchFunctions {
         run: { params in
             // Get website content
             var content: String = try await WebScrape.scrape(url: params.url)
-            // Trim if needed
+            // Trim if needed. For local models, prefer the active model's
+            // per-model context length (set via the load-config sheet);
+            // otherwise fall back to the global default.
+            let localCtx: Int = {
+                if let url = Settings.modelUrl,
+                   let perModel = ModelManager.loadConfig(for: url)?.contextLength {
+                    return perModel
+                }
+                return InferenceSettings.contextLength
+            }()
             let maxTokens: Int = Int(
-                Double(InferenceSettings.useServer ? 128_000 : InferenceSettings.contextLength) * 0.75
+                Double(InferenceSettings.useServer ? 128_000 : localCtx) * 0.75
             )
             content.trimmingSuffixToTokens(maxTokens: maxTokens)
             // Make call to worker model

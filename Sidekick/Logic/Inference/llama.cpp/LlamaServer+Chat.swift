@@ -1147,6 +1147,18 @@ extension LlamaServer {
         /// Malformed tool calls that failed to parse
         var malformedToolCalls: [MalformedToolCall]?
 
+        /// Per-iteration agent loop history captured on the live
+        /// pending message during streaming. Snapshotted onto the
+        /// response in ``Model/listenThinkRespond`` so callers can
+        /// recover it after the pending message is cleared.
+        var steps: [MessageStep] = []
+        /// Moment the final iteration's reasoning phase ended, copied
+        /// from the live pending message for the same reason as
+        /// ``steps``. Used by the persisted message's "Thought for …"
+        /// pill so the duration freezes the instant the model stops
+        /// thinking.
+        var reasoningEndTime: Date?
+
     }
 
 }

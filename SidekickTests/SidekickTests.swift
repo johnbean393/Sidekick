@@ -237,6 +237,16 @@ struct SidekickTests {
         #expect(secondSummary?.contains("first task") == false)
     }
 
+    @Test func localLlamaServerUsesMultipleSlotsWithPerSlotContext() async throws {
+        let server = LlamaServer(modelType: .regular)
+        let slots = await server.parallelSlots
+        let contextLength = await server.contextLength
+        let totalContextLength = await server.totalContextLength
+
+        #expect(slots >= 2)
+        #expect(totalContextLength == contextLength * slots)
+    }
+
     @Test func chatParametersIncludeToolsAndAutoToolChoice() async throws {
         let defaults = UserDefaults.standard
         let originalUseFunctionsExists = defaults.exists(key: "useFunctions")

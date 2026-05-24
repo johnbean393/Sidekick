@@ -68,8 +68,11 @@ You recall the following information about the user from prior interactions:
     /// Static constant for the default server endpoint
     public static let defaultEndpoint: String = ""
     
-    /// Static constant for the default context length
-    private static var defaultContextLength: Int {
+    /// Static constant for the default context length used as a
+    /// fallback when a model has no per-model override stored on its
+    /// ``LocalModelFileEntity``. Brand-new installs and pre-migration
+    /// models land here.
+    static var defaultContextLength: Int {
         if self.unifiedMemorySize < 16 {
             return 16_000
         } else if (16...32).contains(self.unifiedMemorySize) {
@@ -368,46 +371,36 @@ You recall the following information about the user from prior interactions:
         return !Self.serverModelName.isEmpty && !Self.endpoint.isEmpty
     }
     
-    /// Static constant which controls the amount of context an LLM can remember
+    /// Fallback context length applied when a model has no per-model
+    /// override yet (e.g. pre-migration installs). The settings UI no
+    /// longer exposes this value directly — per-model context length
+    /// is configured via the load-config sheet.
     public static var contextLength: Int {
         get {
-            return UserDefaults.standard.integer(
-                forKey: "contextLength"
-            )
+            let stored = UserDefaults.standard.integer(forKey: "contextLength")
+            return stored > 0 ? stored : Self.defaultContextLength
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "contextLength")
         }
     }
     
-    /// Static constant which controls how creative an LLM is
+    /// Fallback temperature applied for local models whose architecture
+    /// isn't recognised and which carry no per-model override. The
+    /// settings UI no longer exposes this directly — per-model sampling
+    /// is configured via the load-config sheet.
     public static var temperature: Double {
         get {
-            return UserDefaults.standard.double(
-                forKey: "temperature"
-            )
+            if UserDefaults.standard.exists(key: "temperature") {
+                return UserDefaults.standard.double(forKey: "temperature")
+            }
+            return Self.defaultTemperature
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "temperature")
         }
     }
     
-    /// Computed property for whether the LLM uses GPU acceleration
-    static var useGPUAcceleration: Bool {
-        get {
-            // Set default
-            if !UserDefaults.standard.exists(key: "useGPUAcceleration") {
-                // Default to true
-                Self.useGPUAcceleration = true
-            }
-            return UserDefaults.standard.bool(
-                forKey: "useGPUAcceleration"
-            )
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: "useGPUAcceleration")
-        }
-    }
     
     /// Computed property for whether the LLM uses multimodal capabilities
     static var localModelUseVision: Bool {
