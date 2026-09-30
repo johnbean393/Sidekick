@@ -64,6 +64,10 @@ public struct Provider: Identifiable {
             endpointUrl: URL(string: "https://openrouter.ai/api/v1")!
         ),
         Provider(
+            name: "Requesty",
+            endpointUrl: URL(string: "https://router.requesty.ai/v1")!
+        ),
+        Provider(
             name: "xAI",
             endpointUrl: URL(string: "https://api.x.ai/v1")!
         ),
