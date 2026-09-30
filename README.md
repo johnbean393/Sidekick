@@ -161,7 +161,7 @@ Optionally, you can offload generation to speed up processing while extending th
 ### Via Homebrew
 
 ```bash
-brew install --cask arcadi4/tap/sidekick
+brew install --cask arcadi4/tap/sidekick-ai
 ```
 
 ### Download and Setup
